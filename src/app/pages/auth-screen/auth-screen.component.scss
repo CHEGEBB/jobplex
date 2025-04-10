@@ -1,0 +1,637 @@
+// Import fonts
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+//import font awesome icons for angular
+// Import Font Awesome for Angular
+// Import Font Awesome for Angular
+@import "@fortawesome/fontawesome-free/scss/fontawesome";
+@import "@fortawesome/fontawesome-free/scss/regular";
+@import "@fortawesome/fontawesome-free/scss/solid";
+@import "@fortawesome/fontawesome-free/scss/brands";
+
+
+
+
+// Variables
+$primary-color: #10b981;
+$employer-color: #3f51b5;
+$admin-color: #c026d3;
+$text-dark: #333;
+$text-medium: #666;
+$text-light: #888;
+$border-color: #ddd;
+$background-light: #f5f5f5;
+$box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+$transition: all 0.3s ease;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin button-style {
+  cursor: pointer;
+  border: none;
+  transition: $transition;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+// Keyframes
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+:host {
+  display: block;
+  height: 100vh;
+  font-family: 'Poppins', sans-serif;
+}
+
+.auth-container {
+  display: flex;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+// Left side: Image Container
+.image-container {
+  flex: 1.2;
+  position: relative;
+  overflow: hidden;
+  box-shadow: $box-shadow;
+
+  @media (max-width: 992px) {
+    flex: 1;
+  }
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+  
+  .slideshow {
+    width: 100%;
+    height: 100%;
+    
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1s ease;
+      
+      &.active {
+        opacity: 1;
+      }
+      
+      .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        
+        &.jobseeker-overlay {
+          background: linear-gradient(135deg, rgba($primary-color, 0.85) 0%, rgba($primary-color, 0.65) 100%);
+        }
+        
+        &.employer-overlay {
+          background: linear-gradient(135deg, rgba($employer-color, 0.85) 0%, rgba($employer-color, 0.65) 100%);
+        }
+        
+        &.admin-overlay {
+          background: linear-gradient(135deg, rgba($admin-color, 0.85) 0%, rgba($admin-color, 0.65) 100%);
+        }
+      }
+      
+      .slide-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-align: center;
+        width: 80%;
+        z-index: 2;
+        
+        .slide-title {
+          font-size: 2.5rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .slide-description {
+          font-size: 1.2rem;
+          margin-bottom: 2rem;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+      }
+    }
+  }
+  
+  .image-toggle-buttons {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 100px;
+    padding: 0.3rem;
+    z-index: 3;
+    
+    .image-role-btn {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.8);
+      padding: 0.5rem 1.2rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-radius: 100px;
+      transition: $transition;
+      
+      &:hover {
+        color: white;
+      }
+      
+      &.image-active-role {
+        background-color: white;
+        color: $text-dark;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}
+
+// Right side: Form Container
+.form-container {
+  flex: 1;
+  @include flex-column;
+  padding: 2rem;
+  overflow-y: auto;
+  max-width: 500px;
+  background-color: #fff;
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+}
+
+// Form Header
+.form-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  
+  .logo-container {
+    margin-bottom: 1rem;
+    
+    .logo {
+      height: 45px;
+    }
+  }
+  
+  .welcome-text {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin-bottom: 0.5rem;
+  }
+  
+  .role-text {
+    font-size: 1rem;
+    color: $text-medium;
+  }
+}
+
+// Role Selector
+.role-selector {
+  display: flex;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  
+  .role-btn {
+    flex: 1;
+    border: none;
+    background-color: $background-light;
+    color: $text-medium;
+    padding: 0.7rem 0.5rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    @include flex-center;
+    transition: $transition;
+    
+    i {
+      margin-right: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    &:hover {
+      background-color: darken($background-light, 5%);
+    }
+    
+    &.active-role {
+      color: white;
+    }
+  }
+  
+  .jobseeker-btn {
+    &.active-role {
+      background-color: $primary-color;
+    }
+  }
+  
+  .employer-btn {
+    &.active-role {
+      background-color: $employer-color;
+    }
+  }
+  
+  .admin-btn {
+    &.active-role {
+      background-color: $admin-color;
+    }
+  }
+}
+
+// Form Tabs
+.form-tabs {
+  display: flex;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid $border-color;
+  
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0.8rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: $text-light;
+    cursor: pointer;
+    transition: $transition;
+    
+    &:hover {
+      color: $text-dark;
+    }
+    
+    &.active-tab {
+      color: $primary-color;
+      border-bottom: 2px solid $primary-color;
+    }
+  }
+}
+
+// Auth Form
+.auth-form {
+  @include flex-column;
+  gap: 1rem;
+  
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    
+    .half-width {
+      flex: 1;
+    }
+  }
+  
+  .form-group {
+    margin-bottom: 0.3rem;
+    
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: $text-dark;
+    }
+    
+    .input-container {
+      position: relative;
+      
+      .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: $text-light;
+        font-size: 0.9rem;
+      }
+      
+      .toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: $text-light;
+        cursor: pointer;
+        font-size: 0.9rem;
+        
+        &:hover {
+          color: $text-dark;
+        }
+      }
+      
+      .form-input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 2.5rem;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: $transition;
+        
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+        }
+      }
+    }
+    
+    .error-message {
+      font-size: 0.75rem;
+      color: $employer-color;
+      margin-top: 0.3rem;
+    }
+    
+    .password-strength {
+      margin-top: 0.5rem;
+      
+      .strength-bar {
+        height: 4px;
+        border-radius: 2px;
+        width: 100%;
+        background-color: #e9e9e9;
+        position: relative;
+        
+        &.weak {
+          &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30%;
+            height: 100%;
+            background-color: $employer-color;
+            border-radius: 2px;
+          }
+        }
+        
+        &.medium {
+          &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 60%;
+            height: 100%;
+            background-color: #ff9800;
+            border-radius: 2px;
+          }
+        }
+        
+        &.strong {
+          &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: $admin-color;
+            border-radius: 2px;
+          }
+        }
+      }
+      
+      .strength-text {
+        font-size: 0.75rem;
+        color: $text-medium;
+        display: block;
+        margin-top: 0.2rem;
+        text-transform: capitalize;
+      }
+    }
+  }
+  
+  .form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.5rem 0;
+    
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      label {
+        font-size: 0.85rem;
+        color: $text-medium;
+      }
+    }
+    
+    .forgot-password {
+      font-size: 0.85rem;
+      color: $primary-color;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+  
+  .submit-btn {
+    padding: 0.8rem;
+    background-color: $primary-color;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: $transition;
+    @include flex-center;
+    height: 48px;
+    
+    &:hover {
+      background-color: darken($primary-color, 10%);
+    }
+    
+    &:disabled {
+      background-color: lighten($text-light, 15%);
+      cursor: not-allowed;
+    }
+    
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+    }
+  }
+  
+  .separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1rem 0;
+    
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid $border-color;
+    }
+    
+    span {
+      padding: 0 1rem;
+      font-size: 0.85rem;
+      color: $text-light;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+  }
+  
+  .social-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    
+    .social-btn {
+      flex: 1;
+      @include flex-center;
+      padding: 0.7rem;
+      border: 1px solid $border-color;
+      border-radius: 8px;
+      background-color: white;
+      cursor: pointer;
+      transition: $transition;
+      
+      i {
+        font-size: 1.1rem;
+        margin-right: 0.5rem;
+      }
+      
+      span {
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      
+      &:hover {
+        background-color: $background-light;
+        transform: translateY(-2px);
+      }
+    }
+    
+    .google-btn {
+      i {
+        color: #DB4437;
+      }
+      
+      &:hover {
+        border-color: #DB4437;
+      }
+    }
+    
+    .linkedin-btn {
+      i {
+        color: #0077B5;
+      }
+      
+      &:hover {
+        border-color: #0077B5;
+      }
+    }
+  }
+  
+  .terms-container {
+    .checkbox-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      
+      label {
+        font-size: 0.85rem;
+        color: $text-medium;
+        margin-top: -2px;
+        line-height: 1.4;
+        
+        .link {
+          color: $primary-color;
+          text-decoration: none;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 1200px) {
+  .image-container .slideshow .slide .slide-content {
+    .slide-title {
+      font-size: 2rem;
+    }
+    
+    .slide-description {
+      font-size: 1rem;
+    }
+  }
+}
+
+@media (max-width: 992px) {
+  .auth-container {
+    .form-container {
+      padding: 1.5rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+  }
+  
+  .form-container {
+    order: 1;
+    padding: 1.2rem;
+    max-width: none;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .form-tabs {
+    margin-bottom: 1rem;
+  }
+  
+  .social-buttons {
+    flex-direction: column;
+  }
+}

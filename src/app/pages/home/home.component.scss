@@ -1,0 +1,294 @@
+// Glassmorphic Effect
+.glassmorphic-container {
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+      border-radius: 1rem;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      z-index: 0;
+    }
+  }
+  
+  .glassmorphic-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+  }
+  
+  // Animations
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes fadeInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .animate-on-scroll {
+    &.animated {
+      animation-duration: 0.8s;
+      animation-fill-mode: both;
+      
+      &.fadeIn {
+        animation-name: fadeIn;
+      }
+      
+      &.fadeInUp {
+        animation-name: fadeInUp;
+      }
+      
+      &.fadeInLeft {
+        animation-name: fadeInLeft;
+      }
+      
+      &.fadeInRight {
+        animation-name: fadeInRight;
+      }
+      
+      &.delay-100 {
+        animation-delay: 0.1s;
+      }
+      
+      &.delay-200 {
+        animation-delay: 0.2s;
+      }
+      
+      &.delay-300 {
+        animation-delay: 0.3s;
+      }
+      
+      &.delay-400 {
+        animation-delay: 0.4s;
+      }
+      
+      &.delay-500 {
+        animation-delay: 0.5s;
+      }
+      
+      &.delay-600 {
+        animation-delay: 0.6s;
+      }
+      
+      &.delay-700 {
+        animation-delay: 0.7s;
+      }
+      
+      &.delay-800 {
+        animation-delay: 0.8s;
+      }
+      
+      &.delay-900 {
+        animation-delay: 0.9s;
+      }
+    }
+  }
+  
+  // Hero Section Animations
+  .tech-icons-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    
+    .tech-icon {
+      position: absolute;
+      animation: floatIcon 5s ease-in-out infinite;
+      
+      &:nth-child(1) {
+        top: 10%;
+        left: 80%;
+      }
+      &:nth-child(2) {
+        top: 70%;
+        left: 15%;
+      }
+      &:nth-child(3) {
+        top: 40%;
+        left: 85%;
+      }
+      &:nth-child(4) {
+        top: 80%;
+        left: 75%;
+      }
+      &:nth-child(5) {
+        top: 20%;
+        left: 25%;
+      }
+      &:nth-child(6) {
+        top: 60%;
+        left: 50%;
+      }
+    }
+  }
+  
+  @keyframes floatIcon {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+  
+  .profile-card, .job-card {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .connection-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawLine 3s ease-in-out forwards infinite;
+  }
+  
+  @keyframes drawLine {
+    0% {
+      stroke-dashoffset: 1000;
+      opacity: 0;
+    }
+    50% {
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: -1000;
+      opacity: 0;
+    }
+  }
+  
+  // Wave Divider
+  .shape-fill {
+    fill: #FFFFFF;
+  }
+  
+  // Particles Animation
+  @keyframes floatParticle {
+    0% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-100px) rotate(180deg);
+    }
+    100% {
+      transform: translateY(0) rotate(360deg);
+    }
+  }
+  
+  // CountUp Animation
+  @keyframes countUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  [countUp] {
+    animation: countUp 0.5s ease-out forwards;
+  }
+  
+  // Job Cards
+  .job-card {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      border-color: theme('colors.emerald.200');
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    }
+  }
+  
+  // Features Cards
+  .feature-stats {
+    margin-top: auto;
+  }
+  
+  // Media Queries
+  @media (max-width: 768px) {
+    .glassmorphic-container {
+      margin: 0 auto;
+      max-width: 90%;
+    }
+    
+    .tech-icons-animation .tech-icon {
+      transform: scale(0.8);
+    }
+  }
+  
+  // Fix for mobile Safari
+  @supports (-webkit-touch-callout: none) {
+    .backdrop-blur-lg {
+      -webkit-backdrop-filter: blur(8px);
+    }
+    
+    .backdrop-blur-xl {
+      -webkit-backdrop-filter: blur(12px);
+    }
+  }
+  .parallax-container {
+    perspective: 1000px;
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  
+  .parallax-layer {
+    position: absolute;
+    height: 100vh;
+    width: 100%;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }

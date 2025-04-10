@@ -32,8 +32,7 @@ jobplex/
 │   │   │
 │   │   ├── pages/                     # Main pages
 │   │   │   ├── home/                  # Landing page
-│   │   │   ├── login/                 # Login page
-│   │   │   ├── register/              # Registration page
+│   │   │   ├── auth-screen/           # Combined login/registration page
 │   │   │   ├── forgot-password/       # Password recovery
 │   │   │   │
 │   │   │   ├── jobseeker/             # Job seeker pages
@@ -71,11 +70,11 @@ jobplex/
 │   │   │   ├── chat.service.ts        # AI chat functionality
 │   │   │   └── notification.service.ts # Notifications
 │   │   │
-│   │   ├── models/                    # Data models/interfaces
-│   │   │   ├── user.model.ts          # User data structure
-│   │   │   ├── job.model.ts           # Job data structure
-│   │   │   ├── skill.model.ts         # Skills data structure
-│   │   │   └── application.model.ts   # Application data structure
+│   │   ├── interfaces/                # TypeScript interfaces
+│   │   │   ├── user.interface.ts      # User data structure
+│   │   │   ├── job.interface.ts       # Job data structure
+│   │   │   ├── skill.interface.ts     # Skills data structure
+│   │   │   └── application.interface.ts # Application data structure
 │   │   │
 │   │   ├── app.routes.ts              # Main routes
 │   │   ├── app.config.ts              # App configuration
@@ -108,13 +107,10 @@ server/
 │   ├── interview.controller.js      # Interview management
 │   └── ai.controller.js             # AI integration endpoints
 │
-├── models/                          # Database models
-│   ├── user.model.js                # User schema
-│   ├── job.model.js                 # Job schema
-│   ├── skill.model.js               # Skills schema
-│   ├── application.model.js         # Applications schema
-│   ├── portfolio.model.js           # Portfolio schema
-│   └── cv.model.js                  # CV storage model
+├── db/                              # Database scripts
+│   ├── schema.sql                   # Database schema
+│   ├── seed.sql                     # Seed data
+│   └── index.js                     # Database connection
 │
 ├── routes/                          # API routes
 │   ├── auth.routes.js               # Auth endpoints
@@ -274,6 +270,18 @@ server/
    - API response times
    - Error monitoring
 
+## Auth Screen Details
+
+The AuthScreen component combines login and registration functionality in a single interface with:
+- Tab-based UI to switch between login and signup forms
+- Responsive design for all devices
+- Form validation with error messages
+- Social login integration
+- User role selection during signup (Job Seeker/Employer)
+- Password strength indicator
+- Terms and conditions acceptance
+- Remember me functionality
+
 ## Getting Started
 
 1. **Set up Angular project**
@@ -300,7 +308,12 @@ server/
    }
    ```
 
-3. **Start development server**
+3. **Create Auth Screen Component**
+   ```bash
+   ng generate component pages/auth-screen --standalone
+   ```
+
+4. **Start development server**
    ```bash
    ng serve
    ```
@@ -315,7 +328,16 @@ server/
    npm install express pg cors bcrypt jsonwebtoken
    ```
 
-2. **Start backend server**
+2. **Set up PostgreSQL database**
+   ```bash
+   # After installing PostgreSQL
+   psql -U postgres
+   CREATE DATABASE jobplex;
+   \c jobplex
+   # Run schema.sql script
+   ```
+
+3. **Start backend server**
    ```bash
    node server.js
    ```

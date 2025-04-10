@@ -1,0 +1,767 @@
+<!-- home.component.html -->
+<div>
+    <div class="relative overflow-hidden">
+      <!-- Back to top button -->
+      <button id="back-to-top" class="fixed bottom-6 right-6 bg-emerald-500 text-white p-3 rounded-full shadow-lg z-50 transition-all duration-300 opacity-0 translate-y-10" (click)="scrollToTop()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+      </button>
+  
+    <!-- Header/Navigation -->
+    <header class="sticky top-0 z-50 backdrop-blur-lg bg-white/30 shadow-sm">
+      <div class="container mx-auto px-4">
+        <nav class="flex items-center justify-between py-4">
+          <!-- Logo -->
+          <div class="flex items-center">
+            <svg class="w-8 h-8 text-emerald-500 mr-2" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4z"/>
+            </svg>
+            <span class="text-2xl font-bold text-slate-800">Job<span class="text-emerald-500">Plex</span></span>
+          </div>
+          
+          <!-- Desktop Navigation -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="#" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" [ngClass]="{'text-emerald-500': activeSection === 'home'}">Home</a>
+            <a href="#jobs" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" [ngClass]="{'text-emerald-500': activeSection === 'jobs'}">Jobs</a>
+            <a href="#features" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" [ngClass]="{'text-emerald-500': activeSection === 'features'}">Features</a>
+            <a href="#howitworks" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" [ngClass]="{'text-emerald-500': activeSection === 'howitworks'}">How It Works</a>
+            <a href="#testimonials" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" [ngClass]="{'text-emerald-500': activeSection === 'testimonials'}">Testimonials</a>
+          </div>
+          
+          <!-- Auth Buttons -->
+          <div class="hidden md:flex items-center space-x-4">
+            <a routerLink="/login" class="border-b-2 border-emerald-200 hover:text-emerald-600 transition-colors font-medium">Login</a>
+            <a routerLink="/register" class="bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-md transition-colors font-medium">Sign Up</a>
+          </div>
+          
+          <!-- Mobile Menu Button -->
+          <button class="md:hidden text-slate-700" (click)="toggleMobileMenu()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path [attr.d]="mobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            </svg>
+          </button>
+        </nav>
+        
+        <!-- Mobile Navigation -->
+        <div [ngClass]="{'max-h-0': !mobileMenuOpen, 'max-h-screen': mobileMenuOpen}" class="md:hidden overflow-hidden transition-all duration-300 ease-in-out">
+          <div class="flex flex-col space-y-4 py-4">
+            <a href="#" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" (click)="closeMobileMenuAndNavigate('home')">Home</a>
+            <a href="#jobs" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" (click)="closeMobileMenuAndNavigate('jobs')">Jobs</a>
+            <a href="#features" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" (click)="closeMobileMenuAndNavigate('features')">Features</a>
+            <a href="#howitworks" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" (click)="closeMobileMenuAndNavigate('howitworks')">How It Works</a>
+            <a href="#testimonials" class="text-slate-700 hover:text-emerald-500 transition-colors font-medium" (click)="closeMobileMenuAndNavigate('testimonials')">Testimonials</a>
+            <div class="flex items-center space-x-4 pt-2">
+              <a routerLink="/login" class="text-emerald-500 hover:text-emerald-600 transition-colors font-medium">Login</a>
+              <a routerLink="/register" class="bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-md transition-colors font-medium">Sign Up</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  
+    <!-- Hero Section with Parallax -->
+    <section id="home" class="relative min-h-screen flex items-center bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden">
+      <!-- Parallax Background Elements -->
+      <div class="absolute inset-0 opacity-30">
+        <div class="parallax-layer absolute inset-0 bg-[url('https://images.pexels.com/photos/3184611/pexels-photo-3184611.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')] bg-cover bg-center"
+         data-depth="0.1"></div>
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-black/5"></div>
+ 
+        <div class="parallax-layer" data-depth="0.1">
+          <div class="absolute top-20 left-20 w-64 h-64 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl"></div>
+        </div>
+        <div class="parallax-layer" data-depth="0.2">
+          <div class="absolute bottom-20 right-20 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl"></div>
+        </div>
+        <div class="parallax-layer" data-depth="0.3">
+          <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl"></div>
+        </div>
+        <div class="grid grid-cols-12 grid-rows-12 h-full w-full">
+          <div *ngFor="let _ of [].constructor(50); let i = index" 
+              class="absolute bg-emerald-500 opacity-10" 
+              [ngStyle]="getRandomParticleStyle(i)">
+          </div>
+        </div>
+      </div>
+  
+       <!-- Content Container -->
+  <div class="relative z-10 container mx-auto px-4 py-16 md:py-24">
+    <div class="flex flex-col md:flex-row items-center">
+      <!-- Your existing content here -->
+      <div class="w-full md:w-1/2 mb-10 md:mb-0 text-white">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+          Where <span class="text-emerald-400">Skills</span> Matter More Than Titles
+        </h1>
+            <p class="text-lg text-slate-600 mb-8">
+              JobPlex matches candidates with opportunities based on real skills and potential. Our AI-powered platform revolutionizes how talent connects with employers.
+            </p>
+            <div class="flex flex-wrap gap-4">
+              <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-md transition-colors font-medium">
+                Get Started
+              </button>
+              <button class="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-md transition-colors font-medium">
+                Learn More
+              </button>
+            </div>
+            <!-- Scrolling Stats -->
+            <div class="mt-10 grid grid-cols-3 gap-4">
+              <div class="text-center">
+                <span class="block text-3xl font-bold text-emerald-500" [countUp]="10000">0</span>
+                <span class="text-slate-600">Job Seekers</span>
+              </div>
+              <div class="text-center">
+                <span class="block text-3xl font-bold text-emerald-500" [countUp]="5000">0</span>
+                <span class="text-slate-600">Employers</span>
+              </div>
+              <div class="text-center">
+                <span class="block text-3xl font-bold text-emerald-500" [countUp]="25000">0</span>
+                <span class="text-slate-600">Matches Made</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right Animation -->
+          <div class="w-full md:w-1/2" [ngClass]="animateOnScroll('fadeInRight')">
+            <div class="relative glassmorphic-container p-8 rounded-2xl">
+              <!-- Glassmorphic Card -->
+              <div class="relative z-10 bg-white/30 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30 overflow-hidden">
+                <!-- Tech Icons Animation -->
+                <div class="tech-icons-animation">
+                  <div class="tech-icon" *ngFor="let icon of techIcons" [ngStyle]="{'animation-delay': icon.delay + 's'}">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center" [ngClass]="icon.bgClass">
+                      <i [class]="'text-xl ' + icon.class"></i>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Profile Card Animation -->
+                <div class="profile-card bg-white rounded-lg shadow-md p-4 mb-4 transform transition-all duration-300 hover:scale-105">
+                  <div class="flex items-center mb-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mr-3">
+                      <span class="text-emerald-500 font-bold">JS</span>
+                    </div>
+                    <div>
+                      <h3 class="font-bold text-slate-800">John Smith</h3>
+                      <p class="text-sm text-slate-500">Full Stack Developer</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2 mb-2">
+                    <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded">Angular</span>
+                    <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded">Node.js</span>
+                    <span class="bg-purple-100 text-purple-600 text-xs px-2 py-1 rounded">PostgreSQL</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm text-slate-500">95% Match</span>
+                    <div class="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-emerald-500 rounded-full" style="width: 95%"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Job Card Animation -->
+                <div class="job-card bg-white rounded-lg shadow-md p-4 transform transition-all duration-300 hover:scale-105">
+                  <div class="flex items-center mb-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                      <span class="text-blue-500 font-bold">TC</span>
+                    </div>
+                    <div>
+                      <h3 class="font-bold text-slate-800">Senior Angular Developer</h3>
+                      <p class="text-sm text-slate-500">TechCorp, Inc.</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2 mb-2">
+                    <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded">Angular</span>
+                    <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded">Node.js</span>
+                    <span class="bg-amber-100 text-amber-600 text-xs px-2 py-1 rounded">TypeScript</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm text-slate-500">92% Match</span>
+                    <div class="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-emerald-500 rounded-full" style="width: 92%"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Floating Connection Animation -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <svg class="absolute w-full h-full">
+                    <path class="connection-line" d="M120,100 C170,140 230,140 280,100" stroke="rgba(16, 185, 129, 0.5)" stroke-width="2" fill="none" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Animated Wave Divider -->
+      <div class="absolute bottom-0 left-0 w-full overflow-hidden">
+        <svg class="relative block w-full h-24" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.44,118.92,130.61,111.31,186.94,107.58Z" class="shape-fill" fill="#FFFFFF"></path>
+        </svg>
+      </div>
+    </section>
+  
+    <!-- How It Works Section -->
+    <section id="howitworks" class="py-16 md:py-24 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-16" [ngClass]="animateOnScroll('fadeIn')">
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">How JobPlex Works</h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">Transforming hiring through innovative skill-based matching</p>
+        </div>
+        
+        <div class="relative">
+          <!-- Timeline Line -->
+          <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-emerald-100 transform -translate-x-1/2"></div>
+          
+          <!-- Timeline Items -->
+          <div class="relative z-10">
+            <!-- Step 1 -->
+            <div class="flex flex-col md:flex-row items-center mb-12 md:mb-24" [ngClass]="animateOnScroll('fadeIn')">
+              <div class="w-full md:w-1/2 md:pr-16 mb-6 md:mb-0 text-right order-2 md:order-1">
+                <h3 class="text-2xl font-bold text-slate-800 mb-3">Create Your Profile</h3>
+                <p class="text-slate-600">Build a comprehensive skill profile that showcases your abilities beyond traditional resumes. Our AI analyzes your skills and potential.</p>
+              </div>
+              <div class="flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500 text-white md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 order-1 md:order-2">
+                <span class="text-xl font-bold">1</span>
+              </div>
+              <div class="w-full md:w-1/2 md:pl-16 order-3">
+                <div class="bg-emerald-50 p-6 rounded-lg shadow-sm">
+                  <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mr-4">
+                      <i class="fas fa-user-edit text-emerald-500 text-xl"></i>
+                    </div>
+                    <span class="text-slate-700 font-medium">Profile Setup</span>
+                  </div>
+                  <ul class="space-y-2 pl-4">
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-emerald-500 mr-2"></i>
+                      <span>Personal information</span>
+                    </li>
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-emerald-500 mr-2"></i>
+                      <span>Skills assessment</span>
+                    </li>
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-emerald-500 mr-2"></i>
+                      <span>Work experience</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="flex flex-col md:flex-row items-center mb-12 md:mb-24" [ngClass]="animateOnScroll('fadeIn', 300)">
+              <div class="w-full md:w-1/2 md:pr-16 mb-6 md:mb-0 text-right md:order-3">
+                <div class="bg-blue-50 p-6 rounded-lg shadow-sm">
+                  <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                      <i class="fas fa-brain text-blue-500 text-xl"></i>
+                    </div>
+                    <span class="text-slate-700 font-medium">AI Analysis</span>
+                  </div>
+                  <ul class="space-y-2 pl-4">
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                      <span>Deep skill analysis</span>
+                    </li>
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                      <span>Potential assessment</span>
+                    </li>
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                      <span>Career path projection</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="flex items-center justify-center w-16 h-16 rounded-full bg-blue-500 text-white md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 order-1">
+                <span class="text-xl font-bold">2</span>
+              </div>
+              <div class="w-full md:w-1/2 md:pl-16 order-2">
+                <h3 class="text-2xl font-bold text-slate-800 mb-3">AI-Powered Matching</h3>
+                <p class="text-slate-600">Our advanced AI algorithm analyzes your skills, experience, and potential to find the perfect matches beyond traditional keyword searches.</p>
+              </div>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="flex flex-col md:flex-row items-center mb-12 md:mb-24" [ngClass]="animateOnScroll('fadeIn', 600)">
+              <div class="w-full md:w-1/2 md:pr-16 mb-6 md:mb-0 text-right order-2 md:order-1">
+                <h3 class="text-2xl font-bold text-slate-800 mb-3">Discover Opportunities</h3>
+                <p class="text-slate-600">Get matched with opportunities that align with your skills and potential. Our platform reveals jobs you might never have discovered otherwise.</p>
+              </div>
+              <div class="flex items-center justify-center w-16 h-16 rounded-full bg-purple-500 text-white md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 order-1 md:order-2">
+                <span class="text-xl font-bold">3</span>
+              </div>
+              <div class="w-full md:w-1/2 md:pl-16 order-3">
+                <div class="bg-purple-50 p-6 rounded-lg shadow-sm">
+                  <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                      <i class="fas fa-search text-purple-500 text-xl"></i>
+                    </div>
+                    <span class="text-slate-700 font-medium">Match Discovery</span>
+                  </div>
+                  <ul class="space-y-2 pl-4">
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-purple-500 mr-2"></i>
+                      <span>Personalized job recommendations</span>
+                    </li>
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-purple-500 mr-2"></i>
+                      <span>Match quality score</span>
+                    </li>
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-purple-500 mr-2"></i>
+                      <span>Skill gap analysis</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 4 -->
+            <div class="flex flex-col md:flex-row items-center" [ngClass]="animateOnScroll('fadeIn', 900)">
+              <div class="w-full md:w-1/2 md:pr-16 mb-6 md:mb-0 text-right md:order-3">
+                <div class="bg-amber-50 p-6 rounded-lg shadow-sm">
+                  <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mr-4">
+                      <i class="fas fa-handshake text-amber-500 text-xl"></i>
+                    </div>
+                    <span class="text-slate-700 font-medium">Connection</span>
+                  </div>
+                  <ul class="space-y-2 pl-4">
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-amber-500 mr-2"></i>
+                      <span>Apply with one click</span>
+                    </li>
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-amber-500 mr-2"></i>
+                      <span>Interview scheduling</span>
+                    </li>
+                    <li class="flex items-center">
+                      <i class="fas fa-check-circle text-amber-500 mr-2"></i>
+                      <span>Feedback and progress tracking</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="flex items-center justify-center w-16 h-16 rounded-full bg-amber-500 text-white md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 order-1">
+                <span class="text-xl font-bold">4</span>
+              </div>
+              <div class="w-full md:w-1/2 md:pl-16 order-2">
+                <h3 class="text-2xl font-bold text-slate-800 mb-3">Connect & Advance</h3>
+                <p class="text-slate-600">Apply to positions, communicate with employers, and track your progress all within our platform. Your career journey simplified.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  
+    <!-- Features Section with Glassmorphism -->
+    <section id="features" class="py-16 md:py-24 bg-gradient-to-br from-slate-50 via-emerald-50 to-blue-50 relative overflow-hidden">
+        <!-- Fixed Features Section -->
+        <div class="absolute inset-0">
+          <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+          <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        </div>
+        
+        <div class="container mx-auto px-4 relative z-10">
+          <div class="text-center mb-16" [ngClass]="animateOnScroll('fadeIn')">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Powerful Features</h2>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto">Discover why JobPlex is revolutionizing the hiring process</p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Feature Cards with Glassmorphism -->
+          <!-- Feature 1 -->
+          <div class="glassmorphic-card" [ngClass]="animateOnScroll('fadeInUp', 200)">
+            <div class="bg-emerald-100 p-3 rounded-lg inline-block mb-4">
+              <i class="fas fa-brain text-emerald-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">AI-Powered Matching</h3>
+            <p class="text-slate-600 mb-4">Our advanced algorithms understand your true potential beyond just keywords, matching you with opportunities that align with your abilities.</p>
+            <div class="feature-stats">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-slate-500">Match Accuracy</span>
+                <span class="text-sm font-medium text-emerald-500">95%</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5">
+                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 95%"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Feature 2 -->
+          <div class="glassmorphic-card" [ngClass]="animateOnScroll('fadeInUp', 400)">
+            <div class="bg-blue-100 p-3 rounded-lg inline-block mb-4">
+              <i class="fas fa-chart-line text-blue-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Skill Analysis</h3>
+            <p class="text-slate-600 mb-4">Detailed assessment of your skills and capabilities helps identify your strengths and areas for growth.</p>
+            <div class="feature-stats">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-slate-500">Skills Identified</span>
+                <span class="text-sm font-medium text-blue-500">150+</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5">
+                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 85%"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Feature 3 -->
+          <div class="glassmorphic-card" [ngClass]="animateOnScroll('fadeInUp', 600)">
+            <div class="bg-purple-100 p-3 rounded-lg inline-block mb-4">
+              <i class="fas fa-route text-purple-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Career Pathing</h3>
+            <p class="text-slate-600 mb-4">Discover personalized career paths and growth opportunities that align with your skills and aspirations.</p>
+            <div class="feature-stats">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-slate-500">Career Path Options</span>
+                <span class="text-sm font-medium text-purple-500">5+</span>
+              </div>
+              <!-- Continuing from where the file was cut off -->
+                <div class="w-full bg-slate-200 rounded-full h-1.5">
+                  <div class="bg-purple-500 h-1.5 rounded-full" style="width: 75%"></div>
+                </div>
+              </div>
+            </div>
+          <div class="glassmorphic-card" [ngClass]="animateOnScroll('fadeInUp', 200)">
+            <div class="bg-amber-100 p-3 rounded-lg inline-block mb-4">
+              <i class="fas fa-lock-alt text-amber-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Privacy Control</h3>
+            <p class="text-slate-600 mb-4">Full control over your data and profile visibility with advanced privacy settings designed for job seekers.</p>
+            <div class="feature-stats">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-slate-500">Privacy Options</span>
+                <span class="text-sm font-medium text-amber-500">12+</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5">
+                <div class="bg-amber-500 h-1.5 rounded-full" style="width: 90%"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Feature 5 -->
+          <div class="glassmorphic-card" [ngClass]="animateOnScroll('fadeInUp', 400)">
+            <div class="bg-rose-100 p-3 rounded-lg inline-block mb-4">
+              <i class="fas fa-comments text-rose-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Intelligent Messaging</h3>
+            <p class="text-slate-600 mb-4">Connect directly with employers and recruiters through our secure messaging platform with smart suggestions.</p>
+            <div class="feature-stats">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-slate-500">Response Rate</span>
+                <span class="text-sm font-medium text-rose-500">85%</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5">
+                <div class="bg-rose-500 h-1.5 rounded-full" style="width: 85%"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Feature 6 -->
+          <div class="glassmorphic-card" [ngClass]="animateOnScroll('fadeInUp', 600)">
+            <div class="bg-sky-100 p-3 rounded-lg inline-block mb-4">
+              <i class="fas fa-graduation-cap text-sky-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Learning Recommendations</h3>
+            <p class="text-slate-600 mb-4">Personalized courses and resources to help you bridge skill gaps and advance your career.</p>
+            <div class="feature-stats">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-slate-500">Learning Resources</span>
+                <span class="text-sm font-medium text-sky-500">1000+</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5">
+                <div class="bg-sky-500 h-1.5 rounded-full" style="width: 80%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  
+    <!-- Jobs Section with Tabs -->
+    <section id="jobs" class="py-16 md:py-24 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-16" [ngClass]="animateOnScroll('fadeIn')">
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Featured Opportunities</h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">Explore top jobs across different industries</p>
+        </div>
+        
+        <!-- Job Category Tabs -->
+        <div class="mb-8">
+          <ul class="flex flex-wrap border-b border-slate-200">
+            <li class="mr-2" *ngFor="let category of jobCategories; let i = index" [ngClass]="animateOnScroll('fadeIn', i * 100)">
+              <button 
+                class="inline-block px-4 py-2 text-slate-700 hover:text-emerald-500 rounded-t-lg transition-colors"
+                [ngClass]="{'border-b-2 border-emerald-500 text-emerald-500 font-medium': activeJobCategory === category}"
+                (click)="setActiveJobCategory(category)">
+                {{ category }}
+              </button>
+            </li>
+          </ul>
+        </div>
+        
+        <!-- Job Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" [ngClass]="animateOnScroll('fadeInUp')">
+          <div class="job-card bg-white rounded-lg shadow-sm border border-slate-200 p-6 transition-all duration-300 hover:shadow-md hover:border-emerald-200" *ngFor="let job of filteredJobs">
+            <div class="flex items-start mb-4">
+              <div class="w-12 h-12 rounded-md bg-slate-100 flex items-center justify-center mr-4">
+                <span class="text-slate-700 font-bold">{{ job.companyInitials }}</span>
+              </div>
+              <div class="flex-grow">
+                <h3 class="font-bold text-slate-800">{{ job.title }}</h3>
+                <p class="text-sm text-slate-500">{{ job.company }} • {{ job.location }}</p>
+              </div>
+              <button class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
+                <i class="far fa-bookmark text-slate-400 hover:text-emerald-500"></i>
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded" *ngFor="let skill of job.skills">{{ skill }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-slate-500">{{ job.salary }}</span>
+              <div class="flex items-center">
+                <span class="text-sm font-medium text-emerald-500 mr-2">{{ job.matchPercentage }}% Match</span>
+                <div class="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500 rounded-full" [style.width]="job.matchPercentage + '%'"></div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              <button class="text-emerald-500 hover:text-emerald-600 text-sm font-medium transition-colors">
+                View Details
+              </button>
+              <span class="text-xs text-slate-400 float-right">Posted {{ job.postedDays }} days ago</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- View More Button -->
+        <div class="text-center mt-10">
+          <button class="border border-emerald-500 text-emerald-500 hover:bg-emerald-50 px-6 py-2 rounded-md transition-colors font-medium">
+            View All Jobs
+          </button>
+        </div>
+      </div>
+    </section>
+  
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-16 md:py-24 bg-gradient-to-br from-emerald-50 to-slate-50 relative overflow-hidden">
+      <div class="absolute inset-0">
+        <div class="absolute top-40 left-20 w-80 h-80 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
+        <div class="absolute bottom-20 right-20 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
+      </div>
+      
+      <div class="container mx-auto px-4 relative z-10">
+        <div class="text-center mb-16" [ngClass]="animateOnScroll('fadeIn')">
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Success Stories</h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">Hear from candidates and employers who found the perfect match</p>
+        </div>
+        
+        <!-- Testimonial Slider -->
+        <div class="testimonial-slider relative max-w-4xl mx-auto" [ngClass]="animateOnScroll('fadeIn')">
+          <div class="overflow-hidden">
+            <div class="flex transition-transform duration-500 ease-in-out" [style.transform]="'translateX(-' + activeTestimonialIndex * 100 + '%)'">
+              <!-- Testimonial Card 1 -->
+              <div class="w-full flex-shrink-0 px-4">
+                <div class="glassmorphic-card text-center">
+                  <div class="mb-6">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 mx-auto flex items-center justify-center">
+                      <span class="text-white font-bold text-2xl">SJ</span>
+                    </div>
+                  </div>
+                  <p class="text-slate-600 italic mb-6">"JobPlex completely transformed my job search. I was matched with positions I never would have found otherwise and landed my dream role at a tech company I love!"</p>
+                  <h4 class="font-bold text-slate-800">Sarah Johnson</h4>
+                  <p class="text-sm text-slate-500">Full Stack Developer</p>
+                  <div class="flex justify-center mt-4">
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Testimonial Card 2 -->
+              <div class="w-full flex-shrink-0 px-4">
+                <div class="glassmorphic-card text-center">
+                  <div class="mb-6">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 mx-auto flex items-center justify-center">
+                      <span class="text-white font-bold text-2xl">MP</span>
+                    </div>
+                  </div>
+                  <p class="text-slate-600 italic mb-6">"As a hiring manager, JobPlex has revolutionized our recruitment process. The quality of candidates we're matched with is exceptional, saving us time and resources."</p>
+                  <h4 class="font-bold text-slate-800">Michael Patel</h4>
+                  <p class="text-sm text-slate-500">CTO, TechInnovate</p>
+                  <div class="flex justify-center mt-4">
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Testimonial Card 3 -->
+              <div class="w-full flex-shrink-0 px-4">
+                <div class="glassmorphic-card text-center">
+                  <div class="mb-6">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 mx-auto flex items-center justify-center">
+                      <span class="text-white font-bold text-2xl">AW</span>
+                    </div>
+                  </div>
+                  <p class="text-slate-600 italic mb-6">"The skill analysis tool is incredibly accurate. JobPlex identified strengths I didn't even realize I had and connected me with a position that perfectly matched my abilities."</p>
+                  <h4 class="font-bold text-slate-800">Alex Wong</h4>
+                  <p class="text-sm text-slate-500">UX Designer</p>
+                  <div class="flex justify-center mt-4">
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star-half-alt text-amber-400"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Slider Controls -->
+          <button class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-4 md:-translate-x-8 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-700 hover:text-emerald-500 transition-colors" (click)="prevTestimonial()">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-4 md:translate-x-8 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-700 hover:text-emerald-500 transition-colors" (click)="nextTestimonial()">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          
+          <!-- Slider Dots -->
+          <div class="flex justify-center space-x-2 mt-6">
+            <button *ngFor="let _ of testimonials; let i = index" 
+                    class="w-2 h-2 rounded-full transition-all duration-300"
+                    [ngClass]="{'bg-emerald-500 w-6': activeTestimonialIndex === i, 'bg-slate-300': activeTestimonialIndex !== i}"
+                    (click)="setActiveTestimonial(i)"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  
+    <!-- CTA Section -->
+    <section class="py-16 md:py-24 bg-emerald-500 text-white">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+          <div class="w-full md:w-2/3 mb-10 md:mb-0" [ngClass]="animateOnScroll('fadeInLeft')">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Career Journey?</h2>
+            <p class="text-lg text-emerald-50 mb-6">Join thousands of professionals who found their perfect match on JobPlex.</p>
+            <div class="flex flex-wrap gap-4">
+              <button class="bg-white text-emerald-500 hover:bg-emerald-50 px-6 py-3 rounded-md transition-colors font-medium">
+                Get Started - It's Free
+              </button>
+              <button class="border border-white text-white hover:bg-emerald-600 px-6 py-3 rounded-md transition-colors font-medium">
+                For Employers
+              </button>
+            </div>
+          </div>
+          
+          <div class="w-full md:w-1/3 flex justify-center md:justify-end" [ngClass]="animateOnScroll('fadeInRight')">
+            <div class="relative">
+              <div class="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-75" style="animation-duration: 3s"></div>
+              <div class="relative bg-white/30 backdrop-blur-sm rounded-full p-6">
+                <div class="text-center">
+                  <div class="text-4xl font-bold">25K+</div>
+                  <div class="text-emerald-50">Successful Matches</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-16">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <!-- Logo & Info -->
+          <div>
+            <div class="flex items-center mb-4">
+              <svg class="w-8 h-8 text-emerald-500 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4z"/>
+              </svg>
+              <span class="text-2xl font-bold">Job<span class="text-emerald-500">Plex</span></span>
+            </div>
+            <p class="text-slate-400 mb-4">Transforming how talent connects with opportunities through AI-powered skill matching.</p>
+            <div class="flex space-x-4">
+              <a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+              <a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">
+                <i class="fab fa-twitter"></i>
+              </a>
+              <a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">
+                <i class="fab fa-linkedin-in"></i>
+              </a>
+              <a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">
+                <i class="fab fa-instagram"></i>
+              </a>
+            </div>
+          </div>
+          
+          <!-- Quick Links -->
+          <div>
+            <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+            <ul class="space-y-2">
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">Home</a></li>
+              <li><a href="#jobs" class="text-slate-400 hover:text-emerald-500 transition-colors">Browse Jobs</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">For Employers</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">Success Stories</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">Blog</a></li>
+            </ul>
+          </div>
+          
+          <!-- Support -->
+          <div>
+            <h3 class="text-lg font-bold mb-4">Support</h3>
+            <ul class="space-y-2">
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">Help Center</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">Contact Us</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">Privacy Policy</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">Terms of Service</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors">FAQ</a></li>
+            </ul>
+          </div>
+          
+          <!-- Newsletter -->
+          <div>
+            <h3 class="text-lg font-bold mb-4">Stay Updated</h3>
+            <p class="text-slate-400 mb-4">Subscribe to our newsletter for the latest job opportunities and insights.</p>
+            <form class="flex">
+              <input type="email" placeholder="Your email" class="bg-slate-800 text-slate-300 rounded-l-md py-2 px-4 focus:outline-none focus:ring-1 focus:ring-emerald-500 flex-grow">
+              <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white rounded-r-md py-2 px-4 transition-colors">
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+        
+        <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p class="text-slate-400 text-sm mb-4 md:mb-0">&copy; 2025 JobPlex. All rights reserved.</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors text-sm">Privacy Policy</a>
+            <a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors text-sm">Terms of Service</a>
+            <a href="#" class="text-slate-400 hover:text-emerald-500 transition-colors text-sm">Sitemap</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
