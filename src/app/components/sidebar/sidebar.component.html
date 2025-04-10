@@ -1,1 +1,93 @@
-<p>sidebar works!</p>
+<!-- Mobile Hamburger Button -->
+<button 
+  *ngIf="isMobile"
+  class="hamburger-btn"
+  [class.active]="!collapsed"
+  (click)="toggle()">
+  <span class="hamburger-icon"></span>
+</button>
+
+<div class="sidebar-container" [class.collapsed]="collapsed">
+  <!-- Sidebar Backdrop for Mobile -->
+  <div
+    *ngIf="isMobile && !collapsed"
+    class="sidebar-backdrop active"
+    (click)="toggle()">
+  </div>
+  
+  <!-- Sidebar -->
+  <aside
+    class="sidebar-panel"
+    [class.collapsed]="collapsed">
+    
+    <!-- Logo & Toggle -->
+    <div class="logo-container">
+      <div class="logo-wrapper">
+        <div class="logo">
+          <span class="logo-icon">JP</span>
+          <span class="logo-text" *ngIf="!collapsed">JobPlex</span>
+        </div>
+      </div>
+      <button
+        class="toggle-btn"
+        *ngIf="!isMobile"
+        (click)="toggle()"
+        [attr.title]="collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'">
+        <i class="fas" [class.fa-angle-left]="!collapsed" [class.fa-angle-right]="collapsed"></i>
+      </button>
+    </div>
+    
+    <!-- Navigation Items -->
+    <nav class="nav-container">
+      <!-- Primary Navigation Group -->
+      <div class="nav-group-title" *ngIf="!collapsed">Main</div>
+      <ul class="nav-items">
+        <li *ngFor="let item of primaryNavItems">
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            class="nav-item"
+            [attr.title]="collapsed ? item.label : null">
+            <div class="icon-container">
+              <i class="fas {{ item.icon }}"></i>
+            </div>
+            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+            <span *ngIf="item.badge && !collapsed" class="badge">{{ item.badge }}</span>
+          </a>
+        </li>
+      </ul>
+      
+      <!-- Secondary Navigation Group -->
+      <div class="nav-group-title" *ngIf="!collapsed">Support</div>
+      <ul class="nav-items">
+        <li *ngFor="let item of secondaryNavItems">
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            class="nav-item"
+            [attr.title]="collapsed ? item.label : null">
+            <div class="icon-container">
+              <i class="fas {{ item.icon }}"></i>
+            </div>
+            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+            <span *ngIf="item.badge && !collapsed" class="badge">{{ item.badge }}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    
+    <!-- User Profile at Bottom -->
+    <div class="user-profile">
+      <div class="user-avatar">
+        <img src="assets/images/avatar-placeholder.jpg" alt="User" class="avatar-img">
+      </div>
+      <div class="user-info" *ngIf="!collapsed">
+        <h4 class="user-name">Elena Rodriguez</h4>
+        <p class="user-role">Job Seeker</p>
+      </div>
+      <div class="theme-toggle" *ngIf="!collapsed" title="Toggle Theme">
+        <i class="fas fa-moon text-white"></i>
+      </div>
+    </div>
+  </aside>
+</div>

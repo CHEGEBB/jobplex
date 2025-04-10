@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { AuthScreenComponent } from './pages/auth-screen/auth-screen.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
+import { DashboardComponent } from './pages/jobseeker/dashboard/dashboard.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent }, // Default route points to home
@@ -9,8 +10,10 @@ export const routes: Routes = [
   {path:'login',component:AuthScreenComponent},
   {path:'register',component:AuthScreenComponent},
   {path:'forgot-password',component:ForgotPasswordComponent},
+  { path: '', redirectTo: 'jobseeker/dashboard', pathMatch: 'full' },
+  { path: 'jobseeker/dashboard', component: DashboardComponent },
 
 
   // Add other routes as needed
-  { path: '**', redirectTo: '' } // Redirect unknown paths to home
+  // { path: '**', redirectTo: '' } // Redirect unknown paths to home
 ];
