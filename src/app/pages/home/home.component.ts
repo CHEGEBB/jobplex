@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, HostListener } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { CountUpModule } from 'ngx-countup'; 
 
 @Component({
   selector: 'app-home',
   imports: [
     CommonModule,
-    CountUpModule
+    CountUpModule,
+    RouterModule
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']

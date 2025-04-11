@@ -1,0 +1,126 @@
+// jobs-explorer.component.scss
+
+// Variables
+$primary-color: #10b981;
+$secondary-color: #3b82f6;
+$text-color: #1f2937;
+$bg-color: #f9fafb;
+$border-color: #e5e7eb;
+$sidebar-width: 240px;
+$sidebar-collapsed-width: 80px;
+$header-height: 64px;
+
+// Base layout styles
+.jobs-explorer-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: $bg-color;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
+  margin-left: $sidebar-width;
+  height: 100vh;
+  background-color: $bg-color;
+  position: relative;
+  
+  &.expanded {
+    margin-left: $sidebar-collapsed-width;
+  }
+}
+
+// Header styles
+.dashboard-header {
+  height: $header-height;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+// Job details sidebar
+.job-details-sidebar {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 20;
+  overflow-y: auto;
+  
+  &.active {
+    right: 0;
+  }
+}
+
+// Job cards
+.job-card {
+  border-radius: 0.5rem;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Match score indicator
+.match-score {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+  
+  .score-fill {
+    height: 100%;
+    background: linear-gradient(to right, $primary-color, lighten($primary-color, 10%));
+    border-radius: 9999px;
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+// Responsive adjustments
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: $sidebar-collapsed-width;
+  }
+}
+
+@media (max-width: 768px) {
+  .job-details-sidebar {
+    width: 320px;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .job-details-sidebar {
+    width: 100%;
+  }
+}

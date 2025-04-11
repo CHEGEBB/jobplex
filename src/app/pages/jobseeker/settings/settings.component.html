@@ -1,0 +1,291 @@
+<div class="flex h-screen bg-slate-50">
+    <!-- Sidebar Component -->
+    <app-sidebar 
+      [collapsed]="sidebarCollapsed" 
+      (toggleSidebar)="onToggleSidebar($event)">
+    </app-sidebar>  
+<main class="main-content" [class.expanded]="sidebarCollapsed">
+    <!-- Header section with title and actions -->
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">Settings</h1>
+        <p class="text-gray-500">Manage your account preferences and settings</p>
+      </div>
+      <div class="flex space-x-2">
+        <button class="btn-save">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+          Save Changes
+        </button>
+      </div>
+    </div>
+  
+    <!-- Settings navigation tabs -->
+    <div class="settings-tabs mb-6">
+      <nav class="flex space-x-1 border-b border-gray-200">
+        <button 
+          *ngFor="let tab of tabs" 
+          [class]="activeTab === tab.id ? 'active-tab' : 'inactive-tab'"
+          (click)="setActiveTab(tab.id)">
+          <span class="flex items-center">
+            <svg *ngIf="tab.icon" [innerHTML]="tab.icon" class="h-5 w-5 mr-2" fill="currentColor"></svg>
+            {{ tab.label }}
+          </span>
+        </button>
+      </nav>
+    </div>
+  
+    <!-- Settings content panels -->
+    <div class="settings-content">
+      <!-- Account settings panel -->
+      <div *ngIf="activeTab === 'account'" class="settings-panel">
+        <div class="panel-card">
+          <h2 class="panel-title">Account Information</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
+              <input type="text" id="fullName" [(ngModel)]="userSettings.fullName" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" [(ngModel)]="userSettings.email" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" [(ngModel)]="userSettings.phone" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="location">Location</label>
+              <input type="text" id="location" [(ngModel)]="userSettings.location" class="form-input">
+            </div>
+          </div>
+        </div>
+  
+        <div class="panel-card">
+          <h2 class="panel-title">Password</h2>
+          <div class="grid grid-cols-1 gap-6">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input type="password" id="currentPassword" [(ngModel)]="passwordForm.current" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input type="password" id="newPassword" [(ngModel)]="passwordForm.new" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <input type="password" id="confirmPassword" [(ngModel)]="passwordForm.confirm" class="form-input">
+            </div>
+            <div>
+              <button class="btn-secondary">Update Password</button>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Notification settings panel -->
+      <div *ngIf="activeTab === 'notifications'" class="settings-panel">
+        <div class="panel-card">
+          <h2 class="panel-title">Notification Preferences</h2>
+          <div class="space-y-6">
+            <div *ngFor="let category of notificationSettings" class="notification-group">
+              <h3 class="text-lg font-medium text-gray-700 mb-3">{{ category.name }}</h3>
+              <div class="space-y-4">
+                <div *ngFor="let item of category.items" class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-medium text-gray-800">{{ item.label }}</h4>
+                    <p class="text-sm text-gray-500">{{ item.description }}</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" [(ngModel)]="item.enabled">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Privacy settings panel -->
+      <div *ngIf="activeTab === 'privacy'" class="settings-panel">
+        <div class="panel-card">
+          <h2 class="panel-title">Privacy Settings</h2>
+          <div class="space-y-6">
+            <div class="privacy-option">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-800">Profile Visibility</h3>
+                  <p class="text-sm text-gray-500">Control who can see your profile and portfolio information</p>
+                </div>
+                <select [(ngModel)]="privacySettings.profileVisibility" class="privacy-select">
+                  <option value="public">Public</option>
+                  <option value="employers">Employers Only</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+  
+            <div class="privacy-option">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-800">Contact Information</h3>
+                  <p class="text-sm text-gray-500">Control who can see your contact details</p>
+                </div>
+                <select [(ngModel)]="privacySettings.contactVisibility" class="privacy-select">
+                  <option value="public">Public</option>
+                  <option value="employers">Employers Only</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+  
+            <div class="privacy-option">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-800">Search Engine Visibility</h3>
+                  <p class="text-sm text-gray-500">Allow search engines to index your profile</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="privacySettings.searchEngineVisible">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <div class="panel-card">
+          <h2 class="panel-title">Data Management</h2>
+          <div class="space-y-6">
+            <div class="privacy-option">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-800">Download Your Data</h3>
+                  <p class="text-sm text-gray-500">Get a copy of all your personal data</p>
+                </div>
+                <button class="btn-secondary">Request Data</button>
+              </div>
+            </div>
+  
+            <div class="privacy-option">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-800 text-red-600">Delete Account</h3>
+                  <p class="text-sm text-gray-500">Permanently delete your account and all data</p>
+                </div>
+                <button class="btn-danger">Delete Account</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Appearance settings panel -->
+      <div *ngIf="activeTab === 'appearance'" class="settings-panel">
+        <div class="panel-card">
+          <h2 class="panel-title">Theme Settings</h2>
+          <p class="text-gray-500 mb-6">These settings will be available in a future update. For now, you can preview the options below.</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="theme-card" [class.theme-selected]="themePreview === 'light'">
+              <div class="theme-preview light-theme"></div>
+              <div class="flex justify-between items-center mt-2">
+                <span class="font-medium">Light</span>
+                <button class="theme-btn" (click)="themePreview = 'light'">Preview</button>
+              </div>
+            </div>
+            
+            <div class="theme-card" [class.theme-selected]="themePreview === 'dark'">
+              <div class="theme-preview dark-theme"></div>
+              <div class="flex justify-between items-center mt-2">
+                <span class="font-medium">Dark</span>
+                <button class="theme-btn" (click)="themePreview = 'dark'">Preview</button>
+              </div>
+            </div>
+            
+            <div class="theme-card" [class.theme-selected]="themePreview === 'system'">
+              <div class="theme-preview system-theme"></div>
+              <div class="flex justify-between items-center mt-2">
+                <span class="font-medium">System</span>
+                <button class="theme-btn" (click)="themePreview = 'system'">Preview</button>
+              </div>
+            </div>
+          </div>
+  
+          <div class="font-settings mt-8">
+            <h3 class="text-lg font-medium text-gray-800 mb-3">Font Size</h3>
+            <div class="flex items-center space-x-4">
+              <span class="text-sm">A</span>
+              <input type="range" min="1" max="5" [(ngModel)]="appearanceSettings.fontSize" class="w-full">
+              <span class="text-lg">A</span>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Accessibility settings panel -->
+      <div *ngIf="activeTab === 'accessibility'" class="settings-panel">
+        <div class="panel-card">
+          <h2 class="panel-title">Accessibility Options</h2>
+          
+          <div class="space-y-6">
+            <div class="accessibility-option">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-800">Reduced Motion</h3>
+                  <p class="text-sm text-gray-500">Minimize animations and transitions</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="accessibilitySettings.reducedMotion">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+  
+            <div class="accessibility-option">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-800">High Contrast</h3>
+                  <p class="text-sm text-gray-500">Enhance text and UI element contrast</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="accessibilitySettings.highContrast">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+  
+            <div class="accessibility-option">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-800">Screen Reader Optimization</h3>
+                  <p class="text-sm text-gray-500">Optimize UI for screen readers</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="accessibilitySettings.screenReader">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+  
+            <div class="accessibility-option">
+              <div class="flex items-start">
+                <div class="w-full">
+                  <h3 class="text-lg font-medium text-gray-800 mb-2">Text Spacing</h3>
+                  <p class="text-sm text-gray-500 mb-3">Adjust text spacing for better readability</p>
+                  <div class="flex items-center space-x-4">
+                    <span class="text-sm">Default</span>
+                    <input type="range" min="1" max="5" [(ngModel)]="accessibilitySettings.textSpacing" class="w-full">
+                    <span class="text-sm">Maximum</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

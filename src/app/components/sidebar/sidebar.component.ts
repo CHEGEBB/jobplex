@@ -28,6 +28,7 @@ export class SidebarComponent implements OnInit {
     { icon: 'fa-briefcase', label: 'Jobs Explorer', route: '/jobseeker/jobs', badge: 5 },
     { icon: 'fa-robot', label: 'AI-Recommended Career', route: '/jobseeker/ai-career' },
     { icon: 'fa-file-alt', label: 'CV Manager', route: '/jobseeker/cv' },
+    { icon: 'fa-id-card', label: 'My Profile', route: '/jobseeker/profile' },
   ];
   
   secondaryNavItems: NavItem[] = [

@@ -37,14 +37,13 @@ jobplex/
 │   │   │   │
 │   │   │   ├── jobseeker/             # Job seeker pages
 │   │   │   │   ├── dashboard/         # Main dashboard
-│   │   │   │   ├── profile/           # Profile management
-│   │   │   │   ├── skills/            # Skills management
-│   │   │   │   ├── job-matches/       # Matched jobs
-│   │   │   │   ├── applications/      # Job applications
-│   │   │   │   ├── portfolio/         # Portfolio management
-│   │   │   │   ├── cv-upload/         # CV upload and management
-│   │   │   │   ├── interviews/        # Interview notifications
-│   │   │   │   └── career-paths/      # Career guidance
+│   │   │   │   ├── my-portfolio/      # Portfolio with skills management
+│   │   │   │   ├── jobs-explorer/     # Job search and matches
+│   │   │   │   ├── ai-career-path/    # AI-powered career guidance
+│   │   │   │   ├── cv-manager/        # CV upload and management
+│   │   │   │   ├── my-profile/        # Profile management
+│   │   │   │   ├── settings/          # Account settings
+│   │   │   │   └── interviews/        # Interview notifications
 │   │   │   │
 │   │   │   ├── employer/              # Employer pages
 │   │   │   │   ├── dashboard/         # Main dashboard
@@ -145,54 +144,71 @@ server/
    - Application status
    - Upcoming interviews
    - Career recommendations
+   - Activity summary
+   - Notification center
 
-2. **Profile Management**
-   - Personal information
-   - Professional summary
-   - Work experience
-   - Education
-   - Contact details
-
-3. **Skills Management**
-   - Add/edit skills with proficiency levels
+2. **My Portfolio**
+   - Skills management with proficiency levels
+   - Projects showcase
+   - Work samples and achievements
+   - Certifications display
    - Skill endorsements
-   - Skill assessment tests
+   - Skill assessment results
+   - Portfolio visibility settings
 
-4. **Job Matches**
+3. **Jobs Explorer**
    - AI-matched job opportunities
+   - Advanced job search filters
    - Match score indicators
    - Job details and requirements
-   - Apply functionality
+   - Save job functionality
+   - Application tracking
+   - Company information
+   - Similar jobs recommendations
 
-5. **Applications**
-   - Applied jobs list
-   - Application status tracking
-   - Interview schedule
-   - Feedback received
+4. **AI-Career Path**
+   - AI-recommended career trajectories
+   - Skill gap analysis
+   - Growth opportunities visualization
+   - Learning resources and courses
+   - Industry trends and insights
+   - Salary information for career paths
+   - Timeline projections
 
-6. **Portfolio Management**
-   - Projects showcase
-   - Work samples
-   - Achievements
-   - Certifications
-
-7. **CV Upload**
+5. **CV Manager**
    - Document upload interface
    - AI-powered skill extraction
-   - CV parsing results
+   - CV parsing results visualization
    - CV version management
+   - ATS optimization suggestions
+   - CV templates and formatting
+   - Download and sharing options
+
+6. **My Profile**
+   - Personal information management
+   - Professional summary editor
+   - Work experience timeline
+   - Education history
+   - Contact details
+   - Social media links
+   - Privacy controls
+
+7. **Settings**
+   - Account preferences
+   - Notification settings
+   - Privacy controls
+   - Password management
+   - Connected accounts
+   - Data export options
+   - Account deletion
 
 8. **Interviews**
-   - Interview schedule
-   - Interview preparation tips
+   - Interview schedule calendar
+   - Interview preparation resources
    - Interview notification settings
-   - Interview feedback
-
-9. **Career Paths**
-   - AI-recommended career paths
-   - Skill gap analysis
-   - Growth opportunities
-   - Learning resources
+   - Interview feedback tracking
+   - Mock interview tools
+   - Interview notes storage
 
 ### Employer Pages
 
@@ -201,74 +217,109 @@ server/
    - Recent candidate matches
    - Interview schedule
    - Hiring analytics summary
+   - Team activity feed
+   - Urgent actions required
 
 2. **Company Profile**
-   - Company information
-   - Culture and values
-   - Team members
-   - Working environment
+   - Company information and branding
+   - Culture and values description
+   - Team members showcase
+   - Working environment details
+   - Benefits and perks listing
+   - Company photos and videos
+   - Social responsibility initiatives
 
 3. **Job Posts Management**
    - Create/edit job posts
    - Required skills selection
-   - Job post status
+   - Job post status tracking
    - Application statistics
+   - Job post templates
+   - Multi-channel publishing options
+   - Duplicate and archive functionality
 
 4. **Candidate Matches**
-   - AI-matched candidates
-   - Match score details
-   - Candidate profiles
-   - Shortlisting tools
+   - AI-matched candidates list
+   - Match score details and explanation
+   - Candidate profiles viewer
+   - Shortlisting and tagging tools
+   - Bulk actions for candidates
+   - Collaboration tools for hiring teams
+   - Custom screening questions
 
 5. **Chat Interface**
    - Natural language query system
    - Candidate search by skills
    - Experience filtering
    - Skill combination queries
+   - Saved searches
+   - Market insights
+   - Recruitment strategy suggestions
 
 6. **Interview Scheduling**
    - Calendar integration
-   - Candidate availability
+   - Candidate availability checker
    - Interview type selection
    - Automated notifications
+   - Interview panel coordination
+   - Room booking integration
+   - Interview feedback collection
 
 7. **Hiring Analytics**
-   - Application trends
+   - Application trends visualization
    - Match quality metrics
    - Time-to-hire analysis
-   - Source effectiveness
+   - Source effectiveness comparison
+   - Diversity metrics
+   - Cost-per-hire calculations
+   - Candidate experience feedback
 
 ### Admin Pages
 
 1. **Dashboard**
    - Platform activity overview
-   - User statistics
+   - User statistics and growth
    - System performance metrics
    - AI effectiveness summary
+   - Critical alerts
+   - Upcoming maintenance
+   - Feature adoption rates
 
 2. **User Management**
    - User accounts list
-   - Account verification
-   - Role assignment
-   - Account status control
+   - Account verification tools
+   - Role assignment controls
+   - Account status management
+   - Bulk actions
+   - User search and filtering
+   - Account history
 
 3. **Security Settings**
-   - Authentication settings
-   - Password policies
-   - Access logs
-   - Security alerts
+   - Authentication configuration
+   - Password policies management
+   - Access logs review
+   - Security alerts configuration
+   - Two-factor authentication settings
+   - IP restrictions
+   - Session management
 
 4. **AI Monitoring**
    - Match accuracy metrics
-   - AI model performance
+   - AI model performance tracking
    - Training data management
-   - Algorithm adjustments
+   - Algorithm adjustments interface
+   - Feedback processing
+   - Error correction tools
+   - A/B testing configuration
 
 5. **System Metrics**
-   - Server performance
-   - Database health
-   - API response times
-   - Error monitoring
+   - Server performance dashboards
+   - Database health monitoring
+   - API response times tracking
+   - Error monitoring and alerts
+   - Resource utilization
+   - Capacity planning
+   - Automated testing results
 
 ## Auth Screen Details
 
@@ -281,6 +332,7 @@ The AuthScreen component combines login and registration functionality in a sing
 - Password strength indicator
 - Terms and conditions acceptance
 - Remember me functionality
+- Password recovery option
 
 ## Getting Started
 

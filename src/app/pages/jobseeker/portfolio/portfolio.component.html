@@ -1,0 +1,889 @@
+<div class="flex h-screen bg-slate-50">
+  <!-- Sidebar Component -->
+  <app-sidebar 
+    [collapsed]="sidebarCollapsed" 
+    (toggleSidebar)="onToggleSidebar($event)">
+  </app-sidebar>  
+  
+  <!-- Main Content -->
+  <main class="main-content" [class.expanded]="sidebarCollapsed">
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <header class="bg-white shadow-sm z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center py-4">
+            <h1 class="text-2xl font-semibold text-gray-900">My Portfolio</h1>
+            <div class="flex items-center space-x-4">
+              <div class="relative">
+                <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500">
+                  <input 
+                    type="text" 
+                    placeholder="Search projects or skills..." 
+                    class="bg-transparent border-none focus:ring-0 text-gray-700 text-sm w-64"
+                    [(ngModel)]="searchQuery"
+                    (input)="searchProjects($event)"
+                  >
+                  <button *ngIf="searchQuery" (click)="clearSearch()" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                  <button *ngIf="!searchQuery" class="text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Add New Dropdown -->
+              <div class="relative group">
+                <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+                  </svg>
+                  Add New
+                </button>
+                <div class="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md p-2 z-10 hidden group-hover:block transition-opacity duration-150 ease-in-out">
+                  <a (click)="toggleAddProject()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-md cursor-pointer">
+                    <span class="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
+                      </svg>
+                      Add Project
+                    </span>
+                  </a>
+                  <a (click)="toggleAddSkill()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-md cursor-pointer">
+                    <span class="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+                      </svg>
+                      Add Skill
+                    </span>
+                  </a>
+                  <a (click)="toggleAddCertificate()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-md cursor-pointer">
+                    <span class="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                      </svg>
+                      Add Certificate
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8">
+        <!-- Top Containers Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <!-- Technical Skills Container -->
+          <div class="md:col-span-2 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 backdrop-filter backdrop-blur-lg bg-opacity-80">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-900">Technical Skills</h2>
+              </div>
+              <button 
+                (click)="toggleAddSkill()" 
+                class="flex items-center text-sm text-emerald-600 hover:text-emerald-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Add Skill
+              </button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div *ngFor="let skill of skills | filter:'category':'technical'" class="skill-card flex items-center p-4 rounded-lg transition-all hover:bg-gray-50 border border-gray-100">
+                <div class="skill-icon mr-4">
+                  <div class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center">
+                    <svg *ngIf="skill.name.includes('JavaScript')" viewBox="0 0 24 24" class="h-6 w-6" fill="#F7DF1E">
+                      <path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/>
+                    </svg>
+                    <svg *ngIf="skill.name.includes('React')" viewBox="0 0 24 24" class="h-6 w-6" fill="#61DAFB">
+                      <path d="M12 9.861a2.139 2.139 0 100 4.278 2.139 2.139 0 100-4.278zm-5.992 6.394l-.472-.12C2.018 15.246 0 13.737 0 11.996s2.018-3.25 5.536-4.139l.472-.119.133.468a23.53 23.53 0 001.363 3.578l.101.213-.101.213a23.307 23.307 0 00-1.363 3.578l-.133.467zM5.317 8.95c-2.674.751-4.315 1.9-4.315 3.046 0 1.145 1.641 2.294 4.315 3.046.323-1.021.678-2.038 1.043-3.046-.365-1.009-.72-2.025-1.043-3.046zm12.675 6.393l-.12.472c-.935 3.536-2.438 5.536-4.185 5.536s-3.25-2-4.185-5.536l-.12-.472.468-.133a23.568 23.568 0 003.578-1.363l.213-.101.213.101a23.53 23.53 0 003.578 1.363l.468.133zm-4.185 4.631c1.145 0 2.291-1.641 3.042-4.314-1.009-.322-2.025-.661-3.042-1.031-1.017.37-2.033.709-3.042 1.031.75 2.673 1.897 4.314 3.042 4.314zm-7.183-4.628l-.133-.469c-.932-3.537-1.051-6.579-.3-7.724.741-1.131 3.304-1.209 7.208-.216l.469.117-.117.469a23.474 23.474 0 00-1.362 3.578l-.101.213-.213.101a23.522 23.522 0 00-3.578 1.364l-.469.133zm6.961-6.96c-2.924-.778-5.029-.617-5.519.166-.489.782.023 2.983.854 6.02 1.01-.323 2.025-.678 3.042-1.043a23.67 23.67 0 001.35-3.576l.273-1.567zm2.997-.152l.469-.117c3.904-.993 6.466-.915 7.208.216.751 1.146.632 4.187-.3 7.724l-.133.469-.469-.133a23.357 23.357 0 00-3.578-1.364l-.213-.101-.101-.213a23.613 23.613 0 00-1.362-3.578l-.117-.469zm6.414 2.282c.489-.783-.023-2.984-.854-6.02-1.01.322-2.025.678-3.042 1.043.363 1.01.719 2.026 1.035 3.042.315 1.016.662 2.031.996 3.042.832-3.037 1.344-5.237.865-6.02z" fill="#61DAFB"/>
+                    </svg>
+                    <svg *ngIf="skill.name.includes('Angular')" viewBox="0 0 24 24" class="h-6 w-6" fill="#DD0031">
+                      <path d="M9.93 12.645h4.134L11.996 7.74M11.996.009L.686 3.988l1.725 14.76 9.585 5.243 9.588-5.238L23.308 3.99 11.996.01zm7.058 18.297h-2.636l-1.42-3.501H8.995l-1.42 3.501H4.937l7.06-15.648 7.057 15.648z"/>
+                    </svg>
+                    <svg *ngIf="skill.name.includes('Node')" viewBox="0 0 24 24" class="h-6 w-6" fill="#339933">
+                      <path d="M11.998,24c-0.321,0-0.641-0.084-0.922-0.247l-2.936-1.737c-0.438-0.245-0.224-0.332-0.08-0.383 c0.585-0.203,0.703-0.25,1.328-0.604c0.065-0.037,0.151-0.023,0.218,0.017l2.256,1.339c0.082,0.045,0.197,0.045,0.272,0l8.795-5.076 c0.082-0.047,0.134-0.141,0.134-0.238V6.921c0-0.099-0.053-0.192-0.137-0.242l-8.791-5.072c-0.081-0.047-0.189-0.047-0.271,0 L3.075,6.68C2.99,6.729,2.936,6.825,2.936,6.921v10.15c0,0.097,0.054,0.189,0.139,0.235l2.409,1.392 c1.307,0.654,2.108-0.116,2.108-0.89V7.787c0-0.142,0.114-0.253,0.256-0.253h1.115c0.139,0,0.255,0.112,0.255,0.253v10.021 c0,1.745-0.95,2.745-2.604,2.745c-0.508,0-0.909,0-2.026-0.551L2.28,18.675c-0.57-0.329-0.922-0.945-0.922-1.604V6.921 c0-0.659,0.353-1.275,0.922-1.603l8.795-5.082c0.557-0.315,1.296-0.315,1.848,0l8.794,5.082c0.57,0.329,0.924,0.944,0.924,1.603 v10.15c0,0.659-0.354,1.273-0.924,1.604l-8.794,5.078C12.643,23.916,12.324,24,11.998,24z M19.099,13.993 c0-1.9-1.284-2.406-3.987-2.763c-2.731-0.361-3.009-0.548-3.009-1.187c0-0.528,0.235-1.233,2.258-1.233 c1.807,0,2.473,0.389,2.747,1.607c0.024,0.115,0.129,0.199,0.247,0.199h1.141c0.071,0,0.138-0.031,0.186-0.081 c0.048-0.054,0.074-0.123,0.067-0.196c-0.177-2.098-1.571-3.076-4.388-3.076c-2.508,0-4.004,1.058-4.004,2.833 c0,1.925,1.488,2.457,3.895,2.695c2.88,0.282,3.103,0.703,3.103,1.269c0,0.983-0.789,1.402-2.642,1.402 c-2.327,0-2.839-0.584-3.011-1.742c-0.02-0.124-0.126-0.215-0.253-0.215h-1.137c-0.141,0-0.254,0.112-0.254,0.253 c0,1.482,0.806,3.248,4.655,3.248C17.501,17.007,19.099,15.91,19.099,13.993z"/>
+                    </svg>
+                    <span *ngIf="!skill.name.includes('JavaScript') && !skill.name.includes('React') && !skill.name.includes('Angular') && !skill.name.includes('Node')" class="text-lg font-semibold">{{skill.name.charAt(0)}}</span>
+                  </div>
+                </div>
+                <div class="skill-info flex-grow">
+                  <h3 class="font-medium text-gray-900">{{skill.name}}</h3>
+                  <div class="mt-1 flex items-center">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                      <div class="h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-600" [style.width]="getSkillBarWidth(skill.level)"></div>
+                    </div>
+                    <span class="ml-2 text-xs text-gray-500">{{getSkillLevelText(skill.level)}}</span>
+                  </div>
+                  <div *ngIf="skill.yearsExperience" class="mt-1 text-xs text-gray-500">
+                    {{skill.yearsExperience}} {{skill.yearsExperience === 1 ? 'year' : 'years'}} of experience
+                  </div>
+                </div>
+                <button (click)="deleteSkill(skill)" class="ml-2 text-gray-400 hover:text-red-500 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Soft Skills Container -->
+          <div class="md:col-span-1 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 backdrop-filter backdrop-blur-lg bg-opacity-80">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-900">Soft Skills</h2>
+              </div>
+            </div>
+            <div class="p-6 space-y-4">
+              <div *ngFor="let skill of skills | filter:'category':'soft'" class="skill-card flex items-center p-4 rounded-lg transition-all hover:bg-gray-50 border border-gray-100">
+                <div class="skill-icon mr-4">
+                  <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <svg *ngIf="skill.name.includes('Leadership')" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <svg *ngIf="skill.name.includes('Problem')" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <svg *ngIf="skill.name.includes('Communication')" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    <svg *ngIf="skill.name.includes('Project')" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    <span *ngIf="!skill.name.includes('Leadership') && !skill.name.includes('Problem') && !skill.name.includes('Communication') && !skill.name.includes('Project')" class="text-lg font-semibold text-purple-600">{{skill.name.charAt(0)}}</span>
+                  </div>
+                </div>
+                <div class="skill-info flex-grow">
+                  <h3 class="font-medium text-gray-900">{{skill.name}}</h3>
+                  <div class="mt-1 flex items-center">
+                    <div class="flex space-x-1">
+                      <div *ngFor="let star of [1,2,3,4,5]" class="w-4 h-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" [class.text-purple-500]="star <= skill.level" [class.text-gray-300]="star > skill.level" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button (click)="deleteSkill(skill)" class="ml-2 text-gray-400 hover:text-red-500 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Row - Certifications -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <!-- Certifications -->
+          <div class="md:col-span-2 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 backdrop-filter backdrop-blur-lg bg-opacity-80">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-900">Certifications</h2>
+              </div>
+              <button 
+                (click)="toggleAddCertificate()" 
+                class="flex items-center text-sm text-amber-600 hover:text-amber-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Add Certificate
+              </button>
+            </div>
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div *ngFor="let cert of certificates" class="bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm transform transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+                <div class="flex p-4 border-b border-gray-100">
+                  <div class="flex-shrink-0 mr-4">
+                    <div *ngIf="cert.name.includes('AWS')" class="w-14 h-14 bg-orange-100 rounded-lg flex items-center justify-center p-3">
+                      <svg viewBox="0 0 24 24" class="h-10 w-10" fill="#FF9900">
+                        <path d="M6.763 10.036c0 .296.032.535.088.71.064.176.144.368.256.576.04.063.056.127.056.183 0 .08-.048.16-.152.24l-.503.335a.383.383 0 0 1-.208.072c-.08 0-.16-.04-.239-.112a2.47 2.47 0 0 1-.287-.375 6.18 6.18 0 0 1-.248-.471c-.622.734-1.405 1.101-2.347 1.101-.67 0-1.205-.191-1.596-.574-.391-.384-.59-.894-.59-1.533 0-.678.239-1.23.726-1.644.487-.415 1.133-.623 1.955-.623.272 0 .551.024.846.064.296.04.6.104.918.176v-.583c0-.607-.127-1.03-.375-1.277-.255-.248-.686-.367-1.3-.367-.28 0-.568.031-.863.103-.295.072-.583.16-.862.272a2.287 2.287 0 0 1-.28.104.488.488 0 0 1-.127.023c-.112 0-.168-.08-.168-.247v-.391c0-.128.016-.224.056-.28a.597.597 0 0 1 .224-.167c.279-.144.614-.264 1.005-.36a4.84 4.84 0 0 1 1.246-.151c.95 0 1.644.216 2.091.647.439.43.662 1.085.662 1.963v2.586zm-3.24 1.214c.263 0 .534-.048.822-.144.287-.096.543-.271.758-.51.128-.152.224-.32.272-.512.047-.191.08-.423.08-.694v-.335a6.66 6.66 0 0 0-.735-.136 6.02 6.02 0 0 0-.75-.048c-.535 0-.926.104-1.19.32-.263.215-.39.518-.39.917 0 .375.095.655.295.846.191.2.47.296.838.296zm6.41.862c-.144 0-.24-.024-.304-.08-.064-.048-.12-.16-.168-.311L7.586 5.55a1.398 1.398 0 0 1-.072-.32c0-.128.064-.2.191-.2h.783c.151 0 .255.025.31.08.065.048.113.16.16.312l1.342 5.284 1.245-5.284c.04-.16.088-.264.151-.312a.549.549 0 0 1 .32-.08h.638c.152 0 .256.025.32.08.063.048.12.16.151.312l1.261 5.348 1.381-5.348c.048-.16.104-.264.16-.312a.52.52 0 0 1 .311-.08h.743c.127 0 .2.065.2.2 0 .04-.009.08-.017.128a1.137 1.137 0 0 1-.056.2l-1.923 6.17c-.048.16-.104.263-.168.311a.51.51 0 0 1-.303.08h-.687c-.151 0-.255-.024-.32-.08-.063-.056-.119-.16-.15-.32l-1.238-5.148-1.23 5.14c-.04.16-.087.264-.15.32-.065.056-.177.08-.32.08zm10.256.215c-.415 0-.83-.048-1.229-.143-.399-.096-.71-.2-.918-.32-.128-.071-.215-.151-.247-.223a.563.563 0 0 1-.048-.224v-.407c0-.167.064-.247.183-.247.048 0 .096.008.144.024.048.016.12.048.2.08.271.12.566.215.878.279.319.064.63.096.95.096.502 0 .894-.088 1.165-.264a.86.86 0 0 0 .415-.758.777.777 0 0 0-.215-.559c-.144-.151-.415-.287-.806-.415l-1.157-.36c-.583-.183-1.014-.454-1.277-.813a1.902 1.902 0 0 1-.4-1.158c0-.335.073-.63.216-.886.144-.255.335-.479.575-.654.24-.184.51-.32.83-.415.32-.096.655-.136 1.006-.136.175 0 .359.008.535.032.183.024.35.056.518.088.16.04.312.08.455.127.144.048.256.096.336.144a.69.69 0 0 1 .24.2.43.43 0 0 1 .071.263v.375c0 .168-.064.256-.184.256a.83.83 0 0 1-.303-.096 3.652 3.652 0 0 0-1.532-.311c-.455 0-.815.071-1.062.223-.248.152-.375.383-.375.71 0 .224.08.416.24.567.159.152.454.304.877.44l1.134.358c.574.184.99.44 1.237.767.247.327.367.702.367 1.117 0 .343-.072.655-.207.926-.144.272-.336.511-.583.703-.248.2-.543.343-.886.447-.36.111-.734.167-1.142.167zM21.698 16.207c-2.626 1.94-6.442 2.969-9.722 2.969-4.598 0-8.74-1.7-11.87-4.526-.247-.223-.024-.527.27-.351 3.384 1.963 7.559 3.153 11.877 3.153 2.914 0 6.114-.607 9.06-1.852.439-.2.814.287.385.607zM22.792 14.961c-.336-.43-2.22-.207-3.074-.103-.255.032-.295-.192-.063-.36 1.5-1.053 3.967-.75 4.254-.399.287.36-.08 2.826-1.485 4.007-.215.184-.423.088-.327-.151.32-.79 1.03-2.57.695-3z"/>
+                      </svg>
+                    </div>
+                    <div *ngIf="cert.name.includes('Scrum')" class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center p-3">
+                      <svg viewBox="0 0 24 24" class="h-10 w-10" fill="#006CAC">
+                        <path d="M9.389 13.055c.707 0 1.217.198 1.596.594.371.389.566.97.566 1.73 0 .478-.08.892-.232 1.233a2.35 2.35 0 0 1-.63.846 2.47 2.47 0 0 1-.933.48 4.066 4.066 0 0 1-1.145.15c-.41 0-.805-.028-1.179-.086v-4.86c.246-.036.506-.061.781-.075a10.87 10.87 0 0 1 1.176-.012zm-.146.911c-.164 0-.319.006-.464.018a2.329 2.329 0 0 0-.345.048v3.414c.1.017.225.032.375.043.15.011.308.018.47.018.369 0 .682-.06.937-.177a1.44 1.44 0 0 0 .604-.501c.15-.215.256-.47.315-.765.06-.295.09-.62.09-.975 0-.33-.025-.618-.078-.864a1.675 1.675 0 0 0-.254-.645 1.107 1.107 0 0 0-.472-.404 1.798 1.798 0 0 0-.708-.14h-.47zm8.334 5.028v-3.848h1.25v.685c.273-.256.58-.456.925-.601.344-.145.687-.217 1.027-.217.772 0 1.312.219 1.619.656.306.437.46 1.094.46 1.973v3.102h-1.35v-2.977c0-.245-.015-.467-.045-.664a1.368 1.368 0 0 0-.163-.501.773.773 0 0 0-.329-.313c-.139-.07-.315-.106-.53-.106-.218 0-.447.046-.685.14a1.87 1.87 0 0 0-.676.453v3.968h-1.503zm-3.019 0v-3.848h1.25v.685c.273-.256.581-.456.925-.601.344-.145.687-.217 1.028-.217.771 0 1.311.219 1.618.656.306.437.46 1.094.46 1.973v3.102h-1.35v-2.977c0-.245-.015-.467-.045-.664a1.373 1.373 0 0 0-.164-.501.776.776 0 0 0-.328-.313c-.14-.07-.315-.106-.53-.106-.219 0-.447.046-.686.14a1.87 1.87 0 0 0-.675.453v3.968h-1.503zm-8.873 0v-6.881h1.451v2.776h.024c.264-.256.558-.459.882-.61.324-.15.654-.225.99-.225.76 0 1.308.213 1.639.638.331.425.497 1.076.497 1.952v2.35h-1.452v-2.186c0-.599-.083-1.019-.249-1.26-.165-.242-.431-.364-.797-.364-.282 0-.55.07-.804.212a1.452 1.452 0 0 0-.612.57v3.028h-1.57zm-4.195-3.345h3.179c0-.293-.044-.56-.13-.798a1.862 1.862 0 0 0-.384-.633 1.758 1.758 0 0 0-.588-.419 1.812 1.812 0 0 0-.74-.152c-.42 0-.783.121-1.089.364-.306.242-.52.64-.645 1.192l.397.446zm-1.316.804c0-.478.079-.928.237-1.35.158-.42.385-.789.678-1.104.294-.315.648-.563 1.064-.743.415-.18.881-.27 1.397-.27.487 0 .925.09 1.312.27.388.18.717.431.989.755.272.323.479.712.624 1.165.145.454.217.958.217 1.512 0 .135-.003.261-.006.38a2.235 2.235 0 0 1-.024.301H1.489c.028.388.11.724.249 1.01.139.287.316.524.535.712.218.189.47.33.752.423.283.94.58.141.89.141.437 0 .841-.08 1.218-.242.375-.16.669-.381.878-.663l.868.661c-.33.465-.748.824-1.255 1.076-.507.253-1.066.38-1.677.38a3.45 3.45 0 0 1-1.36-.261 3.085 3.085 0 0 1-1.077-.749 3.464 3.464 0 0 1-.71-1.177 4.58 4.58 0 0 1-.256-1.567z"/>
+                      </svg>
+                    </div>
+                    <div *ngIf="cert.name.includes('Google')" class="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center p-3">
+                      <svg viewBox="0 0 24 24" class="h-10 w-10">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                    </div>
+                    <div *ngIf="!cert.name.includes('AWS') && !cert.name.includes('Scrum') && !cert.name.includes('Google')" class="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center p-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-grow">
+                    <h3 class="text-base font-semibold text-gray-900">{{cert.name}}</h3>
+                    <p class="text-sm text-gray-600">{{cert.issuer}}</p>
+                    <div class="flex items-center mt-1 text-xs text-gray-500">
+                      <span>Issued: {{formatDate(cert.date)}}</span>
+                      <span *ngIf="cert.expiry" class="mx-2">•</span>
+                      <span *ngIf="cert.expiry">Expires: {{formatDate(cert.expiry)}}</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-end justify-between">
+                    <button (click)="deleteCertificate(cert.id)" class="text-gray-400 hover:text-red-500 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="p-4 bg-gray-50">
+                  <div class="flex justify-between items-center">
+                    <div *ngIf="cert.credentialId" class="text-xs text-gray-500">
+                      <span class="font-medium">ID:</span> {{cert.credentialId}}
+                    </div>
+                    <a *ngIf="cert.link" [href]="cert.link" target="_blank" class="text-sm text-emerald-600 hover:text-emerald-800 flex items-center">
+                      <span>View Certificate</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tools & Languages Container -->
+          <div class="md:col-span-1 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 backdrop-filter backdrop-blur-lg bg-opacity-80">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-900">Tools & Languages</h2>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="mb-5">
+                <h3 class="text-sm font-medium text-gray-700 uppercase tracking-wider mb-3">Languages</h3>
+                <div class="space-y-3">
+                  <div *ngFor="let skill of skills | filter:'category':'language'" class="flex items-center justify-between">
+                    <div class="flex items-center">
+                      <span class="font-medium text-gray-700">{{skill.name}}</span>
+                    </div>
+                    <div class="flex">
+                      <div *ngFor="let dot of [1,2,3,4,5]" 
+                        [class.bg-blue-500]="dot <= skill.level" 
+                        [class.bg-gray-200]="dot > skill.level" 
+                        class="w-2.5 h-2.5 rounded-full mx-0.5">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-medium text-gray-700 uppercase tracking-wider mb-3">Tools</h3>
+                <div class="space-y-3">
+                  <div *ngFor="let skill of skills | filter:'category':'tool'" class="flex items-center justify-between">
+                    <div class="flex items-center">
+                      <span class="font-medium text-gray-700">{{skill.name}}</span>
+                    </div>
+                    <div class="flex">
+                      <div *ngFor="let dot of [1,2,3,4,5]" 
+                        [class.bg-blue-500]="dot <= skill.level" 
+                        [class.bg-gray-200]="dot > skill.level" 
+                        class="w-2.5 h-2.5 rounded-full mx-0.5">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row - Projects -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 backdrop-filter backdrop-blur-lg bg-opacity-80 mb-8">
+          <div class="flex justify-between items-center p-6 border-b border-gray-100">
+            <div class="flex items-center">
+              <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 class="text-lg font-semibold text-gray-900">Projects</h2>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="flex flex-wrap gap-2">
+                <button 
+                  (click)="filterProjects('all')" 
+                  class="px-3 py-1.5 text-sm font-medium rounded-md"
+                  [class.bg-indigo-100]="activeProjectFilter === 'all'"
+                  [class.text-indigo-800]="activeProjectFilter === 'all'"
+                  [class.bg-gray-100]="activeProjectFilter !== 'all'"
+                  [class.text-gray-700]="activeProjectFilter !== 'all'"
+                  [class.hover:bg-gray-200]="activeProjectFilter !== 'all'"
+                >
+                  All
+                </button>
+                <button 
+                  (click)="filterProjects('featured')" 
+                  class="px-3 py-1.5 text-sm font-medium rounded-md"
+                  [class.bg-indigo-100]="activeProjectFilter === 'featured'"
+                  [class.text-indigo-800]="activeProjectFilter === 'featured'"
+                  [class.bg-gray-100]="activeProjectFilter !== 'featured'"
+                  [class.text-gray-700]="activeProjectFilter !== 'featured'"
+                  [class.hover:bg-gray-200]="activeProjectFilter !== 'featured'"
+                >
+                  Featured
+                </button>
+                <button 
+                  (click)="filterProjects('React')" 
+                  class="px-3 py-1.5 text-sm font-medium rounded-md"
+                  [class.bg-indigo-100]="activeProjectFilter === 'React'"
+                  [class.text-indigo-800]="activeProjectFilter === 'React'"
+                  [class.bg-gray-100]="activeProjectFilter !== 'React'"
+                  [class.text-gray-700]="activeProjectFilter !== 'React'"
+                  [class.hover:bg-gray-200]="activeProjectFilter !== 'React'"
+                >
+                  React
+                </button>
+                <button 
+                  (click)="filterProjects('Angular')" 
+                  class="px-3 py-1.5 text-sm font-medium rounded-md"
+                  [class.bg-indigo-100]="activeProjectFilter === 'Angular'"
+                  [class.text-indigo-800]="activeProjectFilter === 'Angular'"
+                  [class.bg-gray-100]="activeProjectFilter !== 'Angular'"
+                  [class.text-gray-700]="activeProjectFilter !== 'Angular'"
+                  [class.hover:bg-gray-200]="activeProjectFilter !== 'Angular'"
+                >
+                  Angular
+                </button>
+              </div>
+              
+              <button 
+                (click)="toggleAddProject()" 
+                class="flex items-center text-sm text-indigo-600 hover:text-indigo-800 ml-4"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Add Project
+              </button>
+            </div>
+          </div>
+          
+          <!-- Project Grid -->
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <!-- Add New Project Card -->
+              <div *ngIf="!showAddProject" (click)="toggleAddProject()" class="bg-white rounded-lg overflow-hidden border border-dashed border-gray-300 h-80 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition-colors">
+                <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <p class="text-gray-600 font-medium">Add New Project</p>
+                <p class="text-gray-400 text-sm mt-2">Click to create a new project</p>
+              </div>
+
+              <!-- Project Cards -->
+              <div *ngFor="let project of filteredProjects" class="group bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+                <div class="relative h-48 bg-gray-100 overflow-hidden">
+                  <img *ngIf="project.image" [src]="project.image" alt="Project thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  <div *ngIf="!project.image" class="w-full h-full flex items-center justify-center bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div *ngIf="project.featured" class="absolute top-2 right-2 bg-amber-400 text-xs font-semibold px-2 py-1 rounded-full text-gray-800">
+                    Featured
+                  </div>
+                </div>
+                <div class="p-5">
+                  <h3 class="text-lg font-medium text-gray-900 mb-2 line-clamp-2">{{project.title}}</h3>
+                  <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{project.description}}</p>
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    <span *ngFor="let skill of project.skills" 
+                          class="bg-indigo-50 text-indigo-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      {{skill}}
+                    </span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <div class="flex space-x-2">
+                      <a *ngIf="project.link" [href]="project.link" target="_blank" class="text-indigo-600 hover:text-indigo-800 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd" />
+                        </svg>
+                      </a>
+                      <a *ngIf="project.github" [href]="project.github" target="_blank" class="text-gray-600 hover:text-gray-800 transition-colors">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                        </svg>
+                      </a>
+                    </div>
+                    <button 
+                      (click)="deleteProject(project.id)" 
+                      class="text-gray-400 hover:text-red-500 transition-colors"
+                      title="Delete project"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Forms -->
+        <!-- Add Project Form Modal -->
+        <div *ngIf="showAddProject" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
+          <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 overflow-hidden transform transition-all" 
+              @fadeIn>
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Add New Project</h3>
+              <button (click)="toggleAddProject()" class="text-gray-400 hover:text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form [formGroup]="projectForm" (ngSubmit)="submitProject()" class="p-6">
+              <div class="space-y-4">
+                <div>
+                  <label for="title" class="block text-sm font-medium text-gray-700">Project Title</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      id="title" 
+                      formControlName="title" 
+                      class="pl-10 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                  <p *ngIf="projectForm.get('title')?.invalid && projectForm.get('title')?.touched" class="mt-1 text-sm text-red-600">
+                    Title is required
+                  </p>
+                </div>
+
+                <div>
+                  <label for="description" class="block text-sm font-medium text-gray-700">Project Description</label>
+                  <div class="mt-1">
+                    <textarea 
+                      id="description" 
+                      formControlName="description" 
+                      rows="3" 
+                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    ></textarea>
+                  </div>
+                  <p *ngIf="projectForm.get('description')?.invalid && projectForm.get('description')?.touched" class="mt-1 text-sm text-red-600">
+                    Description is required (min 10 characters)
+                  </p>
+                </div>
+
+                <div>
+                  <label for="skills" class="block text-sm font-medium text-gray-700">Skills Used</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      id="skills" 
+                      formControlName="skills" 
+                      placeholder="React, TypeScript, Node.js"
+                      class="pl-10 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">Separate skills with commas</p>
+                  <p *ngIf="projectForm.get('skills')?.invalid && projectForm.get('skills')?.touched" class="mt-1 text-sm text-red-600">
+                    At least one skill is required
+                  </p>
+                </div>
+
+                <div>
+                  <label for="link" class="block text-sm font-medium text-gray-700">Project Link (optional)</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="url" 
+                      id="link" 
+                      formControlName="link" 
+                      placeholder="https://..."
+                      class="pl-10 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                </div>
+
+                <div>
+                  <label for="github" class="block text-sm font-medium text-gray-700">GitHub Repository (optional)</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="url" 
+                      id="github" 
+                      formControlName="github" 
+                      placeholder="https://github.com/..."
+                      class="pl-10 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                </div>
+
+                <div class="flex items-center">
+                  <input 
+                    id="featured" 
+                    type="checkbox" 
+                    formControlName="featured"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  >
+                  <label for="featured" class="ml-2 block text-sm text-gray-700">
+                    Feature this project in your portfolio
+                  </label>
+                </div>
+              </div>
+
+              <div class="mt-6 flex justify-end space-x-3">
+                <button 
+                  type="button" 
+                  (click)="toggleAddProject()"
+                  class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  [disabled]="projectForm.invalid"
+                  class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  [class.opacity-50]="projectForm.invalid"
+                  [class.cursor-not-allowed]="projectForm.invalid"
+                >
+                  Save Project
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Add Skill Form Modal -->
+        <div *ngIf="showAddSkill" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
+          <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 overflow-hidden transform transition-all" 
+              @fadeIn>
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Add New Skill</h3>
+              <button (click)="toggleAddSkill()" class="text-gray-400 hover:text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form [formGroup]="skillForm" (ngSubmit)="submitSkill()" class="p-6">
+              <div class="space-y-4">
+                <div>
+                  <label for="name" class="block text-sm font-medium text-gray-700">Skill Name</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      id="name" 
+                      formControlName="name" 
+                      class="pl-10 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                  <p *ngIf="skillForm.get('name')?.invalid && skillForm.get('name')?.touched" class="mt-1 text-sm text-red-600">
+                    Skill name is required
+                  </p>
+                </div>
+
+                <div>
+                  <label for="category" class="block text-sm font-medium text-gray-700">Skill Category</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </div>
+                    <select 
+                      id="category" 
+                      formControlName="category"
+                      class="pl-10 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                      <option value="technical">Technical Skill</option>
+                      <option value="soft">Soft Skill</option>
+                      <option value="language">Language</option>
+                      <option value="tool">Tool</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="level" class="block text-sm font-medium text-gray-700">Proficiency Level</label>
+                  <div class="mt-3">
+                    <div class="flex items-center justify-between py-1">
+                      <span class="text-xs text-gray-500">Beginner</span>
+                      <span class="text-xs text-gray-500">Expert</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      id="level" 
+                      formControlName="level"
+                      min="1" 
+                      max="5" 
+                      step="1"
+                      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    >
+                    <div class="flex justify-between mt-1">
+                      <span class="text-xs w-6 text-center">1</span>
+                      <span class="text-xs w-6 text-center">2</span>
+                      <span class="text-xs w-6 text-center">3</span>
+                      <span class="text-xs w-6 text-center">4</span>
+                      <span class="text-xs w-6 text-center">5</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="yearsExperience" class="block text-sm font-medium text-gray-700">Years of Experience (optional)</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="number" 
+                      id="yearsExperience" 
+                      formControlName="yearsExperience" 
+                      min="0" 
+                      max="50"
+                      class="pl-10 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 flex justify-end space-x-3">
+                <button 
+                  type="button" 
+                  (click)="toggleAddSkill()"
+                  class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  [disabled]="skillForm.invalid"
+                  class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                  [class.opacity-50]="skillForm.invalid"
+                  [class.cursor-not-allowed]="skillForm.invalid"
+                >
+                  Save Skill
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Add Certificate Form Modal -->
+        <div *ngIf="showAddCertificate" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
+          <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 overflow-hidden transform transition-all" 
+              @fadeIn>
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Add New Certificate</h3>
+              <button (click)="toggleAddCertificate()" class="text-gray-400 hover:text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form [formGroup]="certificateForm" (ngSubmit)="submitCertificate()" class="p-6">
+              <div class="space-y-4">
+                <div>
+                  <label for="certName" class="block text-sm font-medium text-gray-700">Certificate Name</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      id="certName" 
+                      formControlName="name" 
+                      class="pl-10 shadow-sm focus:ring-amber-500 focus:border-amber-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                  <p *ngIf="certificateForm.get('name')?.invalid && certificateForm.get('name')?.touched" class="mt-1 text-sm text-red-600">
+                    Certificate name is required
+                  </p>
+                </div>
+
+                <div>
+                  <label for="issuer" class="block text-sm font-medium text-gray-700">Issuing Organization</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      id="issuer" 
+                      formControlName="issuer" 
+                      class="pl-10 shadow-sm focus:ring-amber-500 focus:border-amber-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                  <p *ngIf="certificateForm.get('issuer')?.invalid && certificateForm.get('issuer')?.touched" class="mt-1 text-sm text-red-600">
+                    Issuer is required
+                  </p>
+                </div>
+
+                <div>
+                  <label for="date" class="block text-sm font-medium text-gray-700">Issue Date</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="date" 
+                      id="date" 
+                      formControlName="date" 
+                      class="pl-10 shadow-sm focus:ring-amber-500 focus:border-amber-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                  <p *ngIf="certificateForm.get('date')?.invalid && certificateForm.get('date')?.touched" class="mt-1 text-sm text-red-600">
+                    Issue date is required
+                  </p>
+                </div>
+
+                <div>
+                  <label for="expiry" class="block text-sm font-medium text-gray-700">Expiry Date (optional)</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="date" 
+                      id="expiry" 
+                      formControlName="expiry" 
+                      class="pl-10 shadow-sm focus:ring-amber-500 focus:border-amber-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                </div>
+
+                <div>
+                  <label for="credentialId" class="block text-sm font-medium text-gray-700">Credential ID (optional)</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      id="credentialId" 
+                      formControlName="credentialId" 
+                      class="pl-10 shadow-sm focus:ring-amber-500 focus:border-amber-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                </div>
+
+                <div>
+                  <label for="link" class="block text-sm font-medium text-gray-700">Certificate Link (optional)</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="url" 
+                      id="link" 
+                      formControlName="link" 
+                      placeholder="https://..."
+                      class="pl-10 shadow-sm focus:ring-amber-500 focus:border-amber-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 flex justify-end space-x-3">
+                <button 
+                  type="button" 
+                  (click)="toggleAddCertificate()"
+                  class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  [disabled]="certificateForm.invalid"
+                  class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+                  [class.opacity-50]="certificateForm.invalid"
+                  [class.cursor-not-allowed]="certificateForm.invalid"
+                >
+                  Save Certificate
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </main>
+</div>

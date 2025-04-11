@@ -1,0 +1,396 @@
+<!-- jobs-explorer.component.html -->
+<div class="jobs-explorer-container">
+    <!-- Sidebar -->
+    <app-sidebar 
+      [collapsed]="sidebarCollapsed" 
+      (toggleSidebar)="onToggleSidebar($event)">
+    </app-sidebar>
+    
+    <!-- Main Content -->
+    <main class="main-content" [class.expanded]="sidebarCollapsed">
+      <!-- Fixed Header -->
+      <header class="bg-white shadow-sm px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-bold text-gray-800">Jobs Explorer</h1>
+          <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">{{ filteredJobs.length }} Matches</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <input 
+              type="text" 
+              placeholder="Search jobs, companies, or keywords" 
+              class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              [(ngModel)]="searchQuery"
+              (input)="onSearchChange()">
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+          </div>
+          <button class="p-2 rounded-full hover:bg-gray-100">
+            <i class="fas fa-bell text-gray-600"></i>
+          </button>
+          <button class="p-2 rounded-full hover:bg-gray-100">
+            <i class="fas fa-cog text-gray-600"></i>
+          </button>
+        </div>
+      </header>
+  
+      <!-- Loading Overlay -->
+      <div *ngIf="loading" class="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50">
+        <div class="animate-pulse flex flex-col items-center">
+          <div class="h-16 w-16 border-4 border-t-green-500 border-gray-200 rounded-full animate-spin"></div>
+          <p class="mt-4 text-gray-600 font-medium">Loading jobs...</p>
+        </div>
+      </div>
+  
+      <!-- Content Area -->
+      <div class="p-6">
+        <!-- Filters Section -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center">
+              <span class="text-gray-700 font-medium mr-2">Filter by:</span>
+            </div>
+            
+            <!-- Job Type Filter -->
+            <div class="relative">
+              <button 
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium"
+                [ngClass]="activeFilters['jobType'] ? 'bg-green-100 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'"
+                (click)="toggleFilterDropdown('jobType')">
+                <span>{{ activeFilters['jobType'] || 'Job type' }}</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+              </button>
+              
+              <div *ngIf="showFilterDropdown['jobType']" class="absolute z-20 mt-1 w-56 bg-white rounded-md shadow-lg overflow-hidden">
+                <div class="py-1">
+                  <button *ngFor="let type of filterOptions.jobType"
+                    class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                    [ngClass]="{'text-green-600 font-medium': activeFilters['jobType'] === type}"
+                    (click)="setFilter('jobType', type)">
+                    {{ type }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Location Type Filter -->
+            <div class="relative">
+              <button 
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium"
+                [ngClass]="activeFilters['locationType'] ? 'bg-green-100 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'"
+                (click)="toggleFilterDropdown('locationType')">
+                <span>{{ activeFilters['locationType'] || 'Location' }}</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+              </button>
+              
+              <div *ngIf="showFilterDropdown['locationType']" class="absolute z-20 mt-1 w-56 bg-white rounded-md shadow-lg overflow-hidden">
+                <div class="py-1">
+                  <button *ngFor="let type of filterOptions.locationType"
+                    class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                    [ngClass]="{'text-green-600 font-medium': activeFilters['locationType'] === type}"
+                    (click)="setFilter('locationType', type)">
+                    {{ type }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Salary Range Filter -->
+            <div class="relative">
+              <button 
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium"
+                [ngClass]="activeFilters['salaryRange'] ? 'bg-green-100 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'"
+                (click)="toggleFilterDropdown('salaryRange')">
+                <span>{{ activeFilters['salaryRange'] || 'Salary' }}</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+              </button>
+              
+              <div *ngIf="showFilterDropdown['salaryRange']" class="absolute z-20 mt-1 w-56 bg-white rounded-md shadow-lg overflow-hidden">
+                <div class="py-1">
+                  <button *ngFor="let range of filterOptions.salaryRange"
+                    class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                    [ngClass]="{'text-green-600 font-medium': activeFilters['salaryRange'] === range}"
+                    (click)="setFilter('salaryRange', range)">
+                    {{ range }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Sort Options -->
+            <div class="relative ml-auto">
+              <button 
+                class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 text-sm font-medium text-gray-700"
+                (click)="toggleFilterDropdown('sort')">
+                <i class="fas fa-sort text-gray-500"></i>
+                <span>Sort by: {{ currentSort }}</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+              </button>
+              
+              <div *ngIf="showFilterDropdown['sort']" class="absolute right-0 z-20 mt-1 w-56 bg-white rounded-md shadow-lg overflow-hidden">
+                <div class="py-1">
+                  <button *ngFor="let option of sortOptions"
+                    class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                    [ngClass]="{'text-green-600 font-medium': currentSort === option}"
+                    (click)="setSortOption(option)">
+                    {{ option }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Active Filter Tags -->
+          <div *ngIf="getObjectKeys(activeFilters).length > 0" class="mt-4 flex flex-wrap gap-2">
+            <div *ngFor="let filter of getObjectKeys(activeFilters)" 
+                 class="flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded">
+              <span>{{ filter[0] === 'jobType' ? 'Job: ' : filter[0] === 'locationType' ? 'Location: ' : 'Salary: ' }}{{ filter[1] }}</span>
+              <button class="ml-1.5 text-green-700 hover:text-green-900" (click)="setFilter(filter[0], filter[1])">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <button *ngIf="getObjectKeys(activeFilters).length > 0"
+                    class="text-xs text-gray-600 hover:text-gray-800 font-medium underline ml-2"
+                    (click)="activeFilters = {}; applyFilters()">
+              Clear all filters
+            </button>
+          </div>
+        </div>
+  
+        <!-- Tab Navigation -->
+        <div class="mb-6 border-b border-gray-200">
+          <nav class="flex space-x-8">
+            <button 
+              class="px-1 py-3 border-b-2 font-medium text-sm focus:outline-none"
+              [ngClass]="currentTab === 'recommended' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              (click)="changeTab('recommended')">
+              Recommended
+              <span class="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">{{ matchedJobs.length }}</span>
+            </button>
+            <button 
+              class="px-1 py-3 border-b-2 font-medium text-sm focus:outline-none"
+              [ngClass]="currentTab === 'saved' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              (click)="changeTab('saved')">
+              Saved Jobs
+              <span class="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">{{ savedJobs.length }}</span>
+            </button>
+            <button 
+              class="px-1 py-3 border-b-2 font-medium text-sm focus:outline-none"
+              [ngClass]="currentTab === 'applied' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              (click)="changeTab('applied')">
+              Applied
+              <span class="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">{{ appliedJobs.length }}</span>
+            </button>
+          </nav>
+        </div>
+  
+        <!-- Job Listings -->
+        <div class="grid grid-cols-1 gap-6">
+          <!-- Empty State -->
+          <div *ngIf="filteredJobs.length === 0" class="bg-white rounded-lg shadow-sm p-8 text-center">
+            <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <i class="fas fa-search text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No jobs found</h3>
+            <p class="text-gray-500 mb-4">Try adjusting your search criteria or clearing filters</p>
+            <button 
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              (click)="activeFilters = {}; searchQuery = ''; applyFilters()">
+              Clear all filters
+            </button>
+          </div>
+  
+          <!-- Job Card -->
+          <div *ngFor="let job of displayedJobs" 
+               class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border border-gray-100"
+               [class.border-green-500]="selectedJob?.id === job.id"
+               (click)="viewJobDetails(job)">
+            <div class="p-6">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center">
+                  <div class="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mr-4">
+                    <img *ngIf="job.companyLogo" [src]="job.companyLogo" alt="{{ job.company }} logo" class="w-full h-full object-contain">
+                    <span *ngIf="!job.companyLogo" class="text-gray-400 text-xl font-bold">{{ job.company.charAt(0) }}</span>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">{{ job.title }}</h3>
+                    <p class="text-gray-600">{{ job.company }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <span class="bg-green-50 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full">{{ job.matchScore }}% Match</span>
+                </div>
+              </div>
+              
+              <div class="mt-4 grid grid-cols-3 gap-2">
+                <div class="flex items-center text-gray-500 text-sm">
+                  <i class="fas fa-briefcase mr-2 text-gray-400"></i>
+                  <span>{{ job.jobType }}</span>
+                </div>
+                <div class="flex items-center text-gray-500 text-sm">
+                  <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                  <span>{{ job.locationType }}</span>
+                </div>
+                <div class="flex items-center text-gray-500 text-sm">
+                  <i class="fas fa-dollar-sign mr-2 text-gray-400"></i>
+                  <span>{{ job.salaryRange }}</span>
+                </div>
+              </div>
+  
+              <div class="mt-2 text-gray-500 text-sm">
+                <i class="far fa-clock mr-2 text-gray-400"></i>
+                <span>{{ job.postedDate }}</span>
+              </div>
+              
+              <div class="mt-4 flex justify-between items-center">
+                <p class="text-sm text-gray-500 line-clamp-1">
+                  {{ job.description }}
+                </p>
+                
+                <div class="flex items-center space-x-2">
+                  <button 
+                    class="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                    [ngClass]="job.isSaved ? 'text-green-600' : 'text-gray-400'"
+                    (click)="toggleSaveJob(job, $event)"
+                    title="{{ job.isSaved ? 'Unsave job' : 'Save job' }}">
+                    <i class="fas" [ngClass]="job.isSaved ? 'fa-bookmark' : 'fa-bookmark'"></i>
+                  </button>
+                  
+                  <button 
+                    class="px-4 py-2 border rounded-lg text-sm font-medium transition-colors duration-200"
+                    [ngClass]="job.isApplied ? 'bg-green-100 text-green-700 border-green-500' : 'border-gray-300 text-gray-700 hover:bg-gray-50'"
+                    [disabled]="job.isApplied"
+                    (click)="applyForJob(job, $event)">
+                    <span *ngIf="!job.isApplied">Apply</span>
+                    <span *ngIf="job.isApplied"><i class="fas fa-check mr-1"></i>Applied</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Pagination -->
+        <div *ngIf="filteredJobs.length > jobsPerPage" class="mt-6 flex justify-center">
+          <nav class="flex items-center space-x-1">
+            <button 
+              class="px-3 py-2 rounded-md text-sm font-medium focus:outline-none"
+              [ngClass]="currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'"
+              [disabled]="currentPage === 1"
+              (click)="changePage(currentPage - 1)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <button 
+              *ngFor="let page of getPageNumbers()"
+              class="px-3 py-2 rounded-md text-sm font-medium focus:outline-none"
+              [ngClass]="page === currentPage ? 'bg-green-100 text-green-700' : (page < 0 ? 'text-gray-500' : 'text-gray-700 hover:bg-gray-100')"
+              [disabled]="page < 0"
+              (click)="page > 0 && changePage(page)">
+              <span *ngIf="page > 0">{{ page }}</span>
+              <span *ngIf="page < 0">...</span>
+            </button>
+            
+            <button 
+              class="px-3 py-2 rounded-md text-sm font-medium focus:outline-none"
+              [ngClass]="currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'"
+              [disabled]="currentPage === totalPages"
+              (click)="changePage(currentPage + 1)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </main>
+  
+    <!-- Job Details Sidebar -->
+    <div *ngIf="selectedJob" class="job-details-sidebar fixed top-0 right-0 h-full w-1/3 bg-white shadow-xl border-l border-gray-200 overflow-y-auto z-20 transform transition-transform duration-300" 
+         [ngClass]="{'translate-x-0': selectedJob, 'translate-x-full': !selectedJob}">
+      <!-- Header -->
+      <div class="sticky top-0 bg-white z-10 shadow-sm">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-bold text-gray-800">Job Details</h2>
+          <button 
+            class="p-2 rounded-full hover:bg-gray-100"
+            (click)="closeJobDetails()">
+            <i class="fas fa-times text-gray-600"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Content -->
+      <div class="p-6">
+        <div class="flex items-center mb-6">
+          <div class="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mr-4">
+            <img *ngIf="selectedJob.companyLogo" [src]="selectedJob.companyLogo" alt="{{ selectedJob.company }} logo" class="w-full h-full object-contain">
+            <span *ngIf="!selectedJob.companyLogo" class="text-gray-400 text-2xl font-bold">{{ selectedJob.company.charAt(0) }}</span>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900">{{ selectedJob.title }}</h3>
+            <p class="text-gray-600">{{ selectedJob.company }}</p>
+          </div>
+        </div>
+        
+        <div class="mb-6 grid grid-cols-2 gap-4">
+          <div class="flex items-center text-gray-700">
+            <i class="fas fa-briefcase mr-3 text-gray-500"></i>
+            <span>{{ selectedJob.jobType }}</span>
+          </div>
+          <div class="flex items-center text-gray-700">
+            <i class="fas fa-map-marker-alt mr-3 text-gray-500"></i>
+            <span>{{ selectedJob.locationType }}</span>
+          </div>
+          <div class="flex items-center text-gray-700">
+            <i class="fas fa-dollar-sign mr-3 text-gray-500"></i>
+            <span>{{ selectedJob.salaryRange }}</span>
+          </div>
+          <div class="flex items-center text-gray-700">
+            <i class="far fa-clock mr-3 text-gray-500"></i>
+            <span>{{ selectedJob.postedDate }}</span>
+          </div>
+        </div>
+  
+        <div class="border-t border-gray-200 pt-6 mb-6">
+          <h4 class="text-lg font-semibold text-gray-800 mb-4">About this role</h4>
+          <p class="text-gray-700 mb-6">{{ selectedJob.description }}</p>
+          
+          <h4 *ngIf="selectedJob.responsibilities?.length" class="text-lg font-semibold text-gray-800 mb-4">Responsibilities</h4>
+          <ul *ngIf="selectedJob.responsibilities?.length" class="list-disc pl-6 mb-6 text-gray-700 space-y-2">
+            <li *ngFor="let item of selectedJob.responsibilities">{{ item }}</li>
+          </ul>
+          
+          <h4 *ngIf="selectedJob.requirements?.length" class="text-lg font-semibold text-gray-800 mb-4">Requirements</h4>
+          <ul *ngIf="selectedJob.requirements?.length" class="list-disc pl-6 mb-6 text-gray-700 space-y-2">
+            <li *ngFor="let item of selectedJob.requirements">{{ item }}</li>
+          </ul>
+          
+          <h4 *ngIf="selectedJob.benefits?.length" class="text-lg font-semibold text-gray-800 mb-4">Benefits</h4>
+          <ul *ngIf="selectedJob.benefits?.length" class="list-disc pl-6 mb-6 text-gray-700 space-y-2">
+            <li *ngFor="let item of selectedJob.benefits">{{ item }}</li>
+          </ul>
+        </div>
+        
+        <div class="flex gap-4">
+          <button 
+            class="flex-1 px-4 py-3 text-center rounded-lg text-white bg-green-600 hover:bg-green-700 font-medium transition-colors duration-200"
+            [ngClass]="{'bg-green-100 text-green-800 hover:bg-green-100 cursor-default': selectedJob.isApplied}"
+            [disabled]="selectedJob.isApplied"
+            (click)="applyForJob(selectedJob, $event)">
+            <span *ngIf="!selectedJob.isApplied">Apply Now</span>
+            <span *ngIf="selectedJob.isApplied"><i class="fas fa-check mr-1"></i>Applied</span>
+          </button>
+          
+          <button 
+            class="px-4 py-3 rounded-lg border transition-colors duration-200"
+            [ngClass]="selectedJob.isSaved ? 'bg-green-100 text-green-800 border-green-500' : 'border-gray-300 text-gray-700 hover:bg-gray-50'"
+            (click)="toggleSaveJob(selectedJob, $event)">
+            <i class="fas" [ngClass]="selectedJob.isSaved ? 'fa-bookmark' : 'fa-bookmark'"></i>
+            <span class="ml-2">{{ selectedJob.isSaved ? 'Saved' : 'Save' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Overlay for Job Details -->
+    <div *ngIf="selectedJob" class="fixed inset-0 bg-black bg-opacity-30 z-10" (click)="closeJobDetails()"></div>
+  </div>

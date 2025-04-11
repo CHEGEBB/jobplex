@@ -1,0 +1,178 @@
+<!-- jobseeker-profile.component.html -->
+<div class="flex h-screen bg-slate-50">
+    <!-- Sidebar Component -->
+    <app-sidebar 
+      [collapsed]="sidebarCollapsed" 
+      (toggleSidebar)="onToggleSidebar($event)">
+    </app-sidebar>  
+<main class="main-content" [class.expanded]="sidebarCollapsed">
+      <!-- Header with logo and user menu -->
+      <header class="bg-white border-b border-gray-200 py-3 px-4 mb-6 rounded-lg shadow-sm" @fadeIn>
+        <div class="flex justify-between items-center">
+          <div class="flex items-center">
+            <span class="text-blue-500 text-xl font-semibold">
+              <i class="fas fa-briefcase mr-2"></i>JobPlex
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button class="text-gray-500 hover:text-gray-700">
+              <i class="fas fa-bell"></i>
+            </button>
+            <button class="text-gray-500 hover:text-gray-700">
+              <i class="fas fa-cog"></i>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center">
+              <span class="text-sm">ER</span>
+            </div>
+          </div>
+        </div>
+      </header>
+  
+      <!-- Profile header section -->
+      <section class="bg-white rounded-lg shadow-sm p-6 mb-6" @slideIn>
+        <div class="flex flex-col md:flex-row items-start md:items-center">
+          <div class="flex items-center mb-4 md:mb-0">
+            <div class="relative">
+              <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile picture" 
+                  class="w-20 h-20 rounded-full object-cover border-4 border-white shadow">
+              <div class="absolute bottom-0 right-0 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="ml-4">
+              <h2 class="text-xl font-bold">{{ user.name }}</h2>
+              <p class="text-gray-600">{{ user.title }}</p>
+              <div class="flex items-center text-sm text-gray-500 mt-1">
+                <i class="fas fa-map-marker-alt mr-1"></i>
+                <span>{{ user.location }}</span>
+                <span class="mx-2">•</span>
+                <i class="fas fa-envelope mr-1"></i>
+                <span>{{ user.email }}</span>
+              </div>
+            </div>
+          </div>
+          <button class="ml-auto bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-md transition-all duration-300 text-sm flex items-center">
+            <i class="fas fa-edit mr-2"></i>
+            Edit Profile
+          </button>
+        </div>
+      </section>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left column for main profile info -->
+        <div class="lg:col-span-2">
+          <!-- About section -->
+          <section class="bg-white rounded-lg shadow-sm mb-6" @fadeIn>
+            <div class="p-6">
+              <h3 class="text-lg font-semibold mb-4">About</h3>
+              <p class="text-gray-700">{{ user.about }}</p>
+            </div>
+          </section>
+  
+          <!-- Skills section -->
+          <section class="bg-white rounded-lg shadow-sm mb-6" @fadeIn>
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Skills</h3>
+                <button (click)="addSkill()" class="text-blue-500 hover:text-blue-700 flex items-center text-sm transition-colors duration-200">
+                  <i class="fas fa-plus mr-1"></i> Add Skill
+                </button>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <div *ngFor="let skill of user.skills" 
+                    class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm hover:bg-blue-200 transition-colors duration-200">
+                  {{ skill }}
+                </div>
+              </div>
+            </div>
+          </section>
+  
+          <!-- Experience section -->
+          <section class="bg-white rounded-lg shadow-sm" @fadeIn>
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Experience</h3>
+                <button (click)="addExperience()" class="text-blue-500 hover:text-blue-700 flex items-center text-sm transition-colors duration-200">
+                  <i class="fas fa-plus mr-1"></i> Add Experience
+                </button>
+              </div>
+              
+              <div *ngFor="let exp of user.experience; let isLast = last" 
+                  class="relative" [class.pb-6]="!isLast" [class.border-b]="!isLast" [class.border-gray-200]="!isLast">
+                <div class="flex mb-2">
+                  <div class="w-10 h-10 rounded-md bg-gray-200 flex items-center justify-center text-gray-600 mr-4">
+                    <i class="fas fa-building"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-medium text-gray-900">{{ exp.title }}</h4>
+                    <p class="text-gray-600">{{ exp.company }}</p>
+                    <p class="text-gray-500 text-sm">{{ exp.period }}</p>
+                  </div>
+                </div>
+                
+                <!-- Timeline dot and line for visual connection -->
+                <div *ngIf="!isLast" class="absolute left-5 top-12 bottom-0 w-px bg-gray-300"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+  
+        <!-- Right column for sidebar widgets -->
+        <div class="lg:col-span-1 space-y-6">
+          <!-- Profile completion -->
+          <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
+            <h3 class="text-lg font-semibold mb-3">Profile Completion</h3>
+            <div class="relative pt-1">
+              <div class="flex mb-2 items-center justify-between">
+                <div>
+                  <span class="text-xs font-semibold inline-block text-emerald-600">
+                    {{ profileCompletion }}% complete
+                  </span>
+                </div>
+              </div>
+              <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-green-100">
+                <div [style.width.%]="profileCompletion" 
+                    class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500 transition-all duration-500"></div>
+              </div>
+            </div>
+          </section>
+  
+          <!-- CV & Documents -->
+          <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
+            <h3 class="text-lg font-semibold mb-4">CV & Documents</h3>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div class="flex flex-col items-center">
+                <i class="fas fa-file-upload text-gray-400 text-3xl mb-2"></i>
+                <p class="text-gray-600 mb-3">Drag & drop your CV here</p>
+                <label class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition-all duration-300 text-sm cursor-pointer">
+                  <input type="file" class="hidden" (change)="uploadCV($event)">
+                  Upload CV
+                </label>
+              </div>
+            </div>
+          </section>
+  
+          <!-- AI Career Recommendations -->
+          <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
+            <h3 class="text-lg font-semibold mb-4">AI Career Recommendations</h3>
+            <div class="space-y-3">
+              <div *ngFor="let rec of user.recommendations" 
+                  class="flex items-center p-3 rounded-lg" 
+                  [class.bg-blue-50]="rec.selected" 
+                  [class.border]="rec.selected"
+                  [class.border-blue-200]="rec.selected">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                    [class.bg-blue-100]="rec.selected"
+                    [class.text-blue-600]="rec.selected"
+                    [class.bg-gray-100]="!rec.selected"
+                    [class.text-gray-600]="!rec.selected">
+                  <i class="fas" [class.fa-check]="rec.selected" [class.fa-briefcase]="!rec.selected"></i>
+                </div>
+                <span [class.text-blue-700]="rec.selected" [class.font-medium]="rec.selected" [class.text-gray-600]="!rec.selected">
+                  {{ rec.role }}
+                </span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>

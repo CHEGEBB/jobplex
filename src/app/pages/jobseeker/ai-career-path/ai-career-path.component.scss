@@ -1,0 +1,190 @@
+/* ai-career-path.component.scss */
+
+// Career Path Timeline Styling
+.ai-container{
+  overflow-x: hidden !important;
+}
+.career-path-timeline {
+  position: relative;
+  padding-left: 2rem;
+  
+  .career-node {
+    position: relative;
+    margin-bottom: 1.5rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .career-node-indicator {
+      position: absolute;
+      left: -2rem;
+      top: 0;
+      bottom: 0;
+      width: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      
+      .node-circle {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background-color: #e5e7eb; // gray-200
+        z-index: 2;
+      }
+      
+      .node-line {
+        position: absolute;
+        top: 0.5rem;
+        bottom: 0;
+        width: 2px;
+        background-color: #e5e7eb; // gray-200
+        z-index: 1;
+      }
+    }
+    
+    &.current-position {
+      .node-circle {
+        background-color: #34d399;
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-left: -0.125rem;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25); 
+        animation: pulse 2s infinite;
+      }
+      
+      .career-node-content h3 {
+        color: #34d399; 
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Timeline projections styling
+.timeline-container {
+  position: relative;
+  padding: 2rem 0;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 4rem;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #e5e7eb; // gray-200
+    z-index: 1;
+  }
+  
+  .timeline-track {
+    position: relative;
+    z-index: 2;
+  }
+
+  .milestone-marker {
+    z-index: 3;
+  }
+}
+
+// Chat container styling
+.chat-container {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  
+  .chat-message {
+    margin-bottom: 0.5rem;
+    max-width: 80%;
+    
+    &.user-message {
+      margin-left: auto;
+      background-color: #34d399; // blue-500
+      color: white;
+      border-radius: 1rem 1rem 0 1rem;
+      padding: 0.75rem 1rem;
+    }
+    
+    &.ai-message {
+      margin-right: auto;
+      background-color: #e5e7eb; // gray-200
+      color: #1f2937; // gray-800
+      border-radius: 1rem 1rem 1rem 0;
+      padding: 0.75rem 1rem;
+    }
+  }
+}
+
+// Skill bar animations
+.skill-progress-bar {
+  transition: width 1s ease-in-out;
+  width: 0;
+  
+  &.animate-skill {
+    width: 100%;
+  }
+}
+
+// Card hover effects
+.resource-card, .trend-card {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-color: #e5e7eb; // gray-200
+  }
+}
+
+// Pulse animation for current position
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(78, 233, 199, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .timeline-container {
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    
+    .timeline-milestone {
+      min-width: 150px;
+    }
+  }
+  
+  .career-path-timeline {
+    padding-left: 1.5rem;
+    
+    .career-node-indicator {
+      left: -1.5rem;
+      width: 1.5rem;
+    }
+  }
+}
+.main-content {
+  flex: 1;
+  margin-left: 220px;
+  padding: 1.5rem;
+  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.expanded {
+    margin-left: 80px;
+  }
+  
+  @media (max-width: 767px) {
+    margin-left: -35px !important;
+    padding: 1rem;
+  }
+}

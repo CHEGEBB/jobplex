@@ -1,0 +1,205 @@
+// Main Portfolio Styles
+.portfolio-page {
+    min-height: 100vh;
+  }
+  
+  // Animation styles
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+  }
+  
+  // Card hover effects
+  .project-card {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+  }
+  
+  // Skill bar animation
+  .skill-bar {
+    position: relative;
+    overflow: hidden;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0;
+      background-color: rgba(255, 255, 255, 0.2);
+      animation: skillProgress 1s ease-out forwards;
+    }
+  }
+  
+  @keyframes skillProgress {
+    0% {
+      width: 0;
+    }
+    100% {
+      width: 100%;
+    }
+  }
+  
+  // Badge animations
+  .badge {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+  
+  // Tab transitions
+  .tab-content {
+    transition: opacity 0.3s ease;
+  }
+  
+  // Form animations
+  .form-container {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  // Dropdown menu
+  .dropdown {
+    position: relative;
+    
+    &:hover .dropdown-menu {
+      display: block;
+      animation: fadeInDropdown 0.2s ease-out;
+    }
+  }
+  
+  @keyframes fadeInDropdown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  // Featured badge animation
+  .featured-badge {
+    animation: pulse 2s infinite;
+  }
+  
+  // Line clamp for multi-line text truncation
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  // Responsive adjustments
+  @media (max-width: 640px) {
+    .filter-buttons {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .skill-grid {
+      grid-template-columns: repeat(1, 1fr);
+    }
+  }
+  
+  // Progress bar colors
+  .progress-beginner {
+    background-color: #DBEAFE;
+  }
+  
+  .progress-basic {
+    background-color: #93C5FD;
+  }
+  
+  .progress-intermediate {
+    background-color: #60A5FA;
+  }
+  
+  .progress-advanced {
+    background-color: #3B82F6;
+  }
+  
+  .progress-expert {
+    background-color: #1D4ED8;
+  }
+  
+  // Certificate card hover effect
+  .certificate-card {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+  }
+  
+  // Skill cloud animation
+  .skill-cloud {
+    .skill-tag {
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.1);
+        z-index: 10;
+      }
+    }
+  }
+  .main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 1.5rem;
+    transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &.expanded {
+      margin-left: 80px;
+    }
+    
+    @media (max-width: 767px) {
+      margin-left: 0 !important;
+      padding: 1rem;
+    }
+  }

@@ -1,247 +1,319 @@
 <div class="dashboard-container">
-    <!-- Sidebar -->
-    <app-sidebar 
-      [collapsed]="sidebarCollapsed" 
-      (toggleSidebar)="onToggleSidebar($event)">
-    </app-sidebar>
-    
-    <!-- Main Content -->
-    <main class="main-content" [class.expanded]="sidebarCollapsed">
-      <!-- Header -->
-      <header class="dashboard-header">
-        <div class="header-content">
-          <div>
-            <h1 class="welcome-heading">Welcome back, {{ profileData.name }}!</h1>
-            <p class="welcome-subtitle">Here's what's happening with your job search today.</p>
-          </div>
-          
-          <div class="header-actions">
-            <button class="action-btn notifications">
-              <i class="fas fa-bell"></i>
-              <span class="notification-badge">3</span>
-            </button>
-            <button class="action-btn messages">
-              <i class="fas fa-envelope"></i>
-              <span class="notification-badge">5</span>
-            </button>
-          </div>
-        </div>
-      </header>
-      
-      <!-- Stats Overview -->
-      <section class="stats-section">
-        <div class="stats-grid">
-          <div class="stat-card profile-views">
-            <div class="stat-icon"><i class="fas fa-eye"></i></div>
-            <div class="stat-content">
-              <h3 class="stat-value">{{ profileData.profileViews }}</h3>
-              <p class="stat-label">Profile Views</p>
-            </div>
-          </div>
-          
-          <div class="stat-card applications">
-            <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
-            <div class="stat-content">
-              <h3 class="stat-value">{{ profileData.applications }}</h3>
-              <p class="stat-label">Applications</p>
-            </div>
-          </div>
-          
-          <div class="stat-card interviews">
-            <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
-            <div class="stat-content">
-              <h3 class="stat-value">{{ profileData.interviews }}</h3>
-              <p class="stat-label">Interviews</p>
-            </div>
-          </div>
-          
-          <div class="stat-card saved-jobs">
-            <div class="stat-icon"><i class="fas fa-bookmark"></i></div>
-            <div class="stat-content">
-              <h3 class="stat-value">{{ profileData.savedJobs }}</h3>
-              <p class="stat-label">Saved Jobs</p>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      <!-- Main Dashboard Content -->
-      <div class="dashboard-content">
-        <!-- Left Column -->
-        <div class="dashboard-column">
-          <!-- Recent Activity -->
-          <section class="dashboard-card recent-activity">
-            <div class="card-header">
-              <h2 class="card-title">Recent Activity</h2>
-            </div>
-            <div class="card-content">
-              <ul class="activity-list">
-                <li *ngFor="let activity of recentActivity" class="activity-item">
-                  <div class="activity-icon" [ngClass]="activity.type.toLowerCase()">
-                    <img [src]="'assets/images/companies/' + activity.logo" [alt]="activity.company" />
-                  </div>
-                  <div class="activity-details">
-                    <h4 class="activity-title">{{ activity.company }}</h4>
-                    <p class="activity-meta">{{ activity.type }}</p>
-                  </div>
-                  <div class="activity-time">{{ activity.time }}</div>
-                </li>
-              </ul>
-            </div>
-          </section>
-          
-          <!-- Recent Applications -->
-          <section class="dashboard-card recent-applications">
-            <div class="card-header">
-              <h2 class="card-title">Recent Applications</h2>
-            </div>
-            <div class="card-content">
-              <div class="applications-grid">
-                <div *ngFor="let application of recentApplications" class="application-card">
-                  <div class="application-header">
-                    <div class="company-logo">
-                      <img [src]="'assets/images/companies/' + application.logo" [alt]="application.company" />
-                    </div>
-                    <button class="star-btn">
-                      <i class="far fa-star"></i>
-                    </button>
-                  </div>
-                  <div class="application-content">
-                    <h3 class="job-title">{{ application.position }}</h3>
-                    <p class="company-name">{{ application.company }}</p>
-                    
-                    <div class="job-meta">
-                      <span class="job-type" *ngIf="application.isFullTime">Full-time</span>
-                      <span class="job-location" *ngIf="application.isRemote">Remote</span>
-                    </div>
-                    
-                    <div class="application-footer">
-                      <span class="application-date">Applied {{ application.date }}</span>
-                      <span class="application-status" [ngClass]="getStatusClass(application.status)">
-                        {{ application.status }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+  <!-- Sidebar -->
+  <app-sidebar 
+    [collapsed]="sidebarCollapsed" 
+    (toggleSidebar)="onToggleSidebar($event)">
+  </app-sidebar>
+  
+  <!-- Main Content -->
+  <main class="main-content" [class.expanded]="sidebarCollapsed">
+    <!-- Fixed Header - Separated from greeting -->
+    <header class="dashboard-header">
+      <div class="header-content">
+        <!-- Logo -->
+        <!-- <div class="logo sm:w-30 sm:h-20 md:w-40 md:h-30 md:mt-4">
+          <img src="assets/logo.png" alt="JobTracker Logo" />
+        </div> -->
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input 
+            type="text" 
+            class="search-input" 
+            placeholder="Search jobs, companies, or skills..." 
+            (input)="onSearchInput($event)"
+          />
+          <button *ngIf="searchQuery" class="clear-search" (click)="clearSearch()">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
         
-        <!-- Right Column -->
-        <div class="dashboard-column">
-          <!-- Best Job Matches -->
-          <section class="dashboard-card job-matches">
-            <div class="card-header">
-              <h2 class="card-title">Best Job Matches</h2>
-            </div>
-            <div class="card-content">
-              <ul class="matches-list">
-                <li *ngFor="let match of bestJobMatches" class="match-item">
-                  <div class="match-details">
-                    <h3 class="match-position">{{ match.position }}</h3>
-                    <p class="match-company">{{ match.company }}</p>
-                  </div>
-                  <div class="match-percentage" [ngClass]="{
-                    'high': match.matchPercentage >= 90,
-                    'medium': match.matchPercentage >= 80 && match.matchPercentage < 90,
-                    'low': match.matchPercentage < 80
-                  }">
-                    {{ match.matchPercentage }}%
-                    <i class="fas fa-caret-up" *ngIf="match.matchPercentage >= 90"></i>
-                  </div>
-                </li>
+        <!-- Right Section -->
+        <div class="header-actions">
+          <button class="action-btn notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+          </button>
+          <button class="action-btn messages">
+            <i class="fas fa-envelope"></i>
+            <span class="notification-badge">5</span>
+          </button>
+          <div class="profile-menu">
+            <img [src]="profileData.image" class="profile-image" alt="Profile" (click)="toggleProfileMenu()"/>
+            <div *ngIf="showProfileMenu" class="profile-dropdown">
+              <ul>
+                <li><i class="fas fa-user"></i> My Profile</li>
+                <li><i class="fas fa-cog"></i> Settings</li>
+                <li><i class="fas fa-sign-out-alt"></i> Logout</li>
               </ul>
-              <button class="view-all-btn">View all matches</button>
             </div>
-          </section>
-          
-          <!-- Upcoming Interviews -->
-          <section class="dashboard-card upcoming-interviews">
-            <div class="card-header">
-              <h2 class="card-title">Upcoming Interviews</h2>
-            </div>
-            <div class="card-content">
-              <div *ngIf="upcomingInterviews.length > 0; else noInterviews">
-                <div *ngFor="let interview of upcomingInterviews" class="interview-card">
-                  <div class="interview-header">
-                    <div class="interview-company">
-                      <h3>{{ interview.position }}</h3>
-                      <p>{{ interview.company }}</p>
-                    </div>
-                    <div class="interview-date">
-                      <span class="date">{{ interview.date }}</span>
-                      <span class="time">{{ interview.time }}</span>
-                    </div>
-                  </div>
-                  <div class="interview-details">
-                    <div class="interview-type">
-                      <i class="fas" [ngClass]="{
-                        'fa-video': interview.type === 'Video Call',
-                        'fa-building': interview.type === 'On-site',
-                        'fa-phone': interview.type === 'Phone'
-                      }"></i>
-                      <span>{{ interview.type }}</span>
-                    </div>
-                    <div class="interview-people">
-                      <h4>Interviewers:</h4>
-                      <ul>
-                        <li *ngFor="let interviewer of interview.interviewers">
-                          {{ interviewer.name }} <span class="role">({{ interviewer.role }})</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div class="interview-actions">
-                    <button class="btn prepare">Prepare</button>
-                    <button class="btn reschedule">Reschedule</button>
-                  </div>
-                </div>
-              </div>
-              <ng-template #noInterviews>
-                <div class="no-interviews">
-                  <i class="far fa-calendar-alt"></i>
-                  <p>No upcoming interviews scheduled</p>
-                </div>
-              </ng-template>
-            </div>
-          </section>
-          
-          <!-- Career Recommendations -->
-          <section class="dashboard-card career-recommendations">
-            <div class="card-header">
-              <h2 class="card-title">AI Career Recommendations</h2>
-            </div>
-            <div class="card-content">
-              <div class="recommendations-list">
-                <div *ngFor="let rec of recommendations" class="recommendation-item" [ngClass]="rec.type">
-                  <div class="rec-icon">
-                    <i class="fas" [ngClass]="{
-                      'fa-graduation-cap': rec.type === 'course',
-                      'fa-bolt': rec.type === 'skill',
-                      'fa-certificate': rec.type === 'certification'
-                    }"></i>
-                  </div>
-                  <div class="rec-content">
-                    <h4>{{ rec.title }}</h4>
-                    <p *ngIf="rec.provider">{{ rec.provider }}</p>
-                    <p *ngIf="rec.description">{{ rec.description }}</p>
-                    <div class="rec-meta">
-                      <span class="relevance" [ngClass]="rec.relevance.toLowerCase().replace(' ', '-')">
-                        {{ rec.relevance }} Relevance
-                      </span>
-                      <span class="duration" *ngIf="rec.duration">{{ rec.duration }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <button class="view-more-btn">
-                <span>View more recommendations</span>
-                <i class="fas fa-chevron-right"></i>
-              </button>
-            </div>
-          </section>
+          </div>
         </div>
       </div>
-    </main>
+    </header>
+    
+    <!-- Greeting Section (Separate from sticky header) -->
+    <!-- Greeting Section (Similar to example) -->
+<section class="greeting-section ">
+  <div class="greeting-content">
+    <div class="greeting-text">
+      <h1 class="welcome-heading">Welcome to your Dashboard {{ profileData.name }}!</h1>
+      <p class="welcome-subtitle">Here's what's happening with your job search today.</p>
+      <button class="tutorial-btn">
+        <i class="fas fa-play-circle"></i>
+        Find Jobs Now
+      </button>
+    </div>
+    <div class="greeting-image">
+      <!-- You'll add your own downloaded SVG or image here -->
+      <img src="assets/job.svg" alt="Professional illustration">
+    </div>
   </div>
+</section>
+    
+    <!-- Stats Overview -->
+    <section class="stats-section">
+      <div class="stats-grid">
+        <div class="stat-card profile-views bg-red-400">
+          <div class="stat-icon"><i class="fas fa-eye"></i></div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ profileData.profileViews }}</h3>
+            <p class="stat-label">Profile Views</p>
+          </div>
+        </div>
+        
+        <div class="stat-card applications bg-amber-400">
+          <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ profileData.applications }}</h3>
+            <p class="stat-label">Applications</p>
+          </div>
+        </div>
+        
+        <div class="stat-card interviews">
+          <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ profileData.interviews }}</h3>
+            <p class="stat-label">Interviews</p>
+          </div>
+        </div>
+        
+        <div class="stat-card saved-jobs">
+          <div class="stat-icon"><i class="fas fa-bookmark"></i></div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ profileData.savedJobs }}</h3>
+            <p class="stat-label">Saved Jobs</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Main Dashboard Content -->
+    <div class="dashboard-content">
+      <!-- Left Column -->
+      <div class="dashboard-column">
+        <!-- Recent Activity -->
+        <section class="dashboard-card recent-activity">
+          <div class="card-header">
+            <h2 class="card-title">Recent Activity</h2>
+          </div>
+          <div class="card-content">
+            <ul class="activity-list">
+              <li *ngFor="let activity of recentActivity" class="activity-item">
+                <div class="activity-icon" [ngClass]="activity.type.toLowerCase()">
+                  <i *ngIf="activity.company === 'Google'" class="fab fa-google"></i>
+                  <i *ngIf="activity.company === 'Microsoft'" class="fab fa-microsoft"></i>
+                  <i *ngIf="activity.company !== 'Google' && activity.company !== 'Microsoft'" class="fas" [ngClass]="{
+                    'fa-eye': activity.type === 'View',
+                    'fa-paper-plane': activity.type === 'Application',
+                    'fa-user-tie': activity.type === 'Interview'
+                  }"></i>
+                </div>
+                <div class="activity-details">
+                  <h4 class="activity-title">{{ activity.company }}</h4>
+                  <p class="activity-meta">{{ activity.type }}</p>
+                </div>
+                <div class="activity-time">{{ activity.time }}</div>
+              </li>
+            </ul>
+          </div>
+        </section>
+        
+        <!-- Recent Applications -->
+        <section class="dashboard-card recent-applications">
+          <div class="card-header">
+            <h2 class="card-title">Recent Applications</h2>
+            <button class="view-all">View All</button>
+          </div>
+          <div class="card-content">
+            <div class="applications-grid">
+              <div *ngFor="let application of recentApplications" class="application-card">
+                <div class="application-header">
+                  <div class="company-logo">
+                    <img *ngIf="application.company !== 'Custom'" [src]="'assets/images/companies/' + application.logo" [alt]="application.company" />
+                    <img *ngIf="application.company === 'Custom'" [src]="'https://source.unsplash.com/random/100x100?company'" [alt]="application.company" />
+                  </div>
+                  <button class="star-btn">
+                    <i class="far fa-star"></i>
+                  </button>
+                </div>
+                <div class="application-content">
+                  <h3 class="job-title">{{ application.position }}</h3>
+                  <p class="company-name">{{ application.company }}</p>
+                  
+                  <div class="job-meta">
+                    <span class="job-type" *ngIf="application.isFullTime">Full-time</span>
+                    <span class="job-location" *ngIf="application.isRemote">Remote</span>
+                  </div>
+                  
+                  <div class="application-footer">
+                    <span class="application-date">Applied {{ application.date }}</span>
+                    <span class="application-status" [ngClass]="getStatusClass(application.status)">
+                      {{ application.status }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Additional Card to Fill Left Column Space -->
+        <section class="dashboard-card skills-progress">
+          <div class="card-header">
+            <h2 class="card-title">Skills Progress</h2>
+          </div>
+          <div class="card-content">
+            <div class="skills-list">
+              <div class="skill-item" *ngFor="let skill of skillsProgress">
+                <div class="skill-info">
+                  <h4 class="skill-name">{{ skill.name }}</h4>
+                  <span class="skill-percentage">{{ skill.percentage }}%</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar" [style.width.%]="skill.percentage"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      
+      <!-- Right Column -->
+      <div class="dashboard-column">
+        <!-- AI Career Recommendations -->
+        <section class="dashboard-card career-recommendations">
+          <div class="card-header">
+            <h2 class="card-title">AI Career Recommendations</h2>
+          </div>
+          <div class="card-content">
+            <div class="recommendations-list">
+              <div *ngFor="let rec of recommendations" class="recommendation-item" [ngClass]="rec.type">
+                <div class="rec-icon">
+                  <i class="fas" [ngClass]="{
+                    'fa-graduation-cap': rec.type === 'course',
+                    'fa-bolt': rec.type === 'skill',
+                    'fa-certificate': rec.type === 'certification'
+                  }"></i>
+                </div>
+                <div class="rec-content">
+                  <h4>{{ rec.title }}</h4>
+                  <p *ngIf="rec.provider">{{ rec.provider }}</p>
+                  <p *ngIf="rec.description">{{ rec.description }}</p>
+                  <div class="rec-meta">
+                    <span class="relevance" [ngClass]="rec.relevance.toLowerCase().replace(' ', '-')">
+                      {{ rec.relevance }} Relevance
+                    </span>
+                    <span class="duration" *ngIf="rec.duration">{{ rec.duration }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="view-more-btn">
+              <span>View more recommendations</span>
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </section>
+        
+        <!-- Best Job Matches -->
+        <section class="dashboard-card job-matches">
+          <div class="card-header">
+            <h2 class="card-title">Best Job Matches</h2>
+          </div>
+          <div class="card-content">
+            <ul class="matches-list">
+              <li *ngFor="let match of bestJobMatches" class="match-item">
+                <div class="match-details">
+                  <h3 class="match-position">{{ match.position }}</h3>
+                  <p class="match-company">{{ match.company }}</p>
+                </div>
+                <div class="match-percentage" [ngClass]="{
+                  'high': match.matchPercentage >= 90,
+                  'medium': match.matchPercentage >= 80 && match.matchPercentage < 90,
+                  'low': match.matchPercentage < 80
+                }">
+                  {{ match.matchPercentage }}%
+                  <i class="fas fa-caret-up" *ngIf="match.matchPercentage >= 90"></i>
+                </div>
+              </li>
+            </ul>
+            <button class="view-all-btn">View all matches</button>
+          </div>
+        </section>
+        
+        <!-- Upcoming Interviews -->
+        <section class="dashboard-card upcoming-interviews">
+          <div class="card-header">
+            <h2 class="card-title">Upcoming Interviews</h2>
+          </div>
+          <div class="card-content">
+            <div *ngIf="upcomingInterviews.length > 0; else noInterviews">
+              <div *ngFor="let interview of upcomingInterviews" class="interview-card">
+                <div class="interview-header">
+                  <div class="interview-company">
+                    <h3>{{ interview.position }}</h3>
+                    <p>{{ interview.company }}</p>
+                  </div>
+                  <div class="interview-date">
+                    <span class="date">{{ interview.date }}</span>
+                    <span class="time">{{ interview.time }}</span>
+                  </div>
+                </div>
+                <div class="interview-details">
+                  <div class="interview-type">
+                    <i class="fas" [ngClass]="{
+                      'fa-video': interview.type === 'Video Call',
+                      'fa-building': interview.type === 'On-site',
+                      'fa-phone': interview.type === 'Phone'
+                    }"></i>
+                    <span>{{ interview.type }}</span>
+                  </div>
+                  <div class="interview-people">
+                    <h4>Interviewers:</h4>
+                    <ul>
+                      <li *ngFor="let interviewer of interview.interviewers">
+                        {{ interviewer.name }} <span class="role">({{ interviewer.role }})</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="interview-actions">
+                  <button class="btn prepare">Prepare</button>
+                  <button class="btn reschedule">Reschedule</button>
+                </div>
+              </div>
+            </div>
+            <ng-template #noInterviews>
+              <div class="no-interviews">
+                <i class="far fa-calendar-alt"></i>
+                <p>No upcoming interviews scheduled</p>
+              </div>
+            </ng-template>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>

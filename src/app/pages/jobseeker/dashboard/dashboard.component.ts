@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
@@ -29,6 +29,11 @@ interface ActivityItem {
   logo: string;
 }
 
+interface Skill {
+  name: string;
+  percentage: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -38,13 +43,24 @@ interface ActivityItem {
 })
 export class DashboardComponent implements OnInit {
   sidebarCollapsed = false;
+  searchQuery = '';
+  showProfileMenu = false;
+  
   profileData = {
     name: 'Elena Rodriguez',
     profileViews: 1240,
     applications: 45,
     interviews: 12,
-    savedJobs: 28
+    savedJobs: 28,
+    image: 'assets/ana.jpg'
   };
+  
+  skillsProgress: Skill[] = [
+    { name: 'UI Design', percentage: 85 },
+    { name: 'UX Research', percentage: 70 },
+    { name: 'Prototyping', percentage: 90 },
+    { name: 'User Testing', percentage: 65 }
+  ];
   
   recentActivity: ActivityItem[] = [
     { id: 1, company: 'Google', type: 'View', time: '2 hours ago', logo: 'google.svg' },
@@ -54,7 +70,7 @@ export class DashboardComponent implements OnInit {
   
   bestJobMatches: JobMatch[] = [
     { id: 1, position: 'Senior UX Designer', company: 'Figma', matchPercentage: 95 },
-    { id: 2, position: 'Product Designer', company: 'Figma', matchPercentage: 89 },
+    { id: 2, position: 'Product Designer', company: 'Adobe', matchPercentage: 89 },
     { id: 3, position: 'UI Engineer', company: 'Google', matchPercentage: 82 }
   ];
   
@@ -71,13 +87,13 @@ export class DashboardComponent implements OnInit {
     },
     { 
       id: 2, 
-      company: 'Dropbox', 
-      position: 'Senior Product Designer',
-      logo: 'dropbox.svg',
-      status: 'In Review',
+      company: 'Custom', 
+      position: 'UX Researcher',
+      logo: '',
+      status: 'Applied',
       date: '2 days ago', 
       isFullTime: true,
-      isRemote: true
+      isRemote: false
     },
     { 
       id: 3, 
@@ -91,30 +107,10 @@ export class DashboardComponent implements OnInit {
     },
     { 
       id: 4, 
-      company: 'Dropbox', 
-      position: 'Senior Product Designer',
-      logo: 'dropbox.svg',
-      status: 'In Review',
-      date: '3 days ago',
-      isFullTime: true,
-      isRemote: true
-    },
-    { 
-      id: 5, 
-      company: 'Dropbox', 
-      position: 'Senior Product Designer',
-      logo: 'dropbox.svg',
-      status: 'In Review',
-      date: '3 days ago',
-      isFullTime: true,
-      isRemote: true
-    },
-    { 
-      id: 6, 
-      company: 'Graphica', 
-      position: 'Senior Product Designer',
-      logo: 'graphica.svg',
-      status: 'In Review',
+      company: 'Custom', 
+      position: 'UI Designer',
+      logo: '',
+      status: 'Interview',
       date: '3 days ago',
       isFullTime: true,
       isRemote: true
@@ -176,6 +172,25 @@ export class DashboardComponent implements OnInit {
     this.sidebarCollapsed = window.innerWidth < 768;
   }
 
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll() {
+    const header = document.querySelector('.dashboard-header') as HTMLElement;
+    
+    if (window.scrollY > 0) {
+      header.classList.add('scrolled');
+    } else {
+      header.classList.remove('scrolled');
+    }
+  }
+
+  @HostListener('window:click', ['$event'])
+  onWindowClick(event: MouseEvent) {
+    // Close profile menu when clicking outside
+    if (this.showProfileMenu && !(event.target as HTMLElement).closest('.profile-menu')) {
+      this.showProfileMenu = false;
+    }
+  }
+
   onToggleSidebar(collapsed: boolean) {
     this.sidebarCollapsed = collapsed;
   }
@@ -189,5 +204,22 @@ export class DashboardComponent implements OnInit {
       case 'Rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  }
+
+  onSearchInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchQuery = input.value;
+    // Implement search functionality here
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+  }
+
+  toggleProfileMenu(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showProfileMenu = !this.showProfileMenu;
   }
 }

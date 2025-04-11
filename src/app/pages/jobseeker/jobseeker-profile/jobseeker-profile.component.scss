@@ -1,0 +1,91 @@
+/* jobseeker-profile.component.scss */
+
+// Sidebar placeholder (remove when actual sidebar component is used)
+.sidebar-placeholder {
+    width: 250px;
+    background-color: #1e293b;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    @media (max-width: 767px) {
+      display: none;
+    }
+  }
+  
+  // Main content styles
+  .main-content {
+    flex: 1;
+    margin-left: 250px;
+    padding: 1.5rem;
+    transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    height: 100vh;
+    
+    &.expanded {
+      margin-left: 80px;
+    }
+    
+    @media (max-width: 767px) {
+      margin-left: 0 !important;
+      padding: 1rem;
+    }
+  }
+  
+  // Custom animations
+  .slide-fade-in {
+    animation: slideFadeIn 0.4s ease-out forwards;
+  }
+  
+  @keyframes slideFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  // Hover effects for cards
+  section.bg-white {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+  }
+  
+  // Skill badge hover effect
+  .bg-blue-100 {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+  
+  // Progress bar animation
+  .bg-green-500 {
+    transition: width 1s ease-out;
+  }
+  
+  // Timeline styling enhancements
+  .timeline-dot {
+    position: absolute;
+    left: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    z-index: 10;
+  }
+  
+  // Profile image hover effect
+  img.rounded-full {
+    transition: transform 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
