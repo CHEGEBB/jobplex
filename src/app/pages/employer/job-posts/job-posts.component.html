@@ -1,0 +1,521 @@
+<div class="flex flex-col md:flex-row min-h-screen bg-gray-50">
+    <!-- Import the employer sidebar -->
+    <app-sidebar-employer class="w-full md:w-64 flex-shrink-0"></app-sidebar-employer>
+  
+    <!-- Main content area -->
+    <div class="flex-grow p-4 md:p-8 overflow-y-auto">
+      <div class="max-w-7xl mx-auto">
+        <!-- Header section -->
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-briefcase mr-3 text-employer"></i>
+            Job Posts Management
+          </h1>
+          <p class="text-gray-600 mt-2">Create, track, and manage your job listings</p>
+        </div>
+  
+        <!-- Stats cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="stats-card" [ngClass]="{'pulse-animation': highlightActive}">
+            <div class="icon-container bg-blue-100">
+              <i class="fas fa-file-alt text-blue-500"></i>
+            </div>
+            <div class="stats-content">
+              <span class="stats-value">{{jobStats.active}}</span>
+              <span class="stats-label">Active Posts</span>
+            </div>
+          </div>
+  
+          <div class="stats-card">
+            <div class="icon-container bg-green-100">
+              <i class="fas fa-users text-green-500"></i>
+            </div>
+            <div class="stats-content">
+              <span class="stats-value">{{jobStats.applications}}</span>
+              <span class="stats-label">Applications</span>
+            </div>
+          </div>
+  
+          <div class="stats-card">
+            <div class="icon-container bg-purple-100">
+              <i class="fas fa-user-check text-purple-500"></i>
+            </div>
+            <div class="stats-content">
+              <span class="stats-value">{{jobStats.matched}}</span>
+              <span class="stats-label">Matched Candidates</span>
+            </div>
+          </div>
+  
+          <div class="stats-card">
+            <div class="icon-container bg-amber-100">
+              <i class="fas fa-calendar-check text-amber-500"></i>
+            </div>
+            <div class="stats-content">
+              <span class="stats-value">{{jobStats.interviews}}</span>
+              <span class="stats-label">Scheduled Interviews</span>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Actions and search bar -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <button (click)="toggleJobForm()" class="btn-employer flex items-center gap-2">
+            <i class="fas fa-plus"></i>
+            <span>Post New Job</span>
+          </button>
+  
+          <div class="relative w-full md:w-auto">
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <input type="text" [(ngModel)]="searchTerm" 
+                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-employer focus:border-employer w-full md:w-80"
+                   placeholder="Search job posts...">
+          </div>
+        </div>
+  
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-3 mb-8">
+          <button (click)="setStatusFilter('all')" 
+                  class="filter-btn" 
+                  [ngClass]="{'filter-active': statusFilter === 'all'}">
+            All Posts
+          </button>
+          <button (click)="setStatusFilter('active')" 
+                  class="filter-btn" 
+                  [ngClass]="{'filter-active': statusFilter === 'active'}">
+            Active
+          </button>
+          <button (click)="setStatusFilter('draft')" 
+                  class="filter-btn" 
+                  [ngClass]="{'filter-active': statusFilter === 'draft'}">
+            Drafts
+          </button>
+          <button (click)="setStatusFilter('closed')" 
+                  class="filter-btn" 
+                  [ngClass]="{'filter-active': statusFilter === 'closed'}">
+            Closed
+          </button>
+          <button (click)="setStatusFilter('archived')" 
+                  class="filter-btn" 
+                  [ngClass]="{'filter-active': statusFilter === 'archived'}">
+            Archived
+          </button>
+        </div>
+  
+        <!-- Job listings -->
+        <div class="job-cards-container">
+          <div *ngFor="let job of filteredJobs" class="job-card fade-in" [ngClass]="{'highlight-card': job.id === highlightedJobId}">
+            <div class="flex flex-col md:flex-row justify-between">
+              <div class="job-main-content">
+                <div class="job-title-section">
+                  <h3 class="job-title">{{job.title}}</h3>
+                  <span class="job-status" [ngClass]="'status-' + job.status">{{job.status}}</span>
+                </div>
+                <div class="job-details">
+                  <span><i class="fas fa-map-marker-alt"></i> {{job.location}}</span>
+                  <span><i class="fas fa-money-bill-wave"></i> {{job.salary}}</span>
+                  <span><i class="fas fa-clock"></i> {{job.type}}</span>
+                  <span><i class="fas fa-calendar-alt"></i> Posted: {{job.postDate}}</span>
+                </div>
+  
+                <div class="job-skills">
+                  <span *ngFor="let skill of job.skills" class="skill-badge">{{skill}}</span>
+                </div>
+              </div>
+  
+              <div class="job-metrics">
+                <div class="metric-item">
+                  <span class="metric-value">{{job.views}}</span>
+                  <span class="metric-label">Views</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-value">{{job.applications}}</span>
+                  <span class="metric-label">Applications</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-value">{{job.matches}}</span>
+                  <span class="metric-label">Matches</span>
+                </div>
+              </div>
+            </div>
+  
+            <div class="job-actions">
+              <button class="action-btn view" (click)="viewJob(job.id)">
+                <i class="fas fa-eye"></i> View
+              </button>
+              <button class="action-btn edit" (click)="editJob(job)">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="action-btn duplicate" (click)="duplicateJob(job)">
+                <i class="fas fa-copy"></i> Duplicate
+              </button>
+              <button class="action-btn" 
+                      [ngClass]="job.status === 'active' ? 'pause' : 'resume'"
+                      (click)="toggleJobStatus(job)">
+                <i class="fas" [ngClass]="job.status === 'active' ? 'fa-pause' : 'fa-play'"></i>
+                {{job.status === 'active' ? 'Pause' : 'Resume'}}
+              </button>
+              <button class="action-btn delete" (click)="archiveJob(job.id)">
+                <i class="fas fa-archive"></i> Archive
+              </button>
+            </div>
+          </div>
+  
+          <!-- Empty state -->
+          <div *ngIf="filteredJobs.length === 0" class="empty-state">
+            <img src="assets/images/empty-jobs.svg" alt="No jobs found" class="empty-img">
+            <h3>No job posts found</h3>
+            <p>{{getEmptyStateMessage()}}</p>
+            <button (click)="toggleJobForm()" class="btn-employer mt-4">
+              <i class="fas fa-plus mr-2"></i> Create Your First Job Post
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Job post form modal -->
+  <div *ngIf="showJobForm" class="modal-overlay" (click)="closeJobFormIfClickedOutside($event)">
+    <div class="job-form-container" #jobFormContainer>
+      <div class="form-header">
+        <h2><i class="fas fa-briefcase mr-2"></i> {{editMode ? 'Edit Job Post' : 'Create New Job Post'}}</h2>
+        <button (click)="toggleJobForm()" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+  
+      <form [formGroup]="jobForm" (ngSubmit)="saveJob()" class="job-form">
+        <div class="form-tabs">
+          <button type="button" [ngClass]="{'active-tab': activeTab === 'basic'}" (click)="setActiveTab('basic')">
+            <i class="fas fa-info-circle"></i> Basic Info
+          </button>
+          <button type="button" [ngClass]="{'active-tab': activeTab === 'details'}" (click)="setActiveTab('details')">
+            <i class="fas fa-list-ul"></i> Job Details
+          </button>
+          <button type="button" [ngClass]="{'active-tab': activeTab === 'skills'}" (click)="setActiveTab('skills')">
+            <i class="fas fa-tools"></i> Skills & Requirements
+          </button>
+          <button type="button" [ngClass]="{'active-tab': activeTab === 'publish'}" (click)="setActiveTab('publish')">
+            <i class="fas fa-paper-plane"></i> Publish Settings
+          </button>
+        </div>
+  
+        <div [hidden]="activeTab !== 'basic'" class="form-section">
+          <div class="form-group">
+            <label for="title">Job Title <span class="required">*</span></label>
+            <input type="text" id="title" formControlName="title" placeholder="e.g. Senior Frontend Developer">
+            <div *ngIf="jobForm.get('title')?.invalid && (jobForm.get('title')?.dirty || jobForm.get('title')?.touched)" class="error-message">
+              Job title is required
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <div class="form-group">
+              <label for="department">Department</label>
+              <input type="text" id="department" formControlName="department" placeholder="e.g. Engineering">
+            </div>
+  
+            <div class="form-group">
+              <label for="jobType">Job Type <span class="required">*</span></label>
+              <select id="jobType" formControlName="jobType">
+                <option value="">Select Job Type</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Contract">Contract</option>
+                <option value="Freelance">Freelance</option>
+                <option value="Internship">Internship</option>
+              </select>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <div class="form-group">
+              <label for="location">Location <span class="required">*</span></label>
+              <input type="text" id="location" formControlName="location" placeholder="e.g. New York, NY">
+            </div>
+  
+            <div class="form-group">
+              <label for="workMode">Work Mode</label>
+              <select id="workMode" formControlName="workMode">
+                <option value="On-site">On-site</option>
+                <option value="Remote">Remote</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <div class="form-group">
+              <label for="minSalary">Minimum Salary</label>
+              <input type="number" id="minSalary" formControlName="minSalary" placeholder="e.g. 50000">
+            </div>
+  
+            <div class="form-group">
+              <label for="maxSalary">Maximum Salary</label>
+              <input type="number" id="maxSalary" formControlName="maxSalary" placeholder="e.g. 80000">
+            </div>
+          </div>
+  
+          <div class="form-group">
+            <div class="flex items-center gap-2">
+              <label>Salary Visibility</label>
+              <div class="tooltip-container">
+                <i class="fas fa-info-circle text-gray-400"></i>
+                <span class="tooltip-text">Jobs with visible salary ranges get 30% more applications</span>
+              </div>
+            </div>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" formControlName="salaryVisible" [value]="true">
+                <span>Show salary range</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" formControlName="salaryVisible" [value]="false">
+                <span>Hide salary range</span>
+              </label>
+            </div>
+          </div>
+        </div>
+  
+        <div [hidden]="activeTab !== 'details'" class="form-section">
+          <div class="form-group">
+            <label for="description">Job Description <span class="required">*</span></label>
+            <div class="rich-text-toolbar">
+              <button type="button" (click)="formatText('bold')"><i class="fas fa-bold"></i></button>
+              <button type="button" (click)="formatText('italic')"><i class="fas fa-italic"></i></button>
+              <button type="button" (click)="formatText('underline')"><i class="fas fa-underline"></i></button>
+              <button type="button" (click)="formatText('list')"><i class="fas fa-list-ul"></i></button>
+              <button type="button" (click)="formatText('header')"><i class="fas fa-heading"></i></button>
+            </div>
+            <textarea id="description" formControlName="description" rows="8" placeholder="Describe the role, responsibilities, and what the successful candidate will do"></textarea>
+          </div>
+  
+          <div class="form-group">
+            <label for="requirements">Requirements <span class="required">*</span></label>
+            <textarea id="requirements" formControlName="requirements" rows="6" placeholder="List the must-have qualifications, experience, and attributes"></textarea>
+          </div>
+  
+          <div class="form-group">
+            <label for="benefits">Benefits and Perks</label>
+            <textarea id="benefits" formControlName="benefits" rows="4" placeholder="Describe the benefits, perks, and company culture"></textarea>
+          </div>
+  
+          <div class="form-row">
+            <div class="form-group">
+              <label for="experienceLevel">Experience Level</label>
+              <select id="experienceLevel" formControlName="experienceLevel">
+                <option value="Entry-level">Entry-level</option>
+                <option value="Mid-level">Mid-level</option>
+                <option value="Senior">Senior</option>
+                <option value="Executive">Executive</option>
+              </select>
+            </div>
+  
+            <div class="form-group">
+              <label for="educationLevel">Education Level</label>
+              <select id="educationLevel" formControlName="educationLevel">
+                <option value="None">None required</option>
+                <option value="High School">High School</option>
+                <option value="Associate's">Associate's Degree</option>
+                <option value="Bachelor's">Bachelor's Degree</option>
+                <option value="Master's">Master's Degree</option>
+                <option value="Doctorate">Doctorate</option>
+              </select>
+            </div>
+          </div>
+        </div>
+  
+        <div [hidden]="activeTab !== 'skills'" class="form-section">
+          <div class="form-group">
+            <div class="flex justify-between items-center">
+              <label for="skills">Required Skills <span class="required">*</span></label>
+              <div class="tooltip-container">
+                <i class="fas fa-info-circle text-gray-400"></i>
+                <span class="tooltip-text">Add skills that are essential for the role. These will be used for candidate matching.</span>
+              </div>
+            </div>
+            
+            <div class="skill-input-container">
+              <input type="text" id="skillInput" 
+                     [formControl]="skillInput" 
+                     placeholder="Type a skill and press Enter"
+                     (keydown.enter)="addSkill($event)">
+              <button type="button" (click)="addSkill($event)" class="skill-add-btn">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            
+            <div class="selected-skills">
+              <div *ngFor="let skill of selectedSkills; let i = index" class="selected-skill">
+                {{skill}}
+                <button type="button" (click)="removeSkill(i)" class="remove-skill">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+  
+            <div *ngIf="jobForm.get('skills')?.invalid && jobForm.get('skills')?.touched" class="error-message">
+              At least one skill is required
+            </div>
+          </div>
+  
+          <div class="popular-skills">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Popular skills in this category:</h4>
+            <div class="popular-skills-list">
+              <button type="button" *ngFor="let skill of popularSkills" 
+                      (click)="addPopularSkill(skill)"
+                      [disabled]="selectedSkills.includes(skill)"
+                      [ngClass]="{'disabled-skill': selectedSkills.includes(skill)}"
+                      class="popular-skill-btn">
+                {{skill}}
+              </button>
+            </div>
+          </div>
+  
+          <div class="form-group">
+            <label for="screeningQuestions">Screening Questions</label>
+            <div class="add-question-btn" (click)="addScreeningQuestion()">
+              <i class="fas fa-plus"></i> Add Question
+            </div>
+  
+            <div formArrayName="screeningQuestions" class="screening-questions">
+              <div *ngFor="let question of screeningQuestions.controls; let i = index" class="screening-question">
+                <div [formGroupName]="i" class="question-form">
+                  <div class="question-header">
+                    <h4>Question {{i + 1}}</h4>
+                    <button type="button" (click)="removeScreeningQuestion(i)" class="remove-question">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                  <div class="form-group">
+                    <input type="text" formControlName="question" placeholder="Enter your question">
+                  </div>
+                  <div class="form-group">
+                    <select formControlName="type">
+                      <option value="text">Text Answer</option>
+                      <option value="yesno">Yes/No</option>
+                      <option value="multiple">Multiple Choice</option>
+                    </select>
+                  </div>
+                  <div *ngIf="question.get('type')?.value === 'multiple'" class="multiple-choice-options">
+                    <div class="form-group">
+                      <label>Options (one per line)</label>
+                      <textarea formControlName="options" rows="4" placeholder="Enter options, one per line"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="flex items-center">
+                      <input type="checkbox" id="required{{i}}" formControlName="required">
+                      <label for="required{{i}}" class="ml-2">Required answer</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <div [hidden]="activeTab !== 'publish'" class="form-section">
+          <div class="form-group">
+            <label for="deadlineDate">Application Deadline</label>
+            <input type="date" id="deadlineDate" formControlName="deadlineDate">
+          </div>
+  
+          <div class="form-group">
+            <label>Publishing Options</label>
+            <div class="publishing-options">
+              <div class="publishing-option">
+                <input type="checkbox" id="internal" formControlName="internal">
+                <label for="internal">
+                  <i class="fas fa-building"></i>
+                  <span>Internal Job Board</span>
+                </label>
+              </div>
+              <div class="publishing-option">
+                <input type="checkbox" id="careerSite" formControlName="careerSite">
+                <label for="careerSite">
+                  <i class="fas fa-globe"></i>
+                  <span>Company Career Site</span>
+                </label>
+              </div>
+              <div class="publishing-option">
+                <input type="checkbox" id="linkedin" formControlName="linkedin">
+                <label for="linkedin">
+                  <i class="fab fa-linkedin"></i>
+                  <span>LinkedIn</span>
+                </label>
+              </div>
+              <div class="publishing-option">
+                <input type="checkbox" id="indeed" formControlName="indeed">
+                <label for="indeed">
+                  <i class="fas fa-search"></i>
+                  <span>Indeed</span>
+                </label>
+              </div>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <div class="form-group">
+              <label for="teamAccess">Team Access</label>
+              <select id="teamAccess" formControlName="teamAccess">
+                <option value="all">All Team Members</option>
+                <option value="hr">HR Team Only</option>
+                <option value="department">Department Only</option>
+                <option value="custom">Custom Permissions</option>
+              </select>
+            </div>
+  
+            <div class="form-group">
+              <label for="status">Job Status</label>
+              <select id="status" formControlName="status">
+                <option value="draft">Save as Draft</option>
+                <option value="active">Publish Now</option>
+                <option value="scheduled">Schedule for Later</option>
+              </select>
+            </div>
+          </div>
+  
+          <div class="form-group" *ngIf="jobForm.get('status')?.value === 'scheduled'">
+            <label for="scheduledDate">Schedule Publish Date</label>
+            <input type="datetime-local" id="scheduledDate" formControlName="scheduledDate">
+          </div>
+  
+          <div class="form-group notifications-section">
+            <label>Notifications</label>
+            <div class="notification-options">
+              <div class="notification-option">
+                <input type="checkbox" id="newApplications" formControlName="notifyNewApplications">
+                <label for="newApplications">Notify me for new applications</label>
+              </div>
+              <div class="notification-option">
+                <input type="checkbox" id="topMatches" formControlName="notifyTopMatches">
+                <label for="topMatches">Notify me for top matches (90%+ match score)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <div class="form-actions">
+          <div class="form-nav-buttons">
+            <button type="button" class="btn-back" [disabled]="activeTab === 'basic'" (click)="goToPreviousTab()">
+              <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <button type="button" class="btn-next" [disabled]="activeTab === 'publish'" (click)="goToNextTab()">
+              Next <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+  
+          <div class="final-actions">
+            <button type="button" (click)="toggleJobForm()" class="btn-cancel">Cancel</button>
+            <button type="button" *ngIf="activeTab !== 'publish'" (click)="saveAsDraft()" class="btn-draft">
+              <i class="fas fa-save"></i> Save as Draft
+            </button>
+            <button type="submit" *ngIf="activeTab === 'publish'" class="btn-save">
+              <i class="fas fa-paper-plane"></i> {{editMode ? 'Update Job Post' : 'Create Job Post'}}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>

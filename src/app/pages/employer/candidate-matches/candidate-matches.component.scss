@@ -1,0 +1,199 @@
+// Animation for candidate cards
+@keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .candidate-card {
+    animation: fadeIn 0.4s ease-out;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-3px);
+    }
+  }
+  
+  // Staggered animation for candidate cards
+  .candidate-card:nth-child(3n+1) {
+    animation-delay: 0.1s;
+  }
+  .candidate-card:nth-child(3n+2) {
+    animation-delay: 0.2s;
+  }
+  .candidate-card:nth-child(3n+3) {
+    animation-delay: 0.3s;
+  }
+  
+  // Status badge transitions
+  [class*="bg-"] {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  // Modal animation
+  .candidate-modal {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  // Employer UI Colors
+  $employer-color: #3f51b5;
+  $employer-gradient-start: rgba(63, 81, 181, 0.85);
+  $employer-gradient-end: rgba(40, 53, 147, 0.95);
+  
+  // Custom scrollbar for candidate modal
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #cfd8dc;
+    border-radius: 5px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b0bec5;
+  }
+  
+  // Checkbox styling
+  input[type="checkbox"] {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:checked {
+      animation: pulse 0.3s ease;
+    }
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  // Status tracker line animation
+  .absolute.top-5.left-0.w-full.h-1.bg-gray-200::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    background: $employer-color;
+    transition: width 0.5s ease;
+  }
+  
+  // Button hover effects
+  button {
+    transition: all 0.2s ease;
+    
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+  
+  // Card selection animation
+  .border-2 {
+    transition: border-color 0.3s ease;
+  }
+  
+  // Tags and skill badges animation
+  .bg-gray-100.text-gray-700.text-xs.rounded-full {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: #e8eaf6;
+      color: $employer-color;
+    }
+  }
+  
+  // Menu transition
+  .absolute.right-0.mt-1.w-48.bg-white.rounded-md.shadow-lg {
+    animation: fadeIn 0.2s ease-out;
+    transform-origin: top right;
+  }
+  
+  // Search box focus animation
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  input[type="time"]:focus,
+  select:focus,
+  textarea:focus {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  
+  // Mobile menu animation
+  @keyframes slideIn {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes fadeInBg {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.5;
+    }
+  }
+  
+  .md\:hidden.fixed.left-0.top-0.h-full.w-\[250px\] {
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .md\:hidden.fixed.inset-0.bg-black.bg-opacity-50 {
+    animation: fadeInBg 0.3s ease-out;
+  }
+  
+  // Job selection hover effect
+  .border.rounded-md.p-3.cursor-pointer.transition-all {
+    &:hover:not(.border-indigo-500) {
+      border-color: #c5cae9;
+      background-color: #f5f5f5;
+    }
+  }
+  
+  // Custom focus style for all interactive elements
+  *:focus-visible {
+    outline: 2px solid rgba(63, 81, 181, 0.5);
+    outline-offset: 2px;
+  }
+  
+  // Print styles for resume view
+  @media print {
+    .employer-dashboard-container {
+      display: none;
+    }
+    
+    .candidate-modal {
+      position: static;
+      overflow: visible;
+      animation: none;
+      
+      .bg-white.rounded-lg.shadow-xl {
+        box-shadow: none;
+        max-height: none;
+        overflow: visible;
+        
+        button {
+          display: none;
+        }
+      }
+    }
+  }

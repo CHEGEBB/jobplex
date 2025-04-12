@@ -1,0 +1,735 @@
+<!-- interviews.component.html -->
+<div class="interviews-page-container flex">
+    <!-- Sidebar component import -->
+    <app-sidebar-employer></app-sidebar-employer>
+  
+    <!-- Main content area -->
+    <div class="interviews-content flex-1 p-4 md:p-6 ml-0 md:ml-[250px]">
+      <div class="page-header mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Interview Management</h1>
+        <p class="text-gray-600 mt-2">Schedule, manage and organize your candidate interviews</p>
+      </div>
+  
+      <!-- Stats summary cards -->
+      <div class="stats-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card bg-white rounded-lg shadow-md p-4 border-none border-employer-primary fade-in-up">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-gray-500 text-sm">Upcoming Interviews</p>
+              <h3 class="text-2xl font-bold text-gray-800">12</h3>
+            </div>
+            <div class="icon-circle bg-employer-light text-employer-primary p-3 rounded-full">
+              <i class="fas fa-calendar-check text-xl"></i>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            <i class="fas fa-arrow-up text-green-500"></i> 
+            <span class="text-green-500 font-medium">9% increase</span> this week
+          </p>
+        </div>
+  
+        <div class="stat-card bg-white rounded-lg shadow-md p-4 border-none border-employer-primary fade-in-up animation-delay-100">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-gray-500 text-sm">Completed</p>
+              <h3 class="text-2xl font-bold text-gray-800">28</h3>
+            </div>
+            <div class="icon-circle bg-employer-light text-employer-primary p-3 rounded-full">
+              <i class="fas fa-check-circle text-xl"></i>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            <span class="text-gray-600 font-medium">4 this week</span>, 24 previously
+          </p>
+        </div>
+  
+        <div class="stat-card bg-white rounded-lg shadow-md p-4 border-none border-employer-primary fade-in-up animation-delay-200">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-gray-500 text-sm">Feedback Pending</p>
+              <h3 class="text-2xl font-bold text-gray-800">7</h3>
+            </div>
+            <div class="icon-circle bg-employer-light text-employer-primary p-3 rounded-full">
+              <i class="fas fa-clipboard-list text-xl"></i>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            <i class="fas fa-exclamation-circle text-amber-500"></i> 
+            <span class="text-amber-500 font-medium">3 urgent</span> (>48h)
+          </p>
+        </div>
+  
+        <div class="stat-card bg-white rounded-lg shadow-md p-4 border-none border-employer-primary fade-in-up animation-delay-300">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-gray-500 text-sm">Avg. Rating</p>
+              <h3 class="text-2xl font-bold text-gray-800">3.8/5</h3>
+            </div>
+            <div class="icon-circle bg-employer-light text-employer-primary p-3 rounded-full">
+              <i class="fas fa-star text-xl"></i>
+            </div>
+          </div>
+          <div class="text-xs text-gray-500 mt-2 flex items-center">
+            <div class="flex">
+              <i class="fas fa-star text-amber-400"></i>
+              <i class="fas fa-star text-amber-400"></i>
+              <i class="fas fa-star text-amber-400"></i>
+              <i class="fas fa-star-half-alt text-amber-400"></i>
+              <i class="far fa-star text-amber-400"></i>
+            </div>
+            <span class="ml-1">(28 reviews)</span>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Main tabs for interviews management -->
+      <div class="tabs-container bg-white rounded-lg shadow-md mb-6 fade-in">
+        <div class="tabs flex border-none overflow-x-auto">
+          <button 
+            *ngFor="let tab of tabs" 
+            [class]="'tab-btn px-4 py-3 font-medium text-sm md:text-base whitespace-nowrap ' + (activeTab === tab.id ? 'text-employer-primary border-b-2\ border-employer-primary' : 'text-gray-500 hover:text-employer-primary')"
+            (click)="setActiveTab(tab.id)">
+            <i [class]="'fas ' + tab.icon + ' mr-2'"></i>
+            {{tab.name}}
+          </button>
+        </div>
+  
+        <div class="tab-content p-4">
+          <!-- Upcoming Interviews Tab -->
+          <div *ngIf="activeTab === 'upcoming'" class="upcoming-content">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+              <div class="search-filter flex flex-col sm:flex-row gap-3 mb-3 md:mb-0 w-full md:w-auto">
+                <div class="relative">
+                  <input 
+                    type="text" 
+                    placeholder="Search candidates..." 
+                    class="pl-10 pr-4 py-2 border-[#ccc] border-2 rounded-lg focus:ring-[#666] focus:border-[#ccc] w-full sm:w-64"
+                    [(ngModel)]="searchTerm">
+                  <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+                <select 
+                  class="border-[#ccc] border-2 rounded-lg px-3 py-2 focus:ring-employer-primary focus:border-employer-primary"
+                  [(ngModel)]="statusFilter">
+                  <option value="all">All Statuses</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+              <button (click)="openScheduleModal()" class="btn-schedule px-4 py-2 bg-employer-primary text-white rounded-lg flex items-center hover:bg-employer-dark transition w-full md:w-auto justify-center">
+                <i class="fas fa-plus-circle mr-2"></i>
+                Schedule New Interview
+              </button>
+            </div>
+  
+            <!-- Calendar & List View Toggle -->
+            <div class="view-toggle flex bg-gray-100 rounded-lg p-1 inline-block mb-4">
+              <button 
+                [class]="'px-3 py-2 rounded-md flex items-center text-sm ' + (calendarView ? 'bg-white shadow-sm text-employer-primary' : 'text-gray-600')"
+                (click)="calendarView = true">
+                <i class="fas fa-calendar-alt mr-2"></i> Calendar
+              </button>
+              <button 
+                [class]="'px-3 py-2 rounded-md flex items-center text-sm ' + (!calendarView ? 'bg-white shadow-sm text-employer-primary' : 'text-gray-600')"
+                (click)="calendarView = false">
+                <i class="fas fa-list-ul mr-2"></i> List
+              </button>
+            </div>
+  
+            <!-- Calendar View -->
+            <div *ngIf="calendarView" class="calendar-view fade-in">
+              <div class="calendar-header flex justify-between items-center mb-4">
+                <div class="month-selector flex items-center">
+                  <button class="p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                  <h3 class="text-lg font-medium mx-4">April 2025</h3>
+                  <button class="p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+                <div class="view-options flex border-1 border-[#ccc] rounded-lg">
+                  <button class="px-3 py-1 text-sm border-none rounded-l-lg bg-employer-primary text-white">Month</button>
+                  <button class="px-3 py-1 text-sm border-none border-l-0 text-gray-600 hover:bg-gray-100">Week</button>
+                  <button class="px-3 py-1 text-sm border-none border-l-0 rounded-r-lg text-gray-600 hover:bg-gray-100">Day</button>
+                </div>
+              </div>
+              
+              <div class="calendar-grid border-none  rounded-lg overflow-hidden">
+                <!-- Calendar Days Header -->
+                <div class="grid grid-cols-7 bg-gray-50 border-b">
+                  <div *ngFor="let day of calendarDays" class="p-2 text-center text-sm font-medium text-gray-700 border-r last:border-r-0">
+                    {{day}}
+                  </div>
+                </div>
+                
+                <!-- Calendar Grid -->
+                <div class="grid grid-cols-7 grid-rows-5 h-[500px] drop-shadow-lg">
+                  <div *ngFor="let date of calendarDates" 
+                       [class]="'calendar-day border-r border-b :border-r-0 p-1 h-full relative ' + (date.isCurrentMonth ? '' : 'bg-gray-50 text-gray-400')">
+                    <div class="date-header flex justify-between items-center">
+                      <span class="text-xs p-1" [class.font-bold]="date.isToday">{{date.day}}</span>
+                      <span *ngIf="date.events > 0" class="events-count bg-employer-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {{date.events}}
+                      </span>
+                    </div>
+                    
+                    <!-- Event pills -->
+                    <div *ngIf="date.events > 0" class="event-pills space-y-1 mt-1">
+                      <ng-container *ngFor="let event of date.eventDetails.slice(0, 2)">
+                        <div 
+                          class="event-pill text-xs p-1 rounded truncate cursor-pointer hover:bg-opacity-80 transition"
+                          [class]="'bg-' + event.color + '-100 text-' + event.color + '-800 border-l-2 border-' + event.color + '-400'"
+                          [title]="event.title + ' - ' + event.time">
+                          <span class="time">{{event.time}}</span> {{event.title}}
+                        </div>
+                      </ng-container>
+                      <div *ngIf="date.eventDetails.length > 2" class="more-events text-xs text-gray-500 text-center">
+                        +{{date.eventDetails.length - 2}} more
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            <!-- List View -->
+            <div *ngIf="!calendarView" class="list-view fade-in">
+              <div *ngFor="let interview of filteredInterviews; let i = index" 
+                  class="interview-card bg-white border-none drop-shadow-lg rounded-lg mb-4 overflow-hidden hover:shadow-md transition fade-in-up"
+                  [style.animation-delay]="i * 0.05 + 's'">
+                <div class="flex flex-col md:flex-row">
+                  <!-- Candidate Image & Status -->
+                  <div class="md:w-1/4 p-4 border-none md:border-b-0 md:border-none flex items-center">
+                    <div class="candidate-avatar mr-3 relative">
+                      <img [src]="interview.candidate.avatar" alt="Candidate" class="w-12 h-12 rounded-full object-cover">
+                      <span [class]="'status-indicator absolute bottom-0 right-0 w-3 h-3 rounded-full border-none border-white ' + 
+                        (interview.status === 'confirmed' ? 'bg-green-500' : 
+                         interview.status === 'pending' ? 'bg-amber-500' : 'bg-blue-500')"></span>
+                    </div>
+                    <div class="candidate-info">
+                      <h4 class="font-medium text-gray-800">{{interview.candidate.name}}</h4>
+                      <p class="text-sm text-gray-500">{{interview.position}}</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Interview Details -->
+                  <div class="md:w-2/4 p-4 border-b md:border-b-0 md:border-none flex flex-wrap gap-y-2">
+                    <div class="w-1/2">
+                      <p class="text-xs text-gray-500">Date & Time</p>
+                      <p class="text-sm font-medium">
+                        <i class="far fa-calendar-alt mr-1 text-employer-primary"></i> 
+                        {{interview.date}} • {{interview.time}}
+                      </p>
+                    </div>
+                    <div class="w-1/2">
+                      <p class="text-xs text-gray-500">Type</p>
+                      <p class="text-sm font-medium">
+                        <i [class]="'mr-1 text-employer-primary ' + 
+                          (interview.type === 'Video' ? 'fas fa-video' : 
+                           interview.type === 'In-person' ? 'fas fa-building' : 
+                           interview.type === 'Phone' ? 'fas fa-phone-alt' : 'fas fa-microphone-alt')"></i>
+                        {{interview.type}}
+                      </p>
+                    </div>
+                    <div class="w-1/2">
+                      <p class="text-xs text-gray-500">Interviewers</p>
+                      <div class="flex -space-x-2 overflow-hidden">
+                        <img *ngFor="let interviewer of interview.interviewers.slice(0, 3)" 
+                            [src]="interviewer.avatar" 
+                            [alt]="interviewer.name"
+                            [title]="interviewer.name + ' (' + interviewer.role + ')'"
+                            class="inline-block h-6 w-6 rounded-full ring-2 ring-white">
+                        <span *ngIf="interview.interviewers.length > 3" 
+                            class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-xs font-medium text-gray-500 ring-2 ring-white">
+                          +{{interview.interviewers.length - 3}}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="w-1/2">
+                      <p class="text-xs text-gray-500">Stage</p>
+                      <p class="text-sm font-medium">
+                        <span [class]="'inline-block w-2 h-2 rounded-full mr-1 ' + 
+                          (interview.stage === 'Technical' ? 'bg-purple-500' : 
+                           interview.stage === 'HR' ? 'bg-blue-500' : 
+                           interview.stage === 'Final' ? 'bg-green-500' : 'bg-amber-500')"></span>
+                        {{interview.stage}} Round
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <!-- Actions -->
+                  <div class="md:w-1/4 p-4 flex md:flex-col justify-between items-center">
+                    <div [class]="'status-badge text-xs font-medium px-2 py-1 rounded-full ' + 
+                      (interview.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
+                       interview.status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800')">
+                      {{interview.status | titlecase}}
+                    </div>
+                    <div class="action-buttons flex mt-2 space-x-1">
+                      <button class="p-2 text-gray-500 hover:text-employer-primary hover:bg-gray-100 rounded-full transition" title="Edit">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="p-2 text-gray-500 hover:text-employer-primary hover:bg-gray-100 rounded-full transition" title="Reschedule">
+                        <i class="fas fa-calendar-alt"></i>
+                      </button>
+                      <button class="p-2 text-gray-500 hover:text-green-600 hover:bg-gray-100 rounded-full transition" title="Send Reminder">
+                        <i class="fas fa-bell"></i>
+                      </button>
+                      <button class="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition" title="Cancel">
+                        <i class="fas fa-times-circle"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+  
+              <!-- Empty state -->
+              <div *ngIf="filteredInterviews.length === 0" class="empty-state text-center p-8 borderinone rounded-lg bg-gray-50 fade-in">
+                <img src="assets/images/empty-calendar.svg" alt="No interviews found" class="w-40 h-40 mx-auto mb-4 opacity-70">
+                <h3 class="text-lg font-medium text-gray-700 mb-2">No interviews found</h3>
+                <p class="text-gray-500 mb-4">No interviews match your current filters</p>
+                <button (click)="clearFilters()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Panel Coordination Tab -->
+          <div *ngIf="activeTab === 'panel'" class="panel-content">
+            <div class="team-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div class="team-member-card bg-white border-none  rounded-lg overflow-hidden hover:shadow-md transition cursor-pointer fade-in" *ngFor="let member of teamMembers; let i = index" [style.animation-delay]="i * 0.1 + 's'">
+                <div class="card-header p-4 border-none bg-gray-50 flex justify-between items-center">
+                  <div class="flex items-center">
+                    <img [src]="member.avatar" alt="Team member" class="w-10 h-10 rounded-full mr-3 object-cover">
+                    <div>
+                      <h4 class="font-medium text-gray-800">{{member.name}}</h4>
+                      <p class="text-sm text-gray-500">{{member.role}}</p>
+                    </div>
+                  </div>
+                  <div [class]="'status px-2 py-1 rounded-full text-xs font-medium ' + 
+                    (member.availability === 'Available' ? 'bg-green-100 text-green-800' : 
+                     member.availability === 'Limited' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800')">
+                    {{member.availability}}
+                  </div>
+                </div>
+                <div class="p-4">
+                  <div class="mb-3">
+                    <p class="text-xs text-gray-500 mb-1">Expertise</p>
+                    <div class="flex flex-wrap gap-1">
+                      <span *ngFor="let skill of member.skills" class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                        {{skill}}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <p class="text-xs text-gray-500 mb-1">Upcoming Interviews</p>
+                    <p class="text-sm"><span class="font-medium">{{member.upcomingInterviews}}</span> scheduled</p>
+                  </div>
+                  <div class="mb-3">
+                    <p class="text-xs text-gray-500 mb-1">Feedback Completion</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                      <div [class]="'h-2 rounded-full ' + 
+                        (member.feedbackCompletion >= 80 ? 'bg-green-500' : 
+                         member.feedbackCompletion >= 50 ? 'bg-amber-500' : 'bg-red-500')"
+                        [style.width]="member.feedbackCompletion + '%'"></div>
+                    </div>
+                    <p class="text-xs text-right mt-1">{{member.feedbackCompletion}}%</p>
+                  </div>
+                  <div class="flex space-x-2 mt-4">
+                    <button class="flex-1 px-3 py-2 bg-employer-light text-employer-primary rounded-lg text-sm hover:bg-employer-primary hover:text-white transition">
+                      <i class="fas fa-calendar-alt mr-1"></i> View Schedule
+                    </button>
+                    <button class="flex-1 px-3 py-2 bg-employer-light text-employer-primary rounded-lg text-sm hover:bg-employer-primary hover:text-white transition">
+                      <i class="fas fa-user-plus mr-1"></i> Assign
+                    </button>
+                  </div>
+                </div>
+              </div>
+  
+              <!-- Add new team member card -->
+              <div class="add-team-member-card border border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition h-full fade-in" [style.animation-delay]="teamMembers.length * 0.1 + 's'">
+                <div class="w-16 h-16 rounded-full bg-employer-light text-employer-primary flex items-center justify-center mb-3">
+                  <i class="fas fa-user-plus text-2xl"></i>
+                </div>
+                <h4 class="font-medium text-gray-800 mb-1">Add Team Member</h4>
+                <p class="text-sm text-gray-500 mb-4">Invite a new interviewer to your team</p>
+                <button class="px-4 py-2 bg-employer-primary text-white rounded-lg text-sm hover:bg-employer-dark transition">
+                  Add Member
+                </button>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Feedback Tab -->
+          <div *ngIf="activeTab === 'feedback'" class="feedback-content">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+              <div class="search-filter flex flex-col sm:flex-row gap-3 mb-3 md:mb-0 w-full md:w-auto">
+                <select 
+                  class="border-1 border-[#ccc] rounded-lg px-3 py-2 focus:ring-employer-primary focus:border-employer-primary"
+                  [(ngModel)]="feedbackFilter">
+                  <option value="all">All Feedback</option>
+                  <option value="pending">Pending Submissions</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+              <button class="px-4 py-2 bg-employer-primary text-white rounded-lg flex items-center hover:bg-employer-dark transition w-full md:w-auto justify-center">
+                <i class="fas fa-clipboard-list mr-2"></i>
+                Create Template
+              </button>
+            </div>
+  
+            <div class="feedback-cards grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div *ngFor="let feedback of feedbackItems; let i = index" 
+                   [class]="'feedback-card border-none rounded-lg drop-shadow-lg overflow-hidden hover:shadow-md transition fade-in-up ' + 
+                   (feedback.status === 'pending' ? 'border-amber-300' : 
+                    feedback.status === 'overdue' ? 'border-red-300' : '')"
+                   [style.animation-delay]="i * 0.1 + 's'">
+                <div class="card-header p-4 flex justify-between items-center" 
+                     [class]="feedback.status === 'pending' ? 'bg-amber-50' : 
+                              feedback.status === 'overdue' ? 'bg-red-50' : 'bg-white'">
+                  <div class="flex items-center">
+                    <img [src]="feedback.candidate.avatar" alt="Candidate" class="w-10 h-10 rounded-full mr-3 object-cover">
+                    <div>
+                      <div class="flex items-center ">
+                        <h4 class="font-medium text-gray-800">{{feedback.candidate.name}}</h4>
+                        <span *ngIf="feedback.status === 'pending'" class="ml-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                          Pending
+                        </span>
+                        <span *ngIf="feedback.status === 'overdue'" class="ml-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
+                          Overdue
+                        </span>
+                        <span *ngIf="feedback.status === 'submitted'" class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                          Submitted
+                        </span>
+                      </div>
+                      <p class="text-sm text-gray-500">{{feedback.position}} • {{feedback.interviewDate}}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <button class="p-2 text-gray-500 hover:text-employer-primary hover:bg-gray-100 rounded-full transition">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="p-4">
+                  <div class="mb-3">
+                    <div class="flex items-center justify-between mb-2">
+                      <p class="text-xs text-gray-500">Interviewers</p>
+                      <p class="text-xs text-gray-500">{{feedback.submittedCount}}/{{feedback.totalInterviewers}} submitted</p>
+                    </div>
+                    <div class="flex -space-x-2 overflow-hidden">
+                      <img *ngFor="let interviewer of feedback.interviewers.slice(0, 4)" 
+                           [src]="interviewer.avatar" 
+                           [alt]="interviewer.name"
+                           [title]="interviewer.name + (interviewer.submitted ? ' (Submitted)' : ' (Pending)')"
+                           class="inline-block h-7 w-7 rounded-full"
+                           [class]="interviewer.submitted ? 'ring-2 ring-green-500' : 'ring-2 ring-gray-200 opacity-60'">
+                      <span *ngIf="feedback.interviewers.length > 4" 
+                            class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-xs font-medium text-gray-500 ring-2 ring-white">
+                        +{{feedback.interviewers.length - 4}}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <p class="text-xs text-gray-500 mb-1">Template</p>
+                      <p class="text-sm font-medium">{{feedback.template}}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-gray-500 mb-1">Due Date</p>
+                      <p [class]="'text-sm font-medium ' + (feedback.status === 'overdue' ? 'text-red-600' : '')">
+                        {{feedback.dueDate}}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div *ngIf="feedback.status === 'submitted'" class="mb-3">
+                    <p class="text-xs text-gray-500 mb-1">Overall Rating</p>
+                    <div class="flex items-center">
+                        <div class="flex text-amber-400">
+                            <i *ngFor="let star of [1,2,3,4,5]" 
+                               [class]="star <= (feedback?.overallRating || 0) ? 'fas fa-star' : 
+                                        star - 0.5 <= (feedback?.overallRating || 0) ? 'fas fa-star-half-alt' : 'far fa-star'"></i>
+                          </div>
+                      <span class="ml-2 text-sm font-medium">{{feedback.overallRating}}/5</span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex space-x-2 mt-4">
+                    <button *ngIf="feedback.status === 'pending' || feedback.status === 'overdue'"
+                            class="flex-1 px-3 py-2 bg-employer-primary text-white rounded-lg text-sm hover:bg-employer-dark transition">
+                      <i class="fas fa-clipboard-check mr-1"></i> Submit Feedback
+                    </button>
+                    <button *ngIf="feedback.status === 'submitted'"
+                            class="flex-1 px-3 py-2 bg-employer-primary text-white rounded-lg text-sm hover:bg-employer-dark transition">
+                      <i class="fas fa-eye mr-1"></i> View Details
+                    </button>
+                    <button *ngIf="feedback.status === 'pending' || feedback.status === 'overdue'"
+                            class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition">
+                      <i class="fas fa-bell mr-1"></i> Remind
+                    </button>
+                    <button *ngIf="feedback.status === 'submitted'"
+                            class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition">
+                      <i class="fas fa-download mr-1"></i> Export
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Interview Types Tab -->
+          <div *ngIf="activeTab === 'types'" class="types-content">
+            <div class="types-grid grid grid-cols-1 md:grid-cols-2 gap-6 ">
+              <div *ngFor="let type of interviewTypes; let i = index" 
+                   class="type-card bg-white border-1 border-[#ccc] rounded-lg overflow-hidden drop-shadow-lg shadow-lg hover:shadow-md transition cursor-pointer fade-in"
+                   [style.animation-delay]="i * 0.1 + 's'">
+                <div class="card-header p-5 flex items-center" [style.background-color]="type.bgColor">
+                  <div [class]="'icon-circle mr-4 p-3 rounded-full ' + type.iconClass">
+                    <i [class]="'fas ' + type.icon + ' text-2xl'"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold">{{type.name}}</h3>
+                    <p class="text-sm opacity-80">{{type.description}}</p>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <div class="mb-4">
+                    <div class="flex justify-between mb-1">
+                      <p class="text-sm text-gray-600">Usage</p>
+                      <p class="text-sm font-medium">{{type.usage}}%</p>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                      <div class="h-2 rounded-full" 
+                           [style.width]="type.usage + '%'"
+                           [style.background-color]="type.progressColor"></div>
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p class="text-xs text-gray-500">Avg. Duration</p>
+                      <p class="font-medium">{{type.avgDuration}}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-gray-500">Completion Rate</p>
+                      <p class="font-medium">{{type.completionRate}}%</p>
+                    </div>
+                  </div>
+                  
+                  <div class="text-sm text-gray-600 mb-4">
+                    <div *ngFor="let feature of type.features" class="flex items-start mb-2">
+                      <i class="fas fa-check-circle text-green-500 mt-0.5 mr-2"></i>
+                      <span>{{feature}}</span>
+                    </div>
+                  </div>
+                  
+                  <button class="w-full px-4 py-2 rounded-lg text-white text-sm hover:bg-opacity-90 transition"
+                          [style.background-color]="type.actionColor">
+                    <i [class]="'fas ' + type.actionIcon + ' mr-2'"></i>
+                    {{type.actionText}}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- New Interview Modal -->
+  <div *ngIf="showScheduleModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 fade-in">
+    <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto scale-in">
+      <div class="modal-header border-b p-4 flex justify-between items-center sticky top-0 bg-white z-10">
+        <h3 class="text-lg font-bold text-gray-800">Schedule New Interview</h3>
+        <button (click)="closeScheduleModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Left column -->
+          <div>
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Candidate
+                <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <input type="text" placeholder="Search candidate..." class="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+              </div>
+            </div>
+            
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Position
+                <span class="text-red-500">*</span>
+              </label>
+              <select class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                <option value="">Select position</option>
+                <option value="frontend">Frontend Developer</option>
+                <option value="backend">Backend Developer</option>
+                <option value="fullstack">Full Stack Developer</option>
+                <option value="ui">UI/UX Designer</option>
+                <option value="pm">Product Manager</option>
+              </select>
+            </div>
+            
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Interview Type
+                <span class="text-red-500">*</span>
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <div *ngFor="let type of ['Video', 'In-person', 'Phone', 'Async']"
+                     [class]="'type-option border rounded-lg p-3 flex items-center cursor-pointer transition ' + 
+                     (selectedType === type ? 'bg-employer-light border-employer-primary' : 'hover:bg-gray-50')"
+                     (click)="selectedType = type">
+                  <i [class]="'mr-2 text-lg ' + 
+                    (type === 'Video' ? 'fas fa-video text-blue-500' : 
+                     type === 'In-person' ? 'fas fa-building text-green-500' : 
+                     type === 'Phone' ? 'fas fa-phone-alt text-purple-500' : 'fas fa-microphone-alt text-red-500')"></i>
+                  <span>{{type}}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Interview Stage
+                <span class="text-red-500">*</span>
+              </label>
+              <select class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                <option value="">Select stage</option>
+                <option value="screening">Initial Screening</option>
+                <option value="technical">Technical</option>
+                <option value="hr">HR</option>
+                <option value="final">Final Round</option>
+              </select>
+            </div>
+            
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Add Interviewers</label>
+              <div class="mb-2">
+                <div class="relative">
+                  <input type="text" placeholder="Search team members..." class="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                  <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                </div>
+              </div>
+              
+              <div class="selected-interviewers flex flex-wrap gap-2 mb-2">
+                <div *ngFor="let interviewer of ['Jane Smith', 'John Doe']" class="selected-interviewer bg-employer-light text-employer-primary px-3 py-1 rounded-full text-sm flex items-center">
+                  <span>{{interviewer}}</span>
+                  <button class="ml-2 focus:outline-none">
+                    <i class="fas fa-times-circle"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right column -->
+          <div>
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Date & Time
+                <span class="text-red-500">*</span>
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <input type="date" class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                </div>
+                <div>
+                  <input type="time" class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Duration
+                <span class="text-red-500">*</span>
+              </label>
+              <select class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                <option value="30">30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="90">1 hour 30 minutes</option>
+                <option value="120">2 hours</option>
+              </select>
+            </div>
+            
+            <div [class]="'form-group mb-4 ' + (selectedType === 'Video' ? '' : 'hidden')">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Video Platform
+              </label>
+              <select class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                <option value="zoom">Zoom</option>
+                <option value="meet">Google Meet</option>
+                <option value="teams">Microsoft Teams</option>
+                <option value="custom">Custom Link</option>
+              </select>
+            </div>
+            
+            <div [class]="'form-group mb-4 ' + (selectedType === 'In-person' ? '' : 'hidden')">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Meeting Room
+              </label>
+              <select class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                <option value="">Select room</option>
+                <option value="room1">Meeting Room 1</option>
+                <option value="room2">Meeting Room 2</option>
+                <option value="room3">Conference Room</option>
+                <option value="room4">Interview Suite</option>
+              </select>
+            </div>
+            
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Template
+              </label>
+              <select class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary">
+                <option value="">Select feedback template</option>
+                <option value="frontend">Frontend Developer</option>
+                <option value="backend">Backend Developer</option>
+                <option value="general">General</option>
+                <option value="custom">Custom Template</option>
+              </select>
+            </div>
+            
+            <div class="form-group mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Notes
+              </label>
+              <textarea rows="3" placeholder="Add interview notes or instructions..." class="w-full px-4 py-3 border rounded-lg focus:ring-employer-primary focus:border-employer-primary"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <div class="flex items-center">
+                <input type="checkbox" id="sendNotification" class="mr-2">
+                <label for="sendNotification" class="text-sm text-gray-700">
+                  Send email notifications to candidate and interviewers
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer border-t p-4 flex justify-end gap-3 sticky bottom-0 bg-white">
+        <button (click)="closeScheduleModal()" class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+          Cancel
+        </button>
+        <button class="px-4 py-2 bg-employer-primary text-white rounded-lg hover:bg-employer-dark transition">
+          Schedule Interview
+        </button>
+      </div>
+    </div>
+  </div>

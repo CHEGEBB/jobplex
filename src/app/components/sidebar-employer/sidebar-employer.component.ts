@@ -33,7 +33,6 @@ export class SidebarEmployerComponent implements OnInit {
   
   secondaryNavItems: NavItem[] = [
     { icon: 'fa-calendar-alt', label: 'Interviews', route: '/employer/interviews' },
-    { icon: 'fa-chart-line', label: 'Analytics', route: '/employer/analytics' },
     { icon: 'fa-cog', label: 'Settings', route: '/employer/settings' },
   ];
 

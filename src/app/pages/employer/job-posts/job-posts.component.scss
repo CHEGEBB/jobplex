@@ -1,0 +1,901 @@
+// Variables (based on the provided employer colors)
+$employer-color: #3f51b5;
+$employer-gradient-start: rgba(63, 81, 181, 0.85);
+$employer-gradient-end: rgba(40, 53, 147, 0.95);
+$employer-light: #C5CAE9;
+$employer-dark: #303F9F;
+$employer-hover: #5C6BC0;
+
+// Utility classes
+.text-employer {
+  color: $employer-color;
+}
+
+.bg-employer {
+  background-color: $employer-color;
+}
+
+// Stats cards
+.stats-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s;
+  border-left: 4px solid $employer-color;
+  
+  .icon-container {
+    padding: 0.75rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    width: 50px;
+    height: 50px;
+    
+    i {
+      font-size: 1.25rem;
+    }
+  }
+  
+  .stats-content {
+    display: flex;
+    flex-direction: column;
+    
+    .stats-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    
+    .stats-label {
+      font-size: 0.875rem;
+      color: #4b5563;
+    }
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+// Filter buttons
+.filter-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  color: #4b5563;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+  
+  &.filter-active {
+    color: white;
+    border: 0;
+    background-color: $employer-color;
+  }
+}
+
+// Job cards
+.job-cards-container {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  
+  & > * + * {
+    margin-top: 1.5rem;
+  }
+}
+
+.job-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  transition: all 0.3s;
+  
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+  }
+  
+  .job-main-content {
+    margin-bottom: 1rem;
+  }
+  
+  .job-title-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    
+    .job-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .job-status {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      
+      &.status-active {
+        background-color: #dcfce7;
+        color: #15803d;
+      }
+      
+      &.status-draft {
+        background-color: #f3f4f6;
+        color: #4b5563;
+      }
+      
+      &.status-closed {
+        background-color: #fef3c7;
+        color: #b45309;
+      }
+      
+      &.status-archived {
+        background-color: #fee2e2;
+        color: #b91c1c;
+      }
+    }
+  }
+  
+  .job-details {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    color: #4b5563;
+    
+    span {
+      display: flex;
+      align-items: center;
+      
+      i {
+        margin-right: 0.25rem;
+      }
+    }
+  }
+  
+  .job-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  
+  .job-metrics {
+    display: flex;
+    margin-right: -1rem;
+    margin-bottom: 1rem;
+    
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 1rem;
+      
+      .metric-value {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1f2937;
+      }
+      
+      .metric-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+      }
+    }
+  }
+  
+  .job-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    
+    .action-btn {
+      display: flex;
+      align-items: center;
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+      border-radius: 0.375rem;
+      transition: background-color 0.2s;
+      
+      i {
+        margin-right: 0.25rem;
+      }
+      
+      &.view {
+        background-color: #f3f4f6;
+        color: #374151;
+        
+        &:hover {
+          background-color: #e5e7eb;
+        }
+      }
+      
+      &.edit {
+        background-color: #dbeafe;
+        color: #1d4ed8;
+        
+        &:hover {
+          background-color: #bfdbfe;
+        }
+      }
+      
+      &.duplicate {
+        background-color: #f3e8ff;
+        color: #7e22ce;
+        
+        &:hover {
+          background-color: #e9d5ff;
+        }
+      }
+      
+      &.pause {
+        background-color: #fef3c7;
+        color: #b45309;
+        
+        &:hover {
+          background-color: #fde68a;
+        }
+      }
+      
+      &.resume {
+        background-color: #dcfce7;
+        color: #15803d;
+        
+        &:hover {
+          background-color: #bbf7d0;
+        }
+      }
+      
+      &.delete {
+        background-color: #fee2e2;
+        color: #b91c1c;
+        
+        &:hover {
+          background-color: #fecaca;
+        }
+      }
+    }
+  }
+}
+
+// Skill badges
+.skill-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: $employer-light;
+  color: $employer-dark;
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  
+  .empty-img {
+    width: 12rem;
+    height: 12rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    color: #4b5563;
+    margin-bottom: 1rem;
+  }
+}
+
+// Create job button
+.btn-employer {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  color: white;
+  transition: all 0.2s;
+  background-color: $employer-color;
+  
+  &:hover {
+    background-color: $employer-hover;
+  }
+  
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// Job form modal
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  backdrop-filter: blur(4px);
+}
+
+.job-form-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 91.666667%;
+  max-width: 56rem;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(to right, $employer-gradient-start, $employer-gradient-end);
+    
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+    }
+    
+    .close-btn {
+      color: white;
+      opacity: 0.8;
+      padding: 0.25rem;
+      border-radius: 9999px;
+      
+      &:hover {
+        opacity: 1;
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+  
+  .job-form {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    padding: 0;
+    
+    .form-tabs {
+      display: flex;
+      overflow-x: auto;
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 10;
+      border-bottom: 1px solid #e5e7eb;
+      
+      button {
+        padding: 0.75rem 1rem;
+        color: #4b5563;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        
+        i {
+          margin-right: 0.5rem;
+        }
+        
+        &.active-tab {
+          color: $employer-color;
+          border-bottom: 2px solid;
+          border-color: $employer-color;
+        }
+        
+        &:hover:not(.active-tab) {
+          background-color: #f9fafb;
+        }
+      }
+    }
+    
+    .form-section {
+      padding: 1.5rem;
+      overflow-y: auto;
+      max-height: 60vh;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+      
+      label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.25rem;
+        
+        .required {
+          color: #ef4444;
+        }
+      }
+      
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      input[type="datetime-local"],
+      select,
+      textarea {
+        display: block;
+        width: 100%;
+        border-radius: 0.375rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        padding: 0.5rem;
+        
+        &:focus {
+          border-color: $employer-color;
+          box-shadow: 0 0 0 3px rgba($employer-color, 0.3);
+          outline: none;
+        }
+      }
+      
+      .error-message {
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+      }
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      
+      @media (min-width: 768px) {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      
+      @media (min-width: 640px) {
+        flex-direction: row;
+      }
+      
+      .radio-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        
+        input {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+    
+    // Rich text toolbar
+    .rich-text-toolbar {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+      background-color: #f9fafb;
+      padding: 0.25rem;
+      border-radius: 0.375rem;
+      border: 1px solid #d1d5db;
+      
+      button {
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        color: #4b5563;
+        
+        &:hover {
+          background-color: #e5e7eb;
+        }
+      }
+    }
+    
+    // Skills input
+    .skill-input-container {
+      display: flex;
+      align-items: center;
+      
+      input {
+        padding-right: 2.5rem;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+      
+      .skill-add-btn {
+        background-color: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-left: 0;
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        color: #4b5563;
+        
+        &:hover {
+          background-color: #e5e7eb;
+        }
+      }
+    }
+    
+    .selected-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      
+      .selected-skill {
+        background-color: $employer-light;
+        color: $employer-dark;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        
+        .remove-skill {
+          margin-left: 0.5rem;
+          font-size: 0.75rem;
+          width: 1rem;
+          height: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 9999px;
+          
+          &:hover {
+            background-color: $employer-dark;
+            color: white;
+          }
+        }
+      }
+    }
+    
+    .popular-skills {
+      background-color: #f9fafb;
+      padding: 1rem;
+      border-radius: 0.375rem;
+      margin-top: 1rem;
+      
+      h4 {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+      }
+      
+      .popular-skills-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        
+        .popular-skill-btn {
+          background-color: white;
+          border: 1px solid #d1d5db;
+          padding: 0.25rem 0.5rem;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+          
+          &:hover {
+            background-color: #f3f4f6;
+          }
+          
+          &.disabled-skill {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+    
+    // Screening questions
+    .add-question-btn {
+      background-color: #f3f4f6;
+      border: 1px dashed #d1d5db;
+      border-radius: 0.375rem;
+      padding: 0.75rem;
+      color: #4b5563;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      
+      &:hover {
+        background-color: #e5e7eb;
+      }
+    }
+    
+    .screening-questions {
+      & > * + * {
+        margin-top: 1rem;
+      }
+      
+      .screening-question {
+        background-color: #f9fafb;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        
+        .question-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.75rem;
+          
+          h4 {
+            font-weight: 500;
+          }
+          
+          .remove-question {
+            color: #ef4444;
+            
+            &:hover {
+              color: #b91c1c;
+            }
+          }
+        }
+      }
+    }
+    
+    // Publishing options
+    .publishing-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      
+      @media (min-width: 640px) {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .publishing-option {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        
+        input {
+          margin-right: 0.75rem;
+        }
+        
+        label {
+          display: flex;
+          align-items: center;
+          margin: 0;
+          cursor: pointer;
+          
+          i {
+            margin-right: 0.5rem;
+            color: #6b7280;
+          }
+        }
+      }
+    }
+    
+    // Notifications section
+    .notifications-section {
+      background-color: #f9fafb;
+      padding: 1rem;
+      border-radius: 0.375rem;
+      
+      .notification-options {
+        margin-top: 0.5rem;
+        
+        .notification-option {
+          display: flex;
+          align-items: center;
+          margin-bottom: 0.5rem;
+          
+          input {
+            margin-right: 0.5rem;
+          }
+        }
+      }
+    }
+    
+    // Form actions
+    .form-actions {
+      position: sticky;
+      bottom: 0;
+      background-color: white;
+      border-top: 1px solid #e5e7eb;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1rem;
+      
+      @media (min-width: 640px) {
+        flex-direction: row;
+      }
+      
+      .form-nav-buttons {
+        display: flex;
+        gap: 0.5rem;
+        
+        .btn-back, .btn-next {
+          padding: 0.5rem 1rem;
+          border-radius: 0.375rem;
+          color: #4b5563;
+          background-color: #f3f4f6;
+          display: flex;
+          align-items: center;
+          
+          &:hover {
+            background-color: #e5e7eb;
+          }
+          
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+      
+      .final-actions {
+        display: flex;
+        gap: 0.5rem;
+        
+        .btn-cancel {
+          padding: 0.5rem 1rem;
+          border-radius: 0.375rem;
+          color: #4b5563;
+          background-color: #f3f4f6;
+          
+          &:hover {
+            background-color: #e5e7eb;
+          }
+        }
+        
+        .btn-draft {
+          padding: 0.5rem 1rem;
+          border-radius: 0.375rem;
+          color: #4b5563;
+          background-color: #f3f4f6;
+          border: 1px solid #d1d5db;
+          
+          &:hover {
+            background-color: #e5e7eb;
+          }
+        }
+        
+        .btn-save {
+          padding: 0.5rem 1rem;
+          border-radius: 0.375rem;
+          color: white;
+          background-color: $employer-color;
+          
+          &:hover {
+            background-color: $employer-hover;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Tooltip
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  
+  .tooltip-text {
+    visibility: hidden;
+    position: absolute;
+    z-index: 10;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: white;
+    border-radius: 0.375rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: normal;
+    max-width: 20rem;
+    background-color: rgba(0, 0, 0, 0.8);
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    &::after {
+      position: absolute;
+      left: 50%;
+      content: "";
+      top: 100%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+    }
+  }
+  
+  &:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+// Highlight animations
+.highlight-card {
+  animation: highlight 2s ease-in-out;
+}
+
+@keyframes highlight {
+  0% {
+    background-color: white;
+  }
+  20% {
+    background-color: rgba($employer-light, 0.3);
+  }
+  100% {
+    background-color: white;
+  }
+}
+
+.pulse-animation {
+  animation: pulse 2s;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($employer-color, 0.7);
+  }
+  
+  70% {
+    box-shadow: 0 0 0 10px rgba($employer-color, 0);
+  }
+  
+  100% {
+    box-shadow: 0 0 0 0 rgba($employer-color, 0);
+  }
+}
+
+// Fade animations
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

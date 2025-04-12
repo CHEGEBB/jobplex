@@ -1,0 +1,642 @@
+<div class="employer-dashboard-container flex flex-col md:flex-row h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <app-sidebar-employer class="hidden md:block md:w-[250px] h-full"></app-sidebar-employer>
+    
+    <!-- Mobile header with menu toggle -->
+    <div class="md:hidden bg-gradient-to-r from-[#3f51b5] to-[#283593] text-white p-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold">Candidate Matches</h1>
+      <button (click)="toggleMobileMenu()" class="text-white focus:outline-none">
+        <i class="fas fa-bars text-xl"></i>
+      </button>
+    </div>
+    
+    <!-- Mobile sidebar overlay -->
+    <div *ngIf="showMobileMenu" class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40" (click)="toggleMobileMenu()"></div>
+    <app-sidebar-employer *ngIf="showMobileMenu" class="md:hidden fixed left-0 top-0 h-full w-[250px] z-50 shadow-lg"></app-sidebar-employer>
+    
+    <!-- Main content -->
+    <div class="flex-1 overflow-auto bg-gray-50">
+      <div class="p-4 md:p-6 max-w-7xl mx-auto">
+        <!-- Header section -->
+        <div class="mb-6">
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Candidate Matches</h1>
+          <p class="text-gray-600 mt-1">AI-matched candidates based on your job requirements</p>
+        </div>
+        
+        <!-- Filters and actions -->
+        <div class="mb-6 bg-white rounded-lg shadow p-4">
+          <div class="flex flex-col md:flex-row justify-between gap-4">
+            <div class="flex-1">
+              <div class="relative">
+                <input 
+                  type="text" 
+                  placeholder="Search candidates..." 
+                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  [(ngModel)]="searchTerm"
+                  (input)="applyFilters()">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2">
+              <div class="relative">
+                <select 
+                  class="appearance-none bg-white border border-gray-300 px-4 py-2 pr-8 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  [(ngModel)]="matchScoreFilter"
+                  (change)="applyFilters()">
+                  <option value="all">All Match Scores</option>
+                  <option value="high">High Match (90%+)</option>
+                  <option value="medium">Medium Match (70-89%)</option>
+                  <option value="low">Low Match (<70%)</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
+              </div>
+              
+              <div class="relative">
+                <select 
+                  class="appearance-none bg-white border border-gray-300 px-4 py-2 pr-8 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  [(ngModel)]="statusFilter"
+                  (change)="applyFilters()">
+                  <option value="all">All Statuses</option>
+                  <option value="new">New</option>
+                  <option value="shortlisted">Shortlisted</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="interviewing">Interviewing</option>
+                  <option value="hired">Hired</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
+              </div>
+              
+              <button 
+                class="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors"
+                (click)="resetFilters()">
+                <i class="fas fa-sync-alt mr-1"></i> Reset
+              </button>
+            </div>
+          </div>
+          
+          <!-- Batch actions (visible when candidates are selected) -->
+          <div *ngIf="selectedCandidates.length > 0" class="mt-4 pt-4 border-t border-gray-200">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-sm font-medium text-gray-700">{{selectedCandidates.length}} candidates selected</span>
+              <div class="ml-auto flex flex-wrap gap-2">
+                <button 
+                  class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                  (click)="batchShortlist()">
+                  <i class="fas fa-bookmark mr-1"></i> Shortlist
+                </button>
+                <button 
+                  class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  (click)="batchScheduleInterview()">
+                  <i class="fas fa-calendar-alt mr-1"></i> Schedule Interview
+                </button>
+                <button 
+                  class="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  (click)="batchReject()">
+                  <i class="fas fa-times-circle mr-1"></i> Reject
+                </button>
+                <button 
+                  class="px-3 py-1.5 text-sm border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+                  (click)="clearSelection()">
+                  <i class="fas fa-times mr-1"></i> Clear
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Job selection for matches -->
+        <div class="mb-6 bg-white rounded-lg shadow p-4">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">View matches for:</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div *ngFor="let job of jobs" 
+                 class="border border-emerald-300 rounded-md p-3 cursor-pointer transition-all duration-200"
+                 [class.border-indigo-500]="selectedJobId === job.id"
+                 [class.bg-indigo-50]="selectedJobId === job.id"
+                 (click)="selectJob(job.id)">
+              <div class="flex items-start">
+                <div class="flex-1">
+                  <h3 class="font-medium text-gray-900">{{job.title}}</h3>
+                  <p class="text-sm text-gray-500">{{job.matches}} matches</p>
+                </div>
+                <span *ngIf="selectedJobId === job.id" class="text-indigo-600">
+                  <i class="fas fa-check-circle"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Candidates grid -->
+        <div *ngIf="filteredCandidates.length > 0; else noCandidates">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div *ngFor="let candidate of filteredCandidates" 
+                 class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow candidate-card"
+                 [class.border-2]="isSelected(candidate.id)"
+                 [class.border-indigo-500]="isSelected(candidate.id)">
+              
+              <!-- Card header with selection checkbox -->
+              <div class="p-4 pb-2 flex items-center justify-between border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                  <div class="w-5 h-5">
+                    <input 
+                      type="checkbox"
+                      [checked]="isSelected(candidate.id)"
+                      (change)="toggleCandidateSelection(candidate.id)"
+                      class="w-4 h-4 accent-indigo-600 cursor-pointer">
+                  </div>
+                  <div [class.font-semibold]="isSelected(candidate.id)" class="text-sm text-gray-500">
+                    ID: {{candidate.id}}
+                  </div>
+                </div>
+                
+                <!-- Match score badge -->
+                <div [ngClass]="{
+                  'bg-green-100 text-green-700': candidate.matchScore >= 90,
+                  'bg-blue-100 text-blue-700': candidate.matchScore >= 70 && candidate.matchScore < 90,
+                  'bg-amber-100 text-amber-700': candidate.matchScore < 70
+                }" class="px-2 py-1 rounded-full text-xs font-semibold flex items-center">
+                  <i class="fas fa-bolt mr-1"></i> {{candidate.matchScore}}% Match
+                </div>
+              </div>
+              
+              <!-- Candidate info -->
+              <div class="p-4">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="relative w-14 h-14 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-bold overflow-hidden">
+                    <div *ngIf="candidate.photo; else initialAvatar">
+                      <img [src]="candidate.photo" alt="Candidate photo" class="w-full h-full object-cover">
+                    </div>
+                    <ng-template #initialAvatar>
+                      {{candidate.name.charAt(0)}}
+                    </ng-template>
+                    
+                    <div *ngIf="candidate.status === 'shortlisted'" class="absolute -bottom-1 -right-1 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center">
+                      <i class="fas fa-bookmark text-xs"></i>
+                    </div>
+                  </div>
+                  
+                  <div class="flex-1">
+                    <h3 class="font-semibold text-gray-900 truncate">{{candidate.name}}</h3>
+                    <p class="text-sm text-gray-500 truncate">{{candidate.title}}</p>
+                    
+                    <!-- Status badge -->
+                    <div class="mt-1">
+                      <span [ngClass]="{
+                        'bg-gray-100 text-gray-600': candidate.status === 'new',
+                        'bg-indigo-100 text-indigo-600': candidate.status === 'shortlisted',
+                        'bg-blue-100 text-blue-600': candidate.status === 'contacted',
+                        'bg-amber-100 text-amber-600': candidate.status === 'interviewing',
+                        'bg-green-100 text-green-600': candidate.status === 'hired',
+                        'bg-red-100 text-red-600': candidate.status === 'rejected'
+                      }" class="px-2 py-0.5 rounded text-xs font-medium inline-block">
+                        {{candidate.status | titlecase}}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Contact info -->
+                <div class="mb-3 text-sm">
+                  <div class="flex items-center text-gray-600 mb-1">
+                    <i class="fas fa-envelope w-5 text-gray-400"></i>
+                    <span class="ml-1 truncate">{{candidate.email}}</span>
+                  </div>
+                  <div class="flex items-center text-gray-600">
+                    <i class="fas fa-phone-alt w-5 text-gray-400"></i>
+                    <span class="ml-1">{{candidate.phone}}</span>
+                  </div>
+                </div>
+                
+                <!-- Key skills -->
+                <div class="mb-3">
+                  <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Top Skills</h4>
+                  <div class="flex flex-wrap gap-1">
+                    <span *ngFor="let skill of candidate.skills.slice(0, 3)" 
+                          class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                      {{skill}}
+                    </span>
+                    <span *ngIf="candidate.skills.length > 3" 
+                          class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                      +{{candidate.skills.length - 3}} more
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Match details -->
+                <div class="mb-4 text-sm">
+                  <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Match Highlights</h4>
+                  <ul class="space-y-1 text-gray-700">
+                    <li *ngFor="let highlight of candidate.matchHighlights" class="flex items-start">
+                      <i class="fas fa-check-circle text-green-500 mt-0.5 mr-1.5"></i>
+                      <span>{{highlight}}</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="flex justify-between pt-3 border-t border-gray-100">
+                  <div>
+                    <button (click)="viewCandidate(candidate)" 
+                            class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                      <i class="fas fa-user-circle mr-1"></i> View Profile
+                    </button>
+                  </div>
+                  
+                  <div class="flex gap-1">
+                    <button (click)="toggleShortlist(candidate)" 
+                            class="p-1.5 rounded-md" 
+                            [ngClass]="candidate.status === 'shortlisted' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600'"
+                            [title]="candidate.status === 'shortlisted' ? 'Remove from shortlist' : 'Add to shortlist'">
+                      <i class="fas fa-bookmark"></i>
+                    </button>
+                    
+                    <button (click)="contactCandidate(candidate)" 
+                            class="p-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200"
+                            title="Contact candidate">
+                      <i class="fas fa-envelope"></i>
+                    </button>
+                    
+                    <button (click)="openActionMenu(candidate)"
+                            class="p-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200"
+                            title="More actions">
+                      <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Pagination -->
+          <div class="mt-6 flex justify-center">
+            <nav class="flex items-center space-x-1">
+              <button 
+                class="p-2 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="currentPage === 1"
+                (click)="changePage(currentPage - 1)">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              
+              <div *ngFor="let page of getPaginationArray()" class="flex items-center">
+                <ng-container *ngIf="page !== '...'">
+                  <button 
+                    class="w-10 h-10 rounded-md border text-sm font-medium"
+                    [class.border-indigo-600]="page === currentPage"
+                    [class.bg-indigo-50]="page === currentPage"
+                    [class.text-indigo-600]="page === currentPage"
+                    [class.border-gray-300]="page !== currentPage"
+                    [class.text-gray-600]="page !== currentPage"
+                    (click)="changePage(page)">
+                    {{page}}
+                  </button>
+                </ng-container>
+                
+                <span *ngIf="page === '...'" class="w-10 h-10 flex items-center justify-center text-gray-500">
+                  ...
+                </span>
+              </div>
+              
+              <button 
+                class="p-2 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="currentPage === totalPages"
+                (click)="changePage(currentPage + 1)">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </nav>
+          </div>
+        </div>
+        
+        <!-- No candidates message -->
+        <ng-template #noCandidates>
+          <div class="bg-white rounded-lg shadow-md p-10 text-center">
+            <div class="flex justify-center mb-4">
+              <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-user-slash text-2xl"></i>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">No candidates found</h3>
+            <p class="text-gray-600 mb-6">Try adjusting your filters or select a different job posting</p>
+            <button (click)="resetFilters()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+              Clear Filters
+            </button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Candidate Detail Modal -->
+  <div *ngIf="selectedCandidate" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 candidate-modal">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <!-- Modal header -->
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+        <h2 class="text-xl font-bold text-gray-800">Candidate Details</h2>
+        <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <!-- Modal content -->
+      <div class="overflow-y-auto p-6">
+        <!-- Profile header -->
+        <div class="flex flex-col md:flex-row gap-6 mb-8">
+          <div class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-4xl font-bold overflow-hidden">
+            <div *ngIf="selectedCandidate.photo; else modalInitialAvatar">
+              <img [src]="selectedCandidate.photo" alt="Candidate photo" class="w-full h-full object-cover">
+            </div>
+            <ng-template #modalInitialAvatar>
+              {{selectedCandidate.name.charAt(0)}}
+            </ng-template>
+          </div>
+          
+          <div class="flex-1">
+            <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+              <h1 class="text-2xl font-bold text-gray-900">{{selectedCandidate.name}}</h1>
+              <div [ngClass]="{
+                'bg-green-100 text-green-700': selectedCandidate.matchScore >= 90,
+                'bg-blue-100 text-blue-700': selectedCandidate.matchScore >= 70 && selectedCandidate.matchScore < 90,
+                'bg-amber-100 text-amber-700': selectedCandidate.matchScore < 70
+              }" class="px-3 py-1 rounded-full text-sm font-semibold inline-flex items-center">
+                <i class="fas fa-bolt mr-1"></i> {{selectedCandidate.matchScore}}% Match
+              </div>
+            </div>
+            
+            <h2 class="text-xl text-gray-600 mb-2">{{selectedCandidate.title}}</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+              <div class="flex items-center text-gray-600">
+                <i class="fas fa-envelope w-5 text-gray-400"></i>
+                <span class="ml-2">{{selectedCandidate.email}}</span>
+              </div>
+              <div class="flex items-center text-gray-600">
+                <i class="fas fa-phone-alt w-5 text-gray-400"></i>
+                <span class="ml-2">{{selectedCandidate.phone}}</span>
+              </div>
+              <div class="flex items-center text-gray-600">
+                <i class="fas fa-map-marker-alt w-5 text-gray-400"></i>
+                <span class="ml-2">{{selectedCandidate.location}}</span>
+              </div>
+              <div class="flex items-center text-gray-600">
+                <i class="fas fa-briefcase w-5 text-gray-400"></i>
+                <span class="ml-2">{{selectedCandidate.experience}} years experience</span>
+              </div>
+            </div>
+            
+            <div class="flex mt-4 gap-2">
+              <button (click)="scheduleInterview(selectedCandidate)" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-calendar-alt mr-1"></i> Schedule Interview
+              </button>
+              <button (click)="contactCandidate(selectedCandidate)" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                <i class="fas fa-envelope mr-1"></i> Contact
+              </button>
+              <button (click)="downloadResume(selectedCandidate)" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                <i class="fas fa-download mr-1"></i> Resume
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Status tracker -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Candidate Status</h3>
+          <div class="relative">
+            <div class="absolute top-5 left-0 w-full h-1 bg-gray-200"></div>
+            <div class="flex justify-between">
+              <div *ngFor="let status of candidateStatuses; let i = index" class="relative z-10 flex flex-col items-center">
+                <div [ngClass]="{
+                  'bg-indigo-600 text-white': getStatusIndex(selectedCandidate.status) >= i,
+                  'bg-gray-200 text-gray-500': getStatusIndex(selectedCandidate.status) < i
+                }" class="w-10 h-10 rounded-full flex items-center justify-center mb-2">
+                  <i class="fas" [ngClass]="statusIcons[status]"></i>
+                </div>
+                <span class="text-xs text-center" [class.font-semibold]="selectedCandidate.status === status">
+                  {{status | titlecase}}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-4 flex justify-end">
+            <div class="relative">
+              <button 
+                (click)="toggleStatusDropdown()" 
+                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center">
+                <span>Change Status</span>
+                <i class="fas fa-chevron-down ml-2"></i>
+              </button>
+              
+              <div *ngIf="showStatusDropdown" class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                <div class="py-1">
+                  <a *ngFor="let status of candidateStatuses" 
+                     (click)="updateCandidateStatus(selectedCandidate, status)"
+                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer"
+                     [class.font-semibold]="selectedCandidate.status === status">
+                    <i class="fas mr-2" [ngClass]="statusIcons[status]"></i>
+                    {{status | titlecase}}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Skills section -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Skills & Expertise</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h4 class="text-md font-medium text-gray-700 mb-3">Technical Skills</h4>
+              <div class="flex flex-wrap gap-2">
+                <div *ngFor="let skill of selectedCandidate.skills" class="flex items-center">
+                  <span class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-full shadow-sm">
+                    {{skill}}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h4 class="text-md font-medium text-gray-700 mb-3">Soft Skills</h4>
+              <div class="flex flex-wrap gap-2">
+                <div *ngFor="let skill of selectedCandidate.softSkills" class="flex items-center">
+                  <span class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-full shadow-sm">
+                    {{skill}}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- AI match insights -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">AI Match Insights</h3>
+          <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+            <div class="flex items-start mb-4">
+              <div class="bg-indigo-100 rounded-full p-2 mr-3">
+                <i class="fas fa-robot text-indigo-600"></i>
+              </div>
+              <div>
+                <h4 class="font-medium text-indigo-800">Why this candidate matches your job</h4>
+                <p class="text-sm text-indigo-700 mt-1">Our AI analyzed the candidate's skills, experience, and background to determine compatibility with your job requirements.</p>
+              </div>
+            </div>
+            
+            <div class="space-y-4">
+              <div *ngFor="let insight of selectedCandidate.aiInsights" class="bg-white rounded-md p-3 shadow-sm">
+                <div class="flex">
+                  <div class="mr-3 text-indigo-600">
+                    <i class="fas" [ngClass]="insight.icon"></i>
+                  </div>
+                  <div>
+                    <h5 class="font-medium text-gray-800">{{insight.title}}</h5>
+                    <p class="text-sm text-gray-600 mt-1">{{insight.description}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Experience -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Work Experience</h3>
+          <div class="space-y-5">
+            <div *ngFor="let job of selectedCandidate.experience" class="border-l-2 border-gray-200 pl-4 ml-2 relative">
+              <div class="absolute w-3 h-3 bg-indigo-500 rounded-full -left-[7px] top-1.5"></div>
+              <div class="mb-1">
+                <h4 class="font-medium text-gray-900">{{job.title}}</h4>
+                <div class="flex items-center text-sm text-gray-600">
+                  <span>{{job.company}}</span>
+                  <span class="mx-2">•</span>
+                  <span>{{job.period}}</span>
+                </div>
+              </div>
+              <p class="text-sm text-gray-700">{{job.description}}</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Education -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Education</h3>
+          <div class="space-y-5">
+            <div *ngFor="let edu of selectedCandidate.education" class="border-l-2 border-gray-200 pl-4 ml-2 relative">
+              <div class="absolute w-3 h-3 bg-indigo-500 rounded-full -left-[7px] top-1.5"></div>
+              <div class="mb-1">
+                <h4 class="font-medium text-gray-900">{{edu.degree}}</h4>
+                <div class="flex items-center text-sm text-gray-600">
+                  <span>{{edu.institution}}</span>
+                  <span class="mx-2">•</span>
+                  <span>{{edu.year}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notes -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Notes</h3>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <textarea 
+              [(ngModel)]="selectedCandidate.notes" 
+              class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              rows="4"
+              placeholder="Add your notes about this candidate here..."></textarea>
+            <div class="flex justify-end mt-2">
+              <button (click)="saveNotes()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-save mr-1"></i> Save Notes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modal footer -->
+      <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-wrap justify-end gap-2">
+        <button (click)="toggleShortlist(selectedCandidate)" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center">
+          <i class="fas fa-bookmark mr-1" [class.text-indigo-600]="selectedCandidate.status === 'shortlisted'"></i>
+          {{selectedCandidate.status === 'shortlisted' ? 'Remove from Shortlist' : 'Add to Shortlist'}}
+        </button>
+        <button (click)="closeModal()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Interview Scheduling Modal -->
+  <div *ngIf="showInterviewModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
+      <!-- Modal header -->
+      <div class="p-4 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-xl font-bold text-gray-800">Schedule Interview</h2>
+      </div>
+      
+      <!-- Modal content -->
+      <div class="p-6">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Candidate</label>
+          <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+            <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold overflow-hidden">
+              {{interviewCandidate?.name?.charAt(0)}}
+            </div>
+            <span class="font-medium">{{interviewCandidate?.name}}</span>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label for="interviewType" class="block text-sm font-medium text-gray-700 mb-1">Interview Type</label>
+          <select id="interviewType" [(ngModel)]="interviewData.type" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="phone">Phone Interview</option>
+            <option value="video">Video Interview</option>
+            <option value="inPerson">In-person Interview</option>
+            <option value="technical">Technical Assessment</option>
+          </select>
+        </div>
+        
+        <div class="mb-4">
+          <label for="interviewDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+          <input type="date" id="interviewDate" [(ngModel)]="interviewData.date" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label for="startTime" class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+            <input type="time" id="startTime" [(ngModel)]="interviewData.startTime" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label for="endTime" class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+            <input type="time" id="endTime" [(ngModel)]="interviewData.endTime" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label for="interviewers" class="block text-sm font-medium text-gray-700 mb-1">Interviewers</label>
+          <select id="interviewers" [(ngModel)]="interviewData.interviewers" multiple class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" size="3">
+            <option *ngFor="let interviewer of interviewers" [value]="interviewer.id">
+              {{interviewer.name}} ({{interviewer.role}})
+            </option>
+          </select>
+        </div>
+        
+        <div>
+          <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <textarea id="notes" [(ngModel)]="interviewData.notes" rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Add any special instructions or topics to cover..."></textarea>
+        </div>
+      </div>
+      
+      <!-- Modal footer -->
+      <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
+        <button (click)="closeInterviewModal()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+          Cancel
+        </button>
+        <button (click)="confirmScheduleInterview()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+          Schedule
+        </button>
+      </div>
+    </div>
+  </div>

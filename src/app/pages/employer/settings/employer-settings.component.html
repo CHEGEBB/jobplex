@@ -1,0 +1,386 @@
+<div class="settings-container">
+    <!-- Import sidebar-employer component -->
+    <app-sidebar-employer></app-sidebar-employer>
+  
+    <!-- Main content -->
+    <div class="content-area">
+      <div class="header-section">
+        <h1 class="text-2xl font-bold mb-2">Account Settings</h1>
+        <p class="text-gray-600">Manage your employer account preferences and settings</p>
+      </div>
+  
+      <div class="settings-sections-container">
+        <!-- Profile Settings Section -->
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <i class="fas fa-user-circle text-xl"></i>
+            <h2 class="text-lg font-semibold">Profile Settings</h2>
+          </div>
+          <div class="settings-section-content">
+            <form [formGroup]="profileForm" (ngSubmit)="saveProfileChanges()">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="companyName">Company Name</label>
+                  <input type="text" id="companyName" formControlName="companyName" class="form-input">
+                  <div *ngIf="profileFormSubmitted && profileForm.get('companyName')?.errors" class="error-message">
+                    <span *ngIf="profileForm.get('companyName')?.errors?.['required']">Company name is required</span>
+                  </div>
+                </div>
+  
+                <div class="form-group">
+                  <label for="industry">Industry</label>
+                  <select id="industry" formControlName="industry" class="form-select">
+                    <option value="">Select Industry</option>
+                    <option *ngFor="let industry of industries" [value]="industry">{{ industry }}</option>
+                  </select>
+                </div>
+  
+                <div class="form-group">
+                  <label for="contactEmail">Contact Email</label>
+                  <input type="email" id="contactEmail" formControlName="contactEmail" class="form-input">
+                  <div *ngIf="profileFormSubmitted && profileForm.get('contactEmail')?.errors" class="error-message">
+                    <span *ngIf="profileForm.get('contactEmail')?.errors?.['required']">Email is required</span>
+                    <span *ngIf="profileForm.get('contactEmail')?.errors?.['email']">Please enter a valid email</span>
+                  </div>
+                </div>
+  
+                <div class="form-group">
+                  <label for="phoneNumber">Phone Number</label>
+                  <input type="tel" id="phoneNumber" formControlName="phoneNumber" class="form-input">
+                </div>
+              </div>
+  
+              <div class="form-group mt-4">
+                <label for="companyWebsite">Company Website</label>
+                <input type="url" id="companyWebsite" formControlName="companyWebsite" class="form-input">
+              </div>
+  
+              <div class="form-actions">
+                <button type="submit" class="btn-save">
+                  <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+  
+        <!-- Notification Settings Section -->
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <i class="fas fa-bell text-xl"></i>
+            <h2 class="text-lg font-semibold">Notification Settings</h2>
+          </div>
+          <div class="settings-section-content">
+            <form [formGroup]="notificationForm" (ngSubmit)="saveNotificationSettings()">
+              <div class="notification-options">
+                <div class="notification-option">
+                  <div class="option-label">
+                    <h3 class="font-medium">Application Updates</h3>
+                    <p class="text-gray-500 text-sm">Receive notifications when candidates apply to your job posts</p>
+                  </div>
+                  <div class="toggle-container">
+                    <label class="toggle-switch">
+                      <input type="checkbox" formControlName="applicationUpdates">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+  
+                <div class="notification-option">
+                  <div class="option-label">
+                    <h3 class="font-medium">Interview Reminders</h3>
+                    <p class="text-gray-500 text-sm">Get reminders about upcoming interviews</p>
+                  </div>
+                  <div class="toggle-container">
+                    <label class="toggle-switch">
+                      <input type="checkbox" formControlName="interviewReminders">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+  
+                <div class="notification-option">
+                  <div class="option-label">
+                    <h3 class="font-medium">Candidate Recommendations</h3>
+                    <p class="text-gray-500 text-sm">Get notified about new candidate matches</p>
+                  </div>
+                  <div class="toggle-container">
+                    <label class="toggle-switch">
+                      <input type="checkbox" formControlName="candidateRecommendations">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+  
+                <div class="notification-option">
+                  <div class="option-label">
+                    <h3 class="font-medium">System Updates</h3>
+                    <p class="text-gray-500 text-sm">Receive information about platform updates and features</p>
+                  </div>
+                  <div class="toggle-container">
+                    <label class="toggle-switch">
+                      <input type="checkbox" formControlName="systemUpdates">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="form-group mt-4">
+                <label>Email Frequency</label>
+                <div class="radio-options">
+                  <label class="radio-label">
+                    <input type="radio" formControlName="emailFrequency" value="immediately">
+                    <span>Immediately</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" formControlName="emailFrequency" value="daily">
+                    <span>Daily Digest</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" formControlName="emailFrequency" value="weekly">
+                    <span>Weekly Summary</span>
+                  </label>
+                </div>
+              </div>
+  
+              <div class="form-actions">
+                <button type="submit" class="btn-save">
+                  <i class="fas fa-save mr-2"></i>Save Preferences
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+  
+        <!-- Security Settings Section -->
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <i class="fas fa-shield-alt text-xl"></i>
+            <h2 class="text-lg font-semibold">Security Settings</h2>
+          </div>
+          <div class="settings-section-content">
+            <div class="security-option" (click)="openChangePasswordModal()">
+              <div class="option-info">
+                <h3 class="font-medium">Change Password</h3>
+                <p class="text-gray-500 text-sm">Update your account password</p>
+              </div>
+              <div class="option-action">
+                <i class="fas fa-chevron-right"></i>
+              </div>
+            </div>
+  
+            <div class="security-option" (click)="toggle2FASettings()">
+              <div class="option-info">
+                <h3 class="font-medium">Two-Factor Authentication</h3>
+                <p class="text-gray-500 text-sm">Add an extra layer of security to your account</p>
+              </div>
+              <div class="option-action">
+                <span class="status-badge" [ngClass]="{'active': isTwoFactorEnabled}">
+                  {{ isTwoFactorEnabled ? 'Enabled' : 'Disabled' }}
+                </span>
+                <i class="fas fa-chevron-right ml-2"></i>
+              </div>
+            </div>
+  
+            <div class="security-option">
+              <div class="option-info">
+                <h3 class="font-medium">Login History</h3>
+                <p class="text-gray-500 text-sm">View your recent account access</p>
+              </div>
+              <div class="option-action">
+                <i class="fas fa-chevron-right"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Data & Privacy Section -->
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <i class="fas fa-database text-xl"></i>
+            <h2 class="text-lg font-semibold">Data & Privacy</h2>
+          </div>
+          <div class="settings-section-content">
+            <div class="privacy-options">
+              <div class="privacy-option">
+                <div class="option-info">
+                  <h3 class="font-medium">Download Your Data</h3>
+                  <p class="text-gray-500 text-sm">Get a copy of all your account data</p>
+                </div>
+                <button class="btn-secondary">
+                  <i class="fas fa-download mr-2"></i>Download
+                </button>
+              </div>
+  
+              <div class="privacy-option">
+                <div class="option-info">
+                  <h3 class="font-medium">Data Visibility</h3>
+                  <p class="text-gray-500 text-sm">Manage what information is visible to job seekers</p>
+                </div>
+                <button class="btn-secondary" (click)="openDataVisibilitySettings()">
+                  <i class="fas fa-cog mr-2"></i>Configure
+                </button>
+              </div>
+  
+              <div class="privacy-option danger-zone">
+                <div class="option-info">
+                  <h3 class="font-medium text-red-600">Delete Account</h3>
+                  <p class="text-gray-500 text-sm">Permanently remove your account and all data</p>
+                </div>
+                <button class="btn-danger" (click)="openDeleteAccountModal()">
+                  <i class="fas fa-trash-alt mr-2"></i>Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Subscription & Billing -->
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <i class="fas fa-credit-card text-xl"></i>
+            <h2 class="text-lg font-semibold">Subscription & Billing</h2>
+          </div>
+          <div class="settings-section-content">
+            <div class="current-plan">
+              <div class="plan-badge">{{ currentPlan?.name || 'Free' }}</div>
+              <p class="text-gray-600">{{ currentPlan?.description || 'Basic access to job posting features' }}</p>
+              
+              <div class="plan-features">
+                <div class="feature-item" *ngFor="let feature of currentPlan?.features">
+                  <i class="fas fa-check text-green-500 mr-2"></i>
+                  <span>{{ feature }}</span>
+                </div>
+              </div>
+  
+              <div class="plan-actions mt-4">
+                <button class="btn-primary" *ngIf="currentPlan?.name === 'Free'" (click)="openUpgradeModal()">
+                  <i class="fas fa-arrow-up mr-2"></i>Upgrade Plan
+                </button>
+                <button class="btn-secondary" *ngIf="currentPlan?.name !== 'Free'">
+                  <i class="fas fa-exchange-alt mr-2"></i>Change Plan
+                </button>
+                <button class="btn-outline" *ngIf="currentPlan?.name !== 'Free'" (click)="openCancelSubscriptionModal()">
+                  Cancel Subscription
+                </button>
+              </div>
+            </div>
+  
+            <div class="billing-history mt-6" *ngIf="billingHistory?.length">
+              <h3 class="font-medium mb-2">Billing History</h3>
+              <div class="history-table">
+                <div class="history-header">
+                  <div>Date</div>
+                  <div>Description</div>
+                  <div>Amount</div>
+                  <div>Status</div>
+                  <div></div>
+                </div>
+                <div class="history-row" *ngFor="let item of billingHistory">
+                  <div>{{ item.date | date:'mediumDate' }}</div>
+                  <div>{{ item.description }}</div>
+                  <div>${{ item.amount }}</div>
+                  <div>
+                    <span class="status-pill" [ngClass]="item.status.toLowerCase()">{{ item.status }}</span>
+                  </div>
+                  <div>
+                    <button class="btn-icon" title="Download Invoice">
+                      <i class="fas fa-file-download"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Change Password Modal (hidden by default) -->
+  <div class="modal-overlay" *ngIf="showChangePasswordModal" (click)="closeModals($event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="text-lg font-bold">Change Password</h3>
+        <button class="close-btn" (click)="closeModals()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+          <div class="form-group">
+            <label for="currentPassword">Current Password</label>
+            <input type="password" id="currentPassword" formControlName="currentPassword" class="form-input">
+            <div *ngIf="passwordFormSubmitted && passwordForm.get('currentPassword')?.errors" class="error-message">
+              <span *ngIf="passwordForm.get('currentPassword')?.errors?.['required']">Current password is required</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" formControlName="newPassword" class="form-input">
+            <div *ngIf="passwordFormSubmitted && passwordForm.get('newPassword')?.errors" class="error-message">
+              <span *ngIf="passwordForm.get('newPassword')?.errors?.['required']">New password is required</span>
+              <span *ngIf="passwordForm.get('newPassword')?.errors?.['minlength']">Password must be at least 8 characters</span>
+              <span *ngIf="passwordForm.get('newPassword')?.errors?.['pattern']">Password must include uppercase, lowercase, and numbers</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="confirmPassword">Confirm New Password</label>
+            <input type="password" id="confirmPassword" formControlName="confirmPassword" class="form-input">
+            <div *ngIf="passwordFormSubmitted && passwordForm.get('confirmPassword')?.errors" class="error-message">
+              <span *ngIf="passwordForm.get('confirmPassword')?.errors?.['required']">Please confirm your password</span>
+              <span *ngIf="passwordForm.get('confirmPassword')?.errors?.['matching']">Passwords do not match</span>
+            </div>
+          </div>
+          
+          <div class="password-strength" *ngIf="passwordForm.get('newPassword')?.value">
+            <div class="strength-label">Password Strength:</div>
+            <div class="strength-meter">
+              <div class="strength-bar" [ngClass]="passwordStrengthClass"></div>
+            </div>
+            <div class="strength-text" [ngClass]="passwordStrengthClass">{{ passwordStrengthText }}</div>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" (click)="closeModals()">Cancel</button>
+            <button type="submit" class="btn-primary">Update Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Delete Account Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteAccountModal" (click)="closeModals($event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="text-lg font-bold text-red-600">Delete Account</h3>
+        <button class="close-btn" (click)="closeModals()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-icon">
+          <i class="fas fa-exclamation-triangle text-5xl text-red-500"></i>
+        </div>
+        <p class="warning-text">Are you sure you want to delete your account? This action cannot be undone and will result in the permanent loss of all your data.</p>
+        
+        <div class="confirmation-input mt-4">
+          <label for="deleteConfirmation">Please type <strong>"DELETE"</strong> to confirm:</label>
+          <input type="text" id="deleteConfirmation" [(ngModel)]="deleteConfirmationText" class="form-input">
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="closeModals()">Cancel</button>
+          <button type="button" class="btn-danger" 
+                  [disabled]="deleteConfirmationText !== 'DELETE'"
+                  (click)="deleteAccount()">
+            Delete Permanently
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
