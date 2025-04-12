@@ -1,0 +1,241 @@
+<!-- employer-dashboard.component.html -->
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <app-sidebar-employer class="sidebar-container"></app-sidebar-employer>
+    
+    <!-- Main Content -->
+    <div class="content-container bg-slate-50">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="search-container">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search candidates, jobs, or team members...">
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <button class="action-btn">
+            <span class="notification-badge">3</span>
+            <i class="fas fa-bell"></i>
+          </button>
+          <button class="action-btn">
+            <span class="notification-badge">5</span>
+            <i class="fas fa-envelope"></i>
+          </button>
+          <div class="profile-dropdown">
+            <div class="profile-avatar">
+              <img src="assets/eliza.jpg" alt="Profile">
+            </div>
+            <span class="profile-name">{{employerName}}</span>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Welcome Section -->
+      <div class="welcome-card">
+        <div class="welcome-content">
+          <h1 class="welcome-title">Welcome back, {{employerName}}!</h1>
+          <p class="welcome-subtitle">Your company profile is {{profileCompletion}}% complete. Take tests for better teamwork!</p>
+          
+          <div class="welcome-actions">
+            <button class="btn btn-secondary">
+              <i class="fas fa-palette"></i>
+              Take Color profiling test
+            </button>
+            <button class="btn btn-secondary">
+              <i class="fas fa-heart"></i>
+              Take Care test
+            </button>
+          </div>
+        </div>
+        <div class="welcome-image">
+          <img src="assets/employer.svg" alt="Welcome">
+        </div>
+      </div>
+      
+      <!-- Quick Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon employer-bg">
+            <i class="fas fa-briefcase"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{dashboardStats.activeJobs}}</h3>
+            <p class="stat-label">Active Jobs</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon employer-bg">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{dashboardStats.totalCandidates}}</h3>
+            <p class="stat-label">Total Candidates</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon employer-bg">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{dashboardStats.scheduledInterviews}}</h3>
+            <p class="stat-label">Scheduled Interviews</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon urgent-bg">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{dashboardStats.urgentActions}}</h3>
+            <p class="stat-label">Urgent Actions</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Main Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- AI Matches Section -->
+        <div class="dashboard-card matches-card">
+          <div class="card-header">
+            <h2><i class="fas fa-robot"></i> AI Perfect Matches</h2>
+            <span class="badge employer-bg">{{dashboardStats.perfectMatches}} New</span>
+          </div>
+          
+          <div class="match-list">
+            <div class="match-item" *ngFor="let match of recentMatches">
+              <div class="match-avatar">
+                <img [src]="match.avatar" alt="Candidate">
+              </div>
+              <div class="match-details">
+                <h3 class="match-name">{{match.name}}</h3>
+                <p class="match-role">{{match.role}}</p>
+              </div>
+              <div class="match-score">
+                <div class="score-circle">
+                  <svg viewBox="0 0 36 36">
+                    <path class="score-bg"
+                      d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path class="score-fill"
+                      [attr.stroke-dasharray]="match.matchScore + ', 100'"
+                      d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <text x="18" y="20.35" class="score-text">{{match.matchScore}}%</text>
+                  </svg>
+                </div>
+              </div>
+              <div class="match-actions">
+                <button class="btn btn-sm btn-outline">View</button>
+                <button class="btn btn-sm btn-employer">Contact</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <button class="btn btn-link" (click)="viewAllMatches()">View all matches <i class="fas fa-arrow-right"></i></button>
+          </div>
+        </div>
+        
+        <!-- Upcoming Interviews Section -->
+        <div class="dashboard-card interviews-card">
+          <div class="card-header">
+            <h2><i class="fas fa-calendar-alt"></i> Upcoming Interviews</h2>
+          </div>
+          
+          <div class="interview-list">
+            <div class="interview-item" *ngFor="let interview of upcomingInterviews">
+              <div class="interview-date">
+                <span class="date-badge">
+                  {{formatInterviewDate(interview.date)}}
+                </span>
+                <span class="interview-type" [class.online]="interview.isOnline">
+                  {{interview.isOnline ? 'Online' : 'In-person'}}
+                </span>
+              </div>
+              <div class="interview-details">
+                <h3 class="interview-name">{{interview.candidateName}}</h3>
+                <p class="interview-role">{{interview.role}}</p>
+              </div>
+              <div class="interview-actions">
+                <button class="btn btn-sm btn-outline" *ngIf="interview.isOnline">
+                  <i class="fas fa-video"></i> Join
+                </button>
+                <button class="btn btn-sm btn-employer">
+                  <i class="fas fa-edit"></i> Details
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <button class="btn btn-link" (click)="viewAllInterviews()">View all interviews <i class="fas fa-arrow-right"></i></button>
+          </div>
+        </div>
+        
+        <!-- Job Statistics Chart -->
+        <div class="dashboard-card stats-card">
+          <div class="card-header">
+            <h2><i class="fas fa-chart-line"></i> Hiring Analytics</h2>
+          </div>
+          
+          <div class="stats-chart">
+            <div class="chart-container">
+              <!-- This would be where your actual chart would go -->
+              <div class="bar-chart">
+                <div class="chart-bar" *ngFor="let stat of jobStats" [style.height.%]="Number(stat.value)/2" [style.background-color]="stat.color"></div>
+              </div>
+              <div class="chart-labels">
+                <span *ngFor="let stat of jobStats">{{stat.label}}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="stats-metrics">
+            <div class="metric-item" *ngFor="let stat of jobStats">
+              <div class="metric-label">{{stat.label}}</div>
+              <div class="metric-value">{{stat.value}}</div>
+              <div class="metric-trend" [class.positive]="stat.increase" [class.negative]="!stat.increase">
+                <i class="fas" [class.fa-arrow-up]="stat.increase" [class.fa-arrow-down]="!stat.increase"></i>
+                {{stat.percent}}%
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Team Activity Feed -->
+        <div class="dashboard-card activity-card">
+          <div class="card-header">
+            <h2><i class="fas fa-stream"></i> Team Activity</h2>
+          </div>
+          
+          <div class="activity-list">
+            <div class="activity-item" *ngFor="let activity of recentActivities">
+              <div class="activity-icon">
+                <i class="fas" [class]="activity.icon"></i>
+              </div>
+              <div class="activity-details">
+                <p><strong>{{activity.user}}</strong> {{activity.action}}</p>
+                <span class="activity-time">{{activity.time}}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <button class="btn btn-employer" (click)="createNewJobPost()">
+              <i class="fas fa-plus-circle"></i> Create New Job Post
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>

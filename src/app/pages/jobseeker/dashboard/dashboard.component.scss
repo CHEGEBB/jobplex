@@ -127,6 +127,19 @@
     }
   }
   
+    .profile-views{
+      background-color:#93c5fd !important;
+    }
+  .applications{
+      background-color: #fda4af !important;
+    }
+    .interviews{
+      background-color: #6ee7b7 !important;
+    }
+  .saved-jobs {
+      background-color: #fbbf24 !important;
+    }
+ 
   .stat-card {
     background: white;
     border-radius: 16px;
@@ -171,6 +184,7 @@
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
+    color: #f3f4f6 !important;
   }
   
   .stat-content {

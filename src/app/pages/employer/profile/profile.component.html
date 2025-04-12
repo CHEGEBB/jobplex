@@ -1,0 +1,422 @@
+<div class="flex h-screen bg-gray-50">
+    <!-- Sidebar - will use your existing sidebar-employer component -->
+    <app-sidebar-employer class="hidden md:block"></app-sidebar-employer>
+  
+    <!-- Main content area -->
+     <Main class="content-container flex-1 ">
+    <div class="overflow-auto">
+      <!-- Header with search -->
+      <header class="sticky top-0 z-10 bg-white shadow-md">
+        <div class="flex items-center justify-between px-6 py-4">
+          <h1 class="text-2xl font-bold text-gray-800">Company Profile</h1>
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                class="w-64 pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+              <span class="absolute left-3 top-2.5 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+            </div>
+            <button 
+              (click)="toggleEditMode()" 
+              class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
+            >
+              <fa-icon [icon]="faEdit" class="mr-2"></fa-icon>
+              Edit Profile
+            </button>
+          </div>
+        </div>
+      </header>
+  
+   
+      <!-- Navigation tabs -->
+      <div class="container mx-auto px-4 mt-6">
+        <div class="border-b border-gray-200">
+          <nav class="flex space-x-8 overflow-x-auto scrollbar-hide">
+            <button 
+              class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap"
+              [class.border-indigo-500]="activeTab === 'overview'"
+              [class.text-indigo-600]="activeTab === 'overview'"
+              [class.border-transparent]="activeTab !== 'overview'"
+              [class.text-gray-500]="activeTab !== 'overview'"
+              (click)="setActiveTab('overview')"
+            >
+              Overview
+            </button>
+            <button 
+              class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap"
+              [class.border-indigo-500]="activeTab === 'culture'"
+              [class.text-indigo-600]="activeTab === 'culture'"
+              [class.border-transparent]="activeTab !== 'culture'"
+              [class.text-gray-500]="activeTab !== 'culture'"
+              (click)="setActiveTab('culture')"
+            >
+              Culture & Values
+            </button>
+            <button 
+              class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap"
+              [class.border-indigo-500]="activeTab === 'benefits'"
+              [class.text-indigo-600]="activeTab === 'benefits'"
+              [class.border-transparent]="activeTab !== 'benefits'"
+              [class.text-gray-500]="activeTab !== 'benefits'"
+              (click)="setActiveTab('benefits')"
+            >
+              Benefits & Perks
+            </button>
+            <button 
+              class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap"
+              [class.border-indigo-500]="activeTab === 'responsibility'"
+              [class.text-indigo-600]="activeTab === 'responsibility'"
+              [class.border-transparent]="activeTab !== 'responsibility'"
+              [class.text-gray-500]="activeTab !== 'responsibility'"
+              (click)="setActiveTab('responsibility')"
+            >
+              Social Responsibility
+            </button>
+          </nav>
+        </div>
+      </div>
+  
+      <!-- Tab content -->
+      <div class="container mx-auto px-4 py-6">
+        <!-- Overview Tab -->
+        <div *ngIf="activeTab === 'overview'" class="space-y-8">
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+              <h2 class="text-2xl font-bold text-gray-800 mb-4">About {{companyData.name}}</h2>
+              <p class="text-gray-700 leading-relaxed mb-6">{{companyData.description}}</p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                <div class="bg-indigo-50 rounded-lg p-6 transition-all duration-300 hover:shadow-md">
+                  <h3 class="text-xl font-semibold text-indigo-700 mb-3">Our Mission</h3>
+                  <p class="text-gray-700">{{companyData.mission}}</p>
+                </div>
+                <div class="bg-indigo-50 rounded-lg p-6 transition-all duration-300 hover:shadow-md">
+                  <h3 class="text-xl font-semibold text-indigo-700 mb-3">Our Vision</h3>
+                  <p class="text-gray-700">{{companyData.vision}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Work Environment Preview -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-2xl font-bold text-gray-800">Work Environment</h2>
+              <button class="text-indigo-600 hover:text-indigo-800" (click)="setActiveTab('culture')">
+                See more details
+              </button>
+            </div>
+            <p class="text-gray-700 mb-6">{{companyData.culture.workEnvironment}}</p>
+            
+            <!-- Environmental images preview -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div class="rounded-lg overflow-hidden h-48 bg-indigo-100">
+                <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Office Space" class="w-full h-full object-cover">
+              </div>
+              <div class="rounded-lg overflow-hidden h-48 bg-indigo-100">
+                <img src="https://images.unsplash.com/photo-1431540015161-0bf868a2d407?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Meeting Room" class="w-full h-full object-cover">
+              </div>
+              <div class="rounded-lg overflow-hidden h-48 bg-indigo-100">
+                <img src="https://plus.unsplash.com/premium_photo-1709932754899-5c36599fface?q=80&w=1509&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Recreation Area" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Culture Tab -->
+        <div *ngIf="activeTab === 'culture'" class="space-y-8">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Our Culture & Values</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div *ngFor="let value of companyData.culture.values" 
+                  class="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                <h3 class="text-xl font-semibold text-indigo-700 mb-3">{{value.title}}</h3>
+                <p class="text-gray-700">{{value.description}}</p>
+              </div>
+            </div>
+            
+            <div class="mt-10">
+              <h3 class="text-xl font-semibold text-gray-800 mb-4">Work Environment</h3>
+              <p class="text-gray-700 mb-6">{{companyData.culture.workEnvironment}}</p>
+              
+              <!-- Environmental images -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="rounded-lg overflow-hidden h-48 bg-indigo-100">
+                  <img src="https://images.unsplash.com/photo-1505409859467-3a796fd5798e?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Office Space" class="w-full h-full object-cover">
+                </div>
+                <div class="rounded-lg overflow-hidden h-48 bg-indigo-100">
+                  <img src="https://images.unsplash.com/photo-1462826303086-329426d1aef5?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Meeting Room" class="w-full h-full object-cover">
+                </div>
+                <div class="rounded-lg overflow-hidden h-48 bg-indigo-100">
+                  <img src="https://images.unsplash.com/photo-1659869590085-57efda46f48e?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Recreation Area" class="w-full h-full object-cover">
+                </div>
+                <div class="rounded-lg overflow-hidden h-48 bg-indigo-100">
+                  <img src="https://plus.unsplash.com/premium_photo-1661962318201-c7faa790617b?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Collaboration Space" class="w-full h-full object-cover">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Benefits Tab -->
+        <div *ngIf="activeTab === 'benefits'" class="space-y-6">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Benefits & Perks</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div *ngFor="let benefit of benefitsData" 
+                  class="bg-white rounded-xl border border-indigo-100 p-6 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                  <fa-icon [icon]="benefit.icon === 'heart' ? faHeart : 
+                                  benefit.icon === 'briefcase' ? faBriefcase : 
+                                  benefit.icon === 'lightbulb' ? faLightbulb : faLeaf" 
+                           class="text-indigo-600 text-xl"></fa-icon>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{benefit.title}}</h3>
+                <p class="text-gray-600">{{benefit.description}}</p>
+              </div>
+            </div>
+            
+            <div class="flex justify-center mt-8">
+              <button class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200 flex items-center">
+                <fa-icon [icon]="faEdit" class="mr-2"></fa-icon>
+                Customize Benefits
+              </button>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Social Responsibility Tab -->
+        <div *ngIf="activeTab === 'responsibility'" class="space-y-6">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Social Responsibility Initiatives</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div *ngFor="let initiative of companyData.socialResponsibility" 
+                   class="bg-gradient-to-br from-green-50 to-indigo-50 rounded-xl p-6 shadow-sm">
+                <h3 class="text-xl font-semibold text-indigo-700 mb-3">{{initiative.title}}</h3>
+                <p class="text-gray-700">{{initiative.description}}</p>
+              </div>
+            </div>
+            
+            <div class="mt-10 p-6 bg-gray-50 rounded-lg">
+              <h3 class="text-xl font-semibold text-gray-800 mb-4">Add New Initiative</h3>
+              <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" placeholder="Initiative Title" 
+                       class="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" placeholder="Brief Description" 
+                       class="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200">
+                  Add Initiative
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+     <!-- Company cover and basic info -->
+     <div class="relative">
+        <!-- Cover image -->
+        <div class="h-64 w-full bg-cover bg-center" [style.background-image]="'url(' + companyData.coverImage + ')'">
+          <div class="absolute inset-0 bg-gradient-to-r from-indigo-600/70 to-blue-900/70"></div>
+        </div>
+  
+        <!-- Company card overlay -->
+        <div class="container mx-auto px-4 relative">
+          <div class="bg-white rounded-lg shadow-xl p-6 -mt-24 relative z-10 max-w-4xl mx-auto">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+              <!-- Company logo -->
+              <div class="w-32 h-32 rounded-lg overflow-hidden border-4 border-white shadow-lg flex-shrink-0 bg-white">
+                <img [src]="companyData.logo" alt="Company Logo" class="w-full h-full object-contain">
+              </div>
+              
+              <!-- Basic company info -->
+              <div class="flex-1 text-center md:text-left">
+                <h1 class="text-3xl font-bold text-gray-800">{{companyData.name}}</h1>
+                <p class="text-indigo-600 font-medium mb-2">{{companyData.industry}}</p>
+                <div class="flex flex-wrap gap-4 justify-center md:justify-start text-gray-600 mb-4">
+                  <div class="flex items-center">
+                    <fa-icon [icon]="faMapMarkerAlt" class="mr-2 text-indigo-500"></fa-icon>
+                    <span>{{companyData.headquarters}}</span>
+                  </div>
+                  <div class="flex items-center">
+                    <fa-icon [icon]="faUsers" class="mr-2 text-indigo-500"></fa-icon>
+                    <span>{{companyData.size}}</span>
+                  </div>
+                  <div class="flex items-center">
+                    <fa-icon [icon]="faBuilding" class="mr-2 text-indigo-500"></fa-icon>
+                    <span>Founded {{companyData.founded}}</span>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-4 justify-center md:justify-start text-gray-600">
+                  <a [href]="'https://' + companyData.website" target="_blank" class="flex items-center hover:text-indigo-600">
+                    <fa-icon [icon]="faGlobe" class="mr-2 text-indigo-500"></fa-icon>
+                    <span>{{companyData.website}}</span>
+                  </a>
+                  <a [href]="'tel:' + companyData.phone" class="flex items-center hover:text-indigo-600">
+                    <fa-icon [icon]="faPhone" class="mr-2 text-indigo-500"></fa-icon>
+                    <span>{{companyData.phone}}</span>
+                  </a>
+                  <a [href]="'mailto:' + companyData.email" class="flex items-center hover:text-indigo-600">
+                    <fa-icon [icon]="faEnvelope" class="mr-2 text-indigo-500"></fa-icon>
+                    <span>{{companyData.email}}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+  <!-- Edit Profile Modal -->
+  <div *ngIf="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="closeModal()"></div>
+      
+      <!-- Modal panel -->
+      <div class="relative bg-white rounded-lg max-w-4xl w-full mx-4 shadow-xl transform transition-all">
+        <div class="absolute top-0 right-0 pt-4 pr-4">
+          <button type="button" class="bg-white rounded-md text-gray-400 hover:text-gray-500" (click)="closeModal()">
+            <span class="sr-only">Close</span>
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="p-6">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Edit Company Profile</h2>
+          
+          <form [formGroup]="companyForm" (ngSubmit)="saveCompanyProfile()">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <!-- Company Images -->
+              <div class="md:col-span-2 flex flex-col md:flex-row gap-6">
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
+                  <div class="flex items-center">
+                    <div class="w-24 h-24 rounded-lg overflow-hidden border border-gray-300 mr-4">
+                      <img [src]="companyData.logo" alt="Company Logo" class="w-full h-full object-contain">
+                    </div>
+                    <div>
+                      <label class="px-4 py-2 bg-indigo-600 text-white rounded cursor-pointer hover:bg-indigo-700 transition duration-200">
+                        <span>Change Logo</span>
+                        <input type="file" class="hidden" accept="image/*" (change)="uploadLogo($event)">
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+                  <div class="flex items-center">
+                    <div class="w-32 h-24 rounded-lg overflow-hidden border border-gray-300 mr-4">
+                      <img [src]="companyData.coverImage" alt="Cover Image" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                      <label class="px-4 py-2 bg-indigo-600 text-white rounded cursor-pointer hover:bg-indigo-700 transition duration-200">
+                        <span>Change Cover</span>
+                        <input type="file" class="hidden" accept="image/*" (change)="uploadCoverImage($event)">
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Company Basic Info -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                <input type="text" formControlName="name" 
+                       class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                <input type="text" formControlName="industry" 
+                       class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Year Founded</label>
+                <input type="text" formControlName="founded" 
+                       class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Company Size</label>
+                <input type="text" formControlName="size" 
+                       class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Headquarters</label>
+                <input type="text" formControlName="headquarters" 
+                       class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                <input type="text" formControlName="website" 
+                       class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input type="text" formControlName="phone" 
+                       class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" formControlName="email" 
+                       class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Company Description</label>
+                <textarea formControlName="description" rows="4"
+                          class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              </div>
+              
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mission</label>
+                <textarea formControlName="mission" rows="3"
+                          class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              </div>
+              
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vision</label>
+                <textarea formControlName="vision" rows="3"
+                          class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              </div>
+              
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Work Environment</label>
+                <textarea formControlName="workEnvironment" rows="3"
+                          class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              </div>
+            </div>
+            
+            <div class="flex justify-end pt-5 gap-3">
+              <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500" (click)="closeModal()">
+                Cancel
+              </button>
+              <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</Main>
+  

@@ -9,6 +9,8 @@ import { AiCareerPathComponent } from './pages/jobseeker/ai-career-path/ai-caree
 import { CvManagerComponent } from './pages/jobseeker/cv-manager/cv-manager.component';
 import { SettingsComponent } from './pages/jobseeker/settings/settings.component';
 import { JobseekerProfileComponent } from './pages/jobseeker/jobseeker-profile/jobseeker-profile.component';
+import { EmployerDashboardComponent } from './pages/employer/employer-dashboard/employer-dashboard.component';
+import { ProfileComponent } from './pages/employer/profile/profile.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent }, // Default route points to home
@@ -23,7 +25,13 @@ export const routes: Routes = [
   {path:'jobseeker/ai-career',component:AiCareerPathComponent},
   {path:'jobseeker/cv',component:CvManagerComponent},
   {path:'jobseeker/settings',component:SettingsComponent},
-  {path:'jobseeker/profile',component:JobseekerProfileComponent}
+  {path:'jobseeker/profile',component:JobseekerProfileComponent},
+
+  //employer routes
+  {path:'employer/dashboard',component:EmployerDashboardComponent},
+  {path:'employer/profile',component:ProfileComponent}
+
+
 
 
 
