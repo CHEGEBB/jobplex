@@ -16,6 +16,8 @@ import { ChatInterfaceComponent } from './pages/employer/chat-interface/chat-int
 import { InterviewsComponent } from './pages/employer/interviews/interviews.component';
 import { SettingsComponent } from './pages/jobseeker/settings/settings.component';
 import { EmployerSettingsComponent } from './pages/employer/settings/employer-settings.component';
+import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
+import { UserManagementComponent } from './pages/admin/user-management/user-management.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent }, // Default route points to home
@@ -39,7 +41,13 @@ export const routes: Routes = [
   {path:'employer/candidate-matches',component:CandidateMatchesComponent},
   {path:'employer/chat-interface',component:ChatInterfaceComponent},
   {path:'employer/interviews',component:InterviewsComponent},
-  {path:'employer/settings',component:EmployerSettingsComponent}
+  {path:'employer/settings',component:EmployerSettingsComponent},
+
+//admin routes
+{path:'admin/dashboard',component:AdminDashboardComponent},
+{path:'admin/user-management',component:UserManagementComponent}
+
+
 
 
 
