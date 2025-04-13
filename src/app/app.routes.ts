@@ -20,6 +20,7 @@ import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-das
 import { UserManagementComponent } from './pages/admin/user-management/user-management.component';
 import { SecurityComponent } from './pages/admin/security/security.component';
 import { AiMonitoringComponent } from './pages/admin/ai-monitoring/ai-monitoring.component';
+import { SystemMetricsComponent } from './pages/admin/system-metrics/system-metrics.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent }, // Default route points to home
@@ -49,7 +50,9 @@ export const routes: Routes = [
 {path:'admin/dashboard',component:AdminDashboardComponent},
 {path:'admin/user-management',component:UserManagementComponent},
 {path:'admin/security',component:SecurityComponent},
-{path:'admin/ai-monitoring',component:AiMonitoringComponent}
+{path:'admin/ai-monitoring',component:AiMonitoringComponent},
+{path:'admin/system-metrics',component:SystemMetricsComponent}
+
 
 
 

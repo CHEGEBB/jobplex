@@ -1,0 +1,280 @@
+// system-metrics.component.scss
+
+// Import variables
+$admin-color: #c026d3;
+$text-dark: #333;
+$text-medium: #666;
+$text-light: #888;
+$border-color: #ddd;
+$background-light: #f5f5f5;
+$box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+// Sidebar layout variables
+$sidebar-width: 250px;
+$header-height: 70px;
+$card-border-radius: 12px;
+$transition-speed: 0.3s;
+
+.sidebar-container {
+  width: $sidebar-width;
+  min-height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  transition: transform $transition-speed ease;
+
+  @media (max-width: 991px) {
+    transform: translateX(-100%);
+    
+    &.sidebar-expanded {
+      transform: translateX(0);
+    }
+  }
+}
+
+// Main content container
+.content-container {
+  flex: 1;
+  margin-left: $sidebar-width;
+  padding: 20px;
+  transition: margin-left $transition-speed ease;
+  
+  @media (max-width: 991px) {
+    margin-left: 0;
+  }
+}
+
+// Dashboard cards
+.dashboard-card {
+  border-radius: $card-border-radius;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Glassmorphism effect
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+// Progress bar animations
+@keyframes progress {
+  0% {
+    width: 0;
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.progress-bar {
+  animation: progress 1.5s ease-out forwards;
+}
+
+// Pulse animation for metrics
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse-anim {
+  animation: pulse 2s infinite;
+}
+
+// Shimmer loading effect
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(to right, #f0f0f0 8%, #e0e0e0 18%, #f0f0f0 33%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+// Chart hover effects
+.chart-container {
+  .data-point {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+    }
+  }
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c026d3;
+  border-radius: 10px;
+  
+  &:hover {
+    background: darken(#c026d3, 10%);
+  }
+}
+
+// Status indicator animations
+.status-indicator {
+  position: relative;
+  
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  
+  &.success::before {
+    background-color: #10b981;
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulse-success 2s infinite;
+  }
+  
+  &.warning::before {
+    background-color: #f59e0b;
+    box-shadow: 0 0 0 rgba(245, 158, 11, 0.4);
+    animation: pulse-warning 2s infinite;
+  }
+  
+  &.error::before {
+    background-color: #ef4444;
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0.4);
+    animation: pulse-error 2s infinite;
+  }
+}
+
+@keyframes pulse-success {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes pulse-warning {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes pulse-error {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+// Floating animation for cards
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+// Scale in animation
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+// Fade in animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+// Interactive hover effects for cards
+.interactive-card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: $box-shadow;
+    
+    .card-icon {
+      transform: scale(1.1) rotate(10deg);
+    }
+  }
+  
+  .card-icon {
+    transition: all 0.3s ease;
+  }
+}
