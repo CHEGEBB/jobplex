@@ -47,7 +47,7 @@ $transition-speed: 0.3s;
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
-  background-color: lighten($admin-color, 40%);
+  background-color: ($admin-color, 40%);
   border-radius: 2rem;
   font-size: 0.9rem;
   color: $admin-color;
@@ -105,7 +105,7 @@ $transition-speed: 0.3s;
     cursor: pointer;
     
     .icon-container {
-      background-color: lighten($admin-color, 40%);
+      background-color: ($admin-color, 40%);
       width: 50px;
       height: 50px;
       border-radius: 12px;
@@ -165,12 +165,12 @@ $transition-speed: 0.3s;
   }
   
   .card-header {
-    background-color: lighten($admin-color, 45%);
+    background-color: ($admin-color, 45%);
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid lighten($admin-color, 40%);
+    border-bottom: 1px solid ($admin-color, 40%);
   }
   
   .card-body {
@@ -387,7 +387,7 @@ $transition-speed: 0.3s;
   justify-content: center;
   
   &:hover {
-    background-color: darken($admin-color, 10%);
+    background-color:($admin-color, 10%);
     transform: translateY(-2px);
   }
   
@@ -411,7 +411,7 @@ $transition-speed: 0.3s;
   
   &:hover {
     background-color: $background-light;
-    border-color: darken($border-color, 10%);
+    border-color:($border-color, 10%);
   }
 }
 
@@ -454,10 +454,10 @@ $transition-speed: 0.3s;
   
   &:hover {
     &::-webkit-slider-thumb {
-      background: darken($admin-color, 10%);
+      background: ($admin-color, 10%);
     }
     &::-moz-range-thumb {
-      background: darken($admin-color, 10%);
+      background:($admin-color, 10%);
     }
   }
 }
