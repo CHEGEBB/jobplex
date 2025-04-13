@@ -1,16 +1,5 @@
 // Import fonts
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-//import font awesome icons for angular
-// Import Font Awesome for Angular
-// Import Font Awesome for Angular
-@import "@fortawesome/fontawesome-free/scss/fontawesome";
-@import "@fortawesome/fontawesome-free/scss/regular";
-@import "@fortawesome/fontawesome-free/scss/solid";
-@import "@fortawesome/fontawesome-free/scss/brands";
-
-
-
-
 // Variables
 $primary-color: #10b981;
 $employer-color: #3f51b5;
@@ -243,7 +232,7 @@ $transition: all 0.3s ease;
     }
     
     &:hover {
-      background-color: darken($background-light, 5%);
+      background-color:($background-light, 5%);
     }
     
     &.active-role {
@@ -473,11 +462,11 @@ $transition: all 0.3s ease;
     height: 48px;
     
     &:hover {
-      background-color: darken($primary-color, 10%);
+      background-color: ($primary-color, 10%);
     }
     
     &:disabled {
-      background-color: lighten($text-light, 15%);
+      background-color:($text-light, 15%);
       cursor: not-allowed;
     }
     

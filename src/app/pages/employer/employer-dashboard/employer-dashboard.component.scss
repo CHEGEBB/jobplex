@@ -706,7 +706,7 @@ $transition-speed: 0.3s;
     color: white;
     
     &:hover {
-      background-color: darken($employer-color, 8%);
+      background-color:($employer-color, 8%);
     }
     
     &:active {
@@ -754,7 +754,7 @@ $transition-speed: 0.3s;
     }
     
     &:hover {
-      color: darken($employer-color, 10%);
+      color:($employer-color, 10%);
       
       i {
         transform: translateX(3px);

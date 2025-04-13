@@ -133,7 +133,7 @@ $success-color: #10b981;
   transition: background-color 0.15s ease;
   
   &:hover {
-    background-color: darken($employer-color, 5%);
+    background-color:($employer-color, 5%);
   }
 }
 
@@ -148,7 +148,7 @@ $success-color: #10b981;
   transition: background-color 0.15s ease;
   
   &:hover {
-    background-color: darken(#f3f4f6, 3%);
+    background-color:(#f3f4f6, 3%);
   }
 }
 
@@ -178,7 +178,7 @@ $success-color: #10b981;
   transition: background-color 0.15s ease;
   
   &:hover {
-    background-color: darken($danger-color, 5%);
+    background-color:($danger-color, 5%);
   }
   
   &:disabled {

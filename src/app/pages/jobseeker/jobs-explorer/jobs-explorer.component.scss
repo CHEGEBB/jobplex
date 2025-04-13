@@ -87,7 +87,7 @@ $header-height: 64px;
   
   .score-fill {
     height: 100%;
-    background: linear-gradient(to right, $primary-color, lighten($primary-color, 10%));
+    background: linear-gradient(to right, $primary-color,($primary-color, 10%));
     border-radius: 9999px;
   }
 }
