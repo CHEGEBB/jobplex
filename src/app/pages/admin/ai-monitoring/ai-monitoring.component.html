@@ -1,0 +1,483 @@
+<div class="flex h-screen overflow-hidden">
+    <!-- Import the sidebar-admin component -->
+    <app-sidebar-admin class="sidebar-container"></app-sidebar-admin>
+  
+    <!-- Main Content Area -->
+    <div class="flex-1 overflow-y-auto bg-slate-50 pb-8 content-container">
+      <!-- Header Section -->
+      <header class="sticky top-0 z-10 bg-white shadow-sm backdrop-blur-md bg-opacity-80 p-4 mb-6" @fadeIn>
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">AI Monitoring Dashboard</h1>
+            <p class="text-sm text-gray-500">Monitor and optimize AI performance metrics</p>
+          </div>
+          
+          <div class="flex items-center space-x-4">
+            <div class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+              Status: Operational
+            </div>
+            <button class="p-2 bg-white rounded-full shadow-md text-gray-700 hover:bg-gray-50">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="p-2 bg-white rounded-full shadow-md text-gray-700 hover:bg-gray-50">
+              <i class="fas fa-bell"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+  
+      <!-- Quick Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 mb-6" @fadeIn>
+        <div class="glassmorphic-card flex items-center p-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+          <div class="rounded-full p-3 bg-white bg-opacity-30 mr-4">
+            <i class="fas fa-line-chart text-purple-500 text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-medium">AI Accuracy</h3>
+            <div class="flex items-end">
+              <p class="text-2xl font-bold">{{modelPerformance.accuracy}}%</p>
+              <p class="ml-2 text-xs">
+                <i class="fas fa-arrow-up"></i> 2.1% 
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glassmorphic-card flex items-center p-4 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-400 text-white">
+          <div class="rounded-full p-3 bg-white bg-opacity-30 mr-4">
+            <i class="fas fa-brain text-cyan-500 text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-medium">Models Active</h3>
+            <div class="flex items-end">
+                <p class="text-2xl font-bold">{{getActiveAlgorithmsString()}}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glassmorphic-card flex items-center p-4 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 text-white">
+          <div class="rounded-full p-3 bg-white bg-opacity-30 mr-4">
+            <i class="fas fa-database text-emerald-500 text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-medium">Training Samples</h3>
+            <div class="flex items-end">
+              <p class="text-2xl font-bold">{{trainingData.totalSamples.toLocaleString()}}</p>
+              <p class="ml-2 text-xs">
+                <i class="fas fa-plus"></i> 1.2K this week
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4" @fadeIn>
+        <!-- Left Column -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Performance Metrics -->
+          <div class="glassmorphic-card bg-white rounded-xl shadow-lg p-5 overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-semibold text-gray-800">Performance Metrics</h2>
+              <div class="tabs bg-gray-100 rounded-lg p-1">
+                <button 
+                  *ngFor="let tab of ['daily', 'weekly', 'monthly']" 
+                  class="px-3 py-1 text-sm rounded-md"
+                  [ngClass]="{'bg-white shadow-sm': activeTab === tab, 'text-gray-600 hover:bg-gray-200': activeTab !== tab}"
+                  (click)="toggleTab(tab)">
+                  {{tab | titlecase}}
+                </button>
+              </div>
+            </div>
+            
+            <!-- Chart Canvas -->
+            <div class="relative h-64 mb-4 overflow-hidden">
+              <div class="absolute bottom-0 w-full">
+                <div class="flex justify-between h-52">
+                  <div *ngFor="let value of performanceData; let i = index" class="w-1/7 flex items-end justify-center px-1">
+                    <div 
+                      class="w-full rounded-t-md bg-gradient-to-t from-purple-500 to-fuchsia-400"
+                      [style.height.%]="value"
+                      style="transition: height 0.5s ease-out;">
+                    </div>
+                  </div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                  <div *ngFor="let label of chartLabels" class="w-1/7 text-center">{{label}}</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div class="metric-card bg-purple-50 rounded-lg p-3 border-l-4 border-purple-500">
+                <p class="text-sm text-gray-600">Accuracy</p>
+                <p class="text-xl font-bold text-gray-800">{{modelPerformance.accuracy}}%</p>
+              </div>
+              <div class="metric-card bg-blue-50 rounded-lg p-3 border-l-4 border-blue-500">
+                <p class="text-sm text-gray-600">Precision</p>
+                <p class="text-xl font-bold text-gray-800">{{modelPerformance.precision}}%</p>
+              </div>
+              <div class="metric-card bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
+                <p class="text-sm text-gray-600">Recall</p>
+                <p class="text-xl font-bold text-gray-800">{{modelPerformance.recall}}%</p>
+              </div>
+              <div class="metric-card bg-amber-50 rounded-lg p-3 border-l-4 border-amber-500">
+                <p class="text-sm text-gray-600">F1 Score</p>
+                <p class="text-xl font-bold text-gray-800">{{modelPerformance.f1Score}}%</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Match Accuracy -->
+          <div class="glassmorphic-card bg-white rounded-xl shadow-lg p-5">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Match Accuracy Metrics</h2>
+            
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm font-medium text-gray-600">Overall Score</span>
+                  <span class="text-sm font-medium text-gray-900">{{matchAccuracy.overallScore}}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-purple-600 h-2 rounded-full" [style.width.%]="matchAccuracy.overallScore"></div>
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm font-medium text-gray-600">Skills Accuracy</span>
+                  <span class="text-sm font-medium text-gray-900">{{matchAccuracy.skillsAccuracy}}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-blue-500 h-2 rounded-full" [style.width.%]="matchAccuracy.skillsAccuracy"></div>
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm font-medium text-gray-600">Experience Matching</span>
+                  <span class="text-sm font-medium text-gray-900">{{matchAccuracy.experienceMatching}}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-green-500 h-2 rounded-full" [style.width.%]="matchAccuracy.experienceMatching"></div>
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm font-medium text-gray-600">Education Relevance</span>
+                  <span class="text-sm font-medium text-gray-900">{{matchAccuracy.educationRelevance}}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-amber-500 h-2 rounded-full" [style.width.%]="matchAccuracy.educationRelevance"></div>
+                </div>
+              </div>
+              
+              <div class="flex items-center justify-between mt-4 p-3 bg-purple-50 rounded-lg">
+                <div>
+                  <p class="text-sm font-medium text-gray-800">Improvement Rate</p>
+                  <p class="text-2xl font-bold text-purple-700">+{{matchAccuracy.improvementRate}}%</p>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Compare
+                  </button>
+                  <button class="px-3 py-1 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                    Optimize
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Algorithm Adjustments -->
+          <div class="glassmorphic-card bg-white rounded-xl shadow-lg p-5 overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-semibold text-gray-800">Algorithm Management</h2>
+              <button class="flex items-center text-sm text-purple-600 hover:text-purple-800">
+                <i class="fas fa-plus-circle mr-1"></i> New Algorithm
+              </button>
+            </div>
+            
+            <!-- Algorithm Cards -->
+            <div class="space-y-3 mb-3">
+              <div *ngFor="let algo of algorithms" 
+                  class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all"
+                  [class.bg-purple-50]="selectedAlgorithm?.id === algo.id"
+                  (click)="selectAlgorithm(algo)">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h3 class="font-medium text-gray-900">{{algo.name}}</h3>
+                    <p class="text-sm text-gray-500">Last modified: {{algo.lastModified}}</p>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <span [ngClass]="{
+                      'bg-green-100 text-green-800': algo.status === 'Active',
+                      'bg-yellow-100 text-yellow-800': algo.status === 'In Testing',
+                      'bg-gray-100 text-gray-800': algo.status === 'Paused'
+                    }" class="px-2 py-1 text-xs rounded-full">
+                      {{algo.status}}
+                    </span>
+                    <p class="text-sm font-medium text-gray-900">{{algo.accuracy}}%</p>
+                  </div>
+                </div>
+                
+                <!-- Controls (visible on selection) -->
+                <div *ngIf="selectedAlgorithm?.id === algo.id" class="pt-3 mt-3 border-t border-gray-200 flex justify-end space-x-2">
+                  <button class="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300" 
+                        *ngIf="algo.status === 'Active'"
+                        (click)="pauseAlgorithm(algo.id)">
+                    Pause
+                  </button>
+                  <button class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                        *ngIf="algo.status === 'Paused'"
+                        (click)="resumeAlgorithm(algo.id)">
+                    Resume
+                  </button>
+                  <button class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Edit
+                  </button>
+                  <button class="px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                        (click)="retrainModel()">
+                    Retrain
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="space-y-6">
+          <!-- Training Data Card -->
+          <div class="glassmorphic-card bg-white rounded-xl shadow-lg p-5">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Training Data</h2>
+            
+            <div class="flex justify-between items-center mb-4">
+              <div class="text-center">
+                <p class="text-3xl font-bold text-gray-900">{{trainingData.totalSamples.toLocaleString()}}</p>
+                <p class="text-sm text-gray-500">Total Samples</p>
+              </div>
+              <div class="h-12 w-[1px] bg-gray-200"></div>
+              <div class="text-center">
+                <p class="text-3xl font-bold text-gray-900">{{(trainingData.labeledData / trainingData.totalSamples * 100).toFixed(1)}}%</p>
+                <p class="text-sm text-gray-500">Labeled</p>
+              </div>
+            </div>
+            
+            <div class="space-y-1 mb-4">
+              <div class="flex justify-between items-center">
+                <p class="text-sm text-gray-600">Last Training Date</p>
+                <p class="text-sm font-medium text-gray-900">{{trainingData.lastTrainingDate}}</p>
+              </div>
+              <div class="flex justify-between items-center">
+                <p class="text-sm text-gray-600">Pending Review</p>
+                <p class="text-sm font-medium text-red-600">{{trainingData.pendingReview}} samples</p>
+              </div>
+            </div>
+            
+            <div class="flex justify-between space-x-2">
+              <button class="flex-1 px-3 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">
+                <i class="fas fa-upload mr-1"></i> Import
+              </button>
+              <button class="flex-1 px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                <i class="fas fa-tag mr-1"></i> Label Data
+              </button>
+            </div>
+          </div>
+          
+          <!-- Error Correction -->
+          <div class="glassmorphic-card bg-white rounded-xl shadow-lg p-5">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Error Correction</h2>
+            
+            <div class="space-y-3">
+              <div *ngFor="let error of recentErrors" 
+                  class="p-3 rounded-lg" 
+                  [ngClass]="{
+                    'bg-red-50 border-l-4 border-red-500': error.status === 'Under Review',
+                    'bg-yellow-50 border-l-4 border-yellow-500': error.status === 'In Progress',
+                    'bg-green-50 border-l-4 border-green-500': error.status === 'Fixed'
+                  }">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{error.type}}</p>
+                    <p class="text-xs text-gray-500">{{error.timestamp}}</p>
+                  </div>
+                  <span [ngClass]="{
+                    'bg-red-100 text-red-800': error.status === 'Under Review',
+                    'bg-yellow-100 text-yellow-800': error.status === 'In Progress',
+                    'bg-green-100 text-green-800': error.status === 'Fixed'
+                  }" class="px-2 py-1 text-xs rounded-full">
+                    {{error.status}}
+                  </span>
+                </div>
+                <p class="text-xs text-gray-600 mt-1">{{error.description}}</p>
+                <div class="mt-2 flex justify-end">
+                  <button class="px-2 py-1 text-xs bg-white text-gray-800 border border-gray-300 rounded hover:bg-gray-50"
+                        (click)="reviewError(error.id)">
+                    Review
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- A/B Testing -->
+          <div class="glassmorphic-card bg-white rounded-xl shadow-lg p-5">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">A/B Testing</h2>
+            
+            <div class="space-y-4">
+              <div *ngFor="let test of abTests" class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <p class="text-sm font-medium text-gray-900">{{test.name}}</p>
+                  <span [ngClass]="{
+                    'bg-green-100 text-green-800': test.status === 'Running',
+                    'bg-gray-100 text-gray-800': test.status === 'Scheduled',
+                    'bg-blue-100 text-blue-800': test.status === 'Completed'
+                  }" class="px-2 py-1 text-xs rounded-full">
+                    {{test.status}}
+                  </span>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500">
+                  <span>{{test.startDate}}</span>
+                  <span>{{test.participants}} participants</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-purple-600 h-2 rounded-full" [style.width.%]="test.progress"></div>
+                </div>
+                <div class="flex justify-end" *ngIf="test.status === 'Scheduled'">
+                  <button class="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                        (click)="startTest(test.id)">
+                    Start Test
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <button class="w-full mt-4 px-3 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 text-sm">
+              <i class="fas fa-plus mr-1"></i> Create New Test
+            </button>
+          </div>
+          
+          <!-- Feedback Processing -->
+          <div class="glassmorphic-card bg-white rounded-xl shadow-lg p-5" @fadeIn>
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-semibold text-gray-800">Feedback Processing</h2>
+              <button class="text-sm text-purple-600 hover:text-purple-800" (click)="toggleFeedback()">
+                <i class="fas" [ngClass]="feedbackExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </button>
+            </div>
+            
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg mb-3">
+              <div class="flex items-center space-x-2">
+                <div class="text-green-500 text-lg">
+                  <i class="fas fa-smile"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Positive</p>
+                  <p class="font-medium">{{feedbackData.positive}}%</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="text-gray-400 text-lg">
+                  <i class="fas fa-meh"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Neutral</p>
+                  <p class="font-medium">{{feedbackData.neutral}}%</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="text-red-500 text-lg">
+                  <i class="fas fa-frown"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Negative</p>
+                  <p class="font-medium">{{feedbackData.negative}}%</p>
+                </div>
+              </div>
+            </div>
+            
+            <div *ngIf="feedbackExpanded" class="space-y-3 mt-4 pt-3 border-t border-gray-200">
+              <div class="flex justify-between items-center">
+                <p class="text-sm text-gray-600">Total Feedbacks</p>
+                <p class="text-sm font-medium">{{feedbackData.totalFeedbacks}}</p>
+              </div>
+              <div class="flex justify-between items-center">
+                <p class="text-sm text-gray-600">Action Required</p>
+                <p class="text-sm font-medium text-red-600">{{feedbackData.actionRequired}}</p>
+              </div>
+              <button class="w-full px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm"
+                    (click)="reviewFeedback()">
+                Review Feedback
+              </button>
+            </div>
+          </div>
+          
+          <!-- System Health -->
+          <div class="glassmorphic-card bg-white rounded-xl shadow-lg p-5">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-semibold text-gray-800">System Health</h2>
+              <button class="text-sm text-purple-600 hover:text-purple-800" (click)="toggleSystemMetrics()">
+                <i class="fas" [ngClass]="showSystemMetrics ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </button>
+            </div>
+            
+            <div *ngIf="showSystemMetrics" class="space-y-4">
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">CPU Usage</span>
+                  <span class="text-sm" [ngClass]="{
+                    'text-green-600': systemHealth.cpuUsage < 50,
+                    'text-yellow-600': systemHealth.cpuUsage >= 50 && systemHealth.cpuUsage < 80,
+                    'text-red-600': systemHealth.cpuUsage >= 80
+                  }">{{systemHealth.cpuUsage}}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div [ngClass]="{
+                    'bg-green-500': systemHealth.cpuUsage < 50,
+                    'bg-yellow-500': systemHealth.cpuUsage >= 50 && systemHealth.cpuUsage < 80,
+                    'bg-red-500': systemHealth.cpuUsage >= 80
+                  }" class="h-2 rounded-full" [style.width.%]="systemHealth.cpuUsage"></div>
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Memory Usage</span>
+                  <span class="text-sm" [ngClass]="{
+                    'text-green-600': systemHealth.memoryUsage < 50,
+                    'text-yellow-600': systemHealth.memoryUsage >= 50 && systemHealth.memoryUsage < 80,
+                    'text-red-600': systemHealth.memoryUsage >= 80
+                  }">{{systemHealth.memoryUsage}}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div [ngClass]="{
+                    'bg-green-500': systemHealth.memoryUsage < 50,
+                    'bg-yellow-500': systemHealth.memoryUsage >= 50 && systemHealth.memoryUsage < 80,
+                    'bg-red-500': systemHealth.memoryUsage >= 80
+                  }" class="h-2 rounded-full" [style.width.%]="systemHealth.memoryUsage"></div>
+                </div>
+              </div>
+              
+              <div class="space-y-1">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">API Latency</span>
+                  <span class="text-sm font-medium">{{systemHealth.apiLatency}} ms</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Database Health</span>
+                  <span class="text-sm font-medium text-green-600">{{systemHealth.databaseHealth}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Last Incident</span>
+                  <span class="text-sm font-medium">{{systemHealth.lastIncident}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

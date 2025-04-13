@@ -1,0 +1,170 @@
+
+// Define our admin color variables
+$admin-color: #c026d3;
+$text-dark: #333;
+$text-medium: #666;
+$text-light: #888;
+$border-color: #ddd;
+$background-light: #f5f5f5;
+$box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+// Core layout setup
+$sidebar-width: 250px;
+$header-height: 70px;
+$card-border-radius: 12px;
+$transition-speed: 0.3s;
+
+.sidebar-container {
+  width: $sidebar-width;
+  min-height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  transition: transform $transition-speed ease;
+
+  @media (max-width: 991px) {
+    transform: translateX(-100%);
+    
+    &.sidebar-expanded {
+      transform: translateX(0);
+    }
+  }
+}
+
+// Main content container
+.content-container {
+  flex: 1;
+  margin-left: $sidebar-width;
+  padding: 20px;
+  transition: margin-left $transition-speed ease;
+  
+  @media (max-width: 991px) {
+    margin-left: 0;
+  }
+}
+
+// Glassmorphic Card Effect
+.glassmorphic-card {
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Animation for cards
+.metric-card {
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+  }
+}
+
+// Animation for chart elements
+@keyframes growBar {
+  from { height: 0; }
+  to { height: 100%; }
+}
+
+// Pulse animation for important elements
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+// Special data point styling
+.data-point {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: $admin-color;
+    border-radius: 50%;
+    top: 50%;
+    right: -12px;
+    transform: translateY(-50%);
+  }
+}
+
+// Custom scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba($admin-color, 0.5);
+  border-radius: 4px;
+  
+  &:hover {
+    background: $admin-color;
+  }
+}
+
+// Media queries for responsive layout adjustments
+@media (max-width: 768px) {
+  .glassmorphic-card {
+    padding: 12px;
+  }
+  
+  h2 {
+    font-size: 16px;
+  }
+}
+
+// Custom progress bars
+.custom-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, $admin-color, #e879f9);
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    animation: shine 2s infinite;
+  }
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+// Notification dot
+.notification-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  top: 0;
+  right: 0;
+}

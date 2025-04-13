@@ -1,0 +1,904 @@
+
+$admin-color: #c026d3;
+$text-dark: #333;
+$text-medium: #666;
+$text-light: #888;
+$border-color: #ddd;
+$background-light: #f5f5f5;
+$box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+$sidebar-width: 250px;
+$header-height: 70px;
+$card-border-radius: 12px;
+$transition-speed: 0.3s;
+
+.sidebar-container {
+  width: $sidebar-width;
+  min-height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  transition: transform $transition-speed ease;
+
+  @media (max-width: 991px) {
+    transform: translateX(-100%);
+    
+    &.sidebar-expanded {
+      transform: translateX(0);
+    }
+  }
+}
+
+// Main content container
+.content-container {
+  flex: 1;
+  margin-left: $sidebar-width;
+  padding: 20px;
+  transition: margin-left $transition-speed ease;
+  
+  @media (max-width: 991px) {
+    margin-left: 0;
+  }
+}
+
+// Security Status Badge
+.security-status-badge {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: lighten($admin-color, 40%);
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  color: $admin-color;
+  animation: pulse 2s infinite;
+
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: $admin-color;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($admin-color, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba($admin-color, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($admin-color, 0);
+  }
+}
+
+// Summary Cards
+.security-summary-card {
+  background-color: white;
+  border-radius: $card-border-radius;
+  box-shadow: $box-shadow;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  border-top: 4px solid transparent;
+  
+  &.active {
+    border-top-color: $admin-color;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    
+    .icon-container {
+      background-color: $admin-color;
+      color: white;
+    }
+  }
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-content {
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    
+    .icon-container {
+      background-color: lighten($admin-color, 40%);
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      transition: all 0.3s ease;
+      
+      i {
+        font-size: 1.5rem;
+        color: $admin-color;
+        transition: all 0.3s ease;
+      }
+    }
+  }
+}
+
+// Section Container
+.section-container {
+  background-color: white;
+  border-radius: $card-border-radius;
+  box-shadow: $box-shadow;
+  padding: 1.5rem;
+  animation: fadeIn 0.5s ease;
+  margin-top: 1.5rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid $border-color;
+  margin-bottom: 1.5rem;
+}
+
+// Setting Card
+.setting-card {
+  background-color: white;
+  border-radius: $card-border-radius;
+  box-shadow: $box-shadow;
+  overflow: hidden;
+  border: 1px solid $border-color;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  }
+  
+  .card-header {
+    background-color: lighten($admin-color, 45%);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid lighten($admin-color, 40%);
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+}
+
+// Toggle Switch
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    
+    &:checked + label {
+      background-color: $admin-color;
+      
+      &:before {
+        transform: translateX(26px);
+      }
+    }
+    
+    &:focus + label {
+      box-shadow: 0 0 1px $admin-color;
+    }
+  }
+  
+  label {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+    
+    &:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+  }
+}
+
+.toggle-switch-small {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    
+    &:checked + label {
+      background-color: $admin-color;
+      
+      &:before {
+        transform: translateX(16px);
+      }
+    }
+  }
+  
+  label {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 34px;
+    
+    &:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+  }
+}
+
+// Checkbox Container
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    margin-right: 0.5rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:checked {
+      background-color: $admin-color;
+      border-color: $admin-color;
+      
+      &:after {
+        content: '';
+        position: absolute;
+        width: 5px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        top: 2px;
+        left: 6px;
+        transform: rotate(45deg);
+      }
+    }
+    
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba($admin-color, 0.3);
+    }
+  }
+  
+  label {
+    font-size: 0.95rem;
+    color: $text-dark;
+    cursor: pointer;
+  }
+}
+
+// Radio Container
+.radio-container {
+  display: flex;
+  align-items: center;
+  
+  input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:checked {
+      border-color: $admin-color;
+      
+      &:after {
+        content: '';
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background-color: $admin-color;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
+    
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba($admin-color, 0.3);
+    }
+  }
+  
+  label {
+    font-size: 0.95rem;
+    color: $text-dark;
+    cursor: pointer;
+  }
+}
+
+// Buttons
+.admin-button {
+  background-color: $admin-color;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background-color: darken($admin-color, 10%);
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.admin-button-secondary {
+  background-color: white;
+  color: $text-dark;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid $border-color;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background-color: $background-light;
+    border-color: darken($border-color, 10%);
+  }
+}
+
+.admin-button-sm {
+  @extend .admin-button;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+// Range Slider
+.range-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #ddd;
+  outline: none;
+  transition: background 0.2s;
+  -webkit-appearance: none;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $admin-color;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $admin-color;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: none;
+  }
+  
+  &:hover {
+    &::-webkit-slider-thumb {
+      background: darken($admin-color, 10%);
+    }
+    &::-moz-range-thumb {
+      background: darken($admin-color, 10%);
+    }
+  }
+}
+
+// Input styles
+.select-input, .text-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid $border-color;
+  border-radius: 0.5rem;
+  background-color: white;
+  color: $text-dark;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: $admin-color;
+    box-shadow: 0 0 0 2px rgba($admin-color, 0.1);
+  }
+  
+  &:disabled {
+    background-color: $background-light;
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.select-input-sm {
+  @extend .select-input;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+// Reset button
+.reset-button {
+  font-size: 0.85rem;
+  color: $admin-color;
+  background: none;
+  border: none;
+  cursor: pointer;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// SSO Provider
+.sso-provider {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid $border-color;
+  border-radius: 0.4rem;
+  background-color: white;
+}
+
+// Password Strength Meter
+.password-strength-demo {
+  margin-top: 1.5rem;
+  
+  .password-strength-meter {
+    width: 100%;
+    height: 8px;
+    background-color: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    
+    .strength-bar {
+      height: 100%;
+      transition: width 0.5s ease, background-color 0.5s ease;
+      
+      &.weak {
+        width: 30%;
+        background-color: #f44336;
+      }
+      
+      &.medium {
+        width: 65%;
+        background-color: #ff9800;
+      }
+      
+      &.strong {
+        width: 100%;
+        background-color: #4caf50;
+      }
+    }
+  }
+}
+
+// Role MFA Setting
+.role-mfa-setting {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid $border-color;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+// Security Metrics
+.security-metrics {
+  margin-bottom: 2rem;
+  
+  .metric-card {
+    background-color: white;
+    border-radius: $card-border-radius;
+    box-shadow: $box-shadow;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    
+    .icon-bg {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      
+      i {
+        font-size: 1.5rem;
+      }
+    }
+  }
+}
+
+// Security Log Table
+.security-log-table {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    
+    th {
+      background-color: $background-light;
+      color: $text-dark;
+      font-weight: 600;
+      text-align: left;
+      padding: 0.8rem 1rem;
+      font-size: 0.9rem;
+      
+      &:first-child {
+        border-top-left-radius: 0.5rem;
+      }
+      
+      &:last-child {
+        border-top-right-radius: 0.5rem;
+      }
+    }
+    
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid $border-color;
+      font-size: 0.9rem;
+      color: $text-dark;
+    }
+    
+    tr {
+      &.suspicious {
+        background-color: rgba(244, 67, 54, 0.05);
+      }
+      
+      &:hover {
+        background-color: rgba($admin-color, 0.05);
+      }
+    }
+  }
+}
+
+// Status Badge
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  
+  &.normal {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+  }
+  
+  &.warning {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #ff9800;
+  }
+  
+  &.suspicious {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+  }
+  
+  &.reviewed {
+    background-color: rgba(33, 150, 243, 0.1);
+    color: #2196f3;
+  }
+}
+
+// Action Buttons
+.action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $background-light;
+  border: 1px solid $border-color;
+  color: $text-medium;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: white;
+    color: $admin-color;
+    border-color: $admin-color;
+  }
+  
+  &.delete:hover {
+    color: #f44336;
+    border-color: #f44336;
+  }
+}
+
+// Pagination
+.pagination {
+  display: flex;
+  align-items: center;
+  
+  .pagination-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border: 1px solid $border-color;
+    color: $text-medium;
+    transition: all 0.2s ease;
+    margin: 0 0.15rem;
+    cursor: pointer;
+    
+    &:hover {
+      border-color: $admin-color;
+      color: $admin-color;
+    }
+    
+    &.active {
+      background-color: $admin-color;
+      color: white;
+      border-color: $admin-color;
+    }
+  }
+  
+  .pagination-ellipsis {
+    margin: 0 0.15rem;
+    color: $text-medium;
+  }
+}
+
+// IP Restrictions Table
+.ip-restrictions-table {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    
+    th {
+      background-color: $background-light;
+      color: $text-dark;
+      font-weight: 600;
+      text-align: left;
+      padding: 0.8rem 1rem;
+      font-size: 0.9rem;
+      
+      &:first-child {
+        border-top-left-radius: 0.5rem;
+      }
+      
+      &:last-child {
+        border-top-right-radius: 0.5rem;
+      }
+    }
+    
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid $border-color;
+      font-size: 0.9rem;
+      color: $text-dark;
+    }
+  }
+}
+
+// Rule Type Badge
+.rule-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  
+  &.allow {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+  }
+  
+  &.block {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+  }
+}
+
+// Modal Styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: $card-border-radius;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid $border-color;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $text-medium;
+  font-size: 1.25rem;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: $text-dark;
+  }
+}
+
+// Notification Toast
+.notification-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background-color: white;
+  border-left: 4px solid $admin-color;
+  border-radius: 0.5rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1000;
+  max-width: 350px;
+  
+  .notification-content {
+    display: flex;
+    align-items: center;
+    
+    i {
+      color: $admin-color;
+      font-size: 1.25rem;
+    }
+  }
+  
+  .notification-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $text-medium;
+    transition: color 0.2s ease;
+    margin-left: 1rem;
+    
+    &:hover {
+      color: $text-dark;
+    }
+  }
+}
+
+// Disable styles for disabled sections
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}

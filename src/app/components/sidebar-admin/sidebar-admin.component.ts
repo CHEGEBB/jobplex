@@ -28,11 +28,9 @@ export class SidebarAdminComponent implements OnInit {
     { icon: 'fa-chart-pie', label: 'Dashboard', route: '/admin/dashboard' },
     { icon: 'fa-users-cog', label: 'User Management', route: '/admin/user-management', badge: 5 },
     { icon: 'fa-shield-alt', label: 'Security', route: '/admin/security' },
-    { icon: 'fa-bell', label: 'Notifications', route: '/admin/notifications', badge: 8 },
   ];
   
   secondaryNavItems: NavItem[] = [
-    { icon: 'fa-building', label: 'Companies', route: '/admin/companies' },
     { icon: 'fa-robot', label: 'AI Monitoring', route: '/admin/ai-monitoring' },
   ];
   

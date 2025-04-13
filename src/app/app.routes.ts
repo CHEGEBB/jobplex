@@ -18,6 +18,8 @@ import { SettingsComponent } from './pages/jobseeker/settings/settings.component
 import { EmployerSettingsComponent } from './pages/employer/settings/employer-settings.component';
 import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
 import { UserManagementComponent } from './pages/admin/user-management/user-management.component';
+import { SecurityComponent } from './pages/admin/security/security.component';
+import { AiMonitoringComponent } from './pages/admin/ai-monitoring/ai-monitoring.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent }, // Default route points to home
@@ -45,7 +47,11 @@ export const routes: Routes = [
 
 //admin routes
 {path:'admin/dashboard',component:AdminDashboardComponent},
-{path:'admin/user-management',component:UserManagementComponent}
+{path:'admin/user-management',component:UserManagementComponent},
+{path:'admin/security',component:SecurityComponent},
+{path:'admin/ai-monitoring',component:AiMonitoringComponent}
+
+
 
 
 

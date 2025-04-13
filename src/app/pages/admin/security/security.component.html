@@ -1,0 +1,682 @@
+<div class="flex h-screen overflow-hidden">
+    <!-- Import the sidebar-admin component -->
+    <app-sidebar-admin class="sidebar-container"></app-sidebar-admin>
+  
+    <!-- Main Content Area -->
+    <div class="flex-1 overflow-y-auto bg-slate-50 pb-8 content-container">
+      <div class="p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+          <div>
+            <h1 class="text-3xl font-bold text-text-dark">Security Settings</h1>
+            <p class="text-text-medium mt-2">Manage platform security and user access controls</p>
+          </div>
+          <div class="mt-4 md:mt-0">
+            <div class="security-status-badge">
+              <span class="status-indicator"></span>
+              <span class="ml-2 font-medium">System Security: Strong</span>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Security Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="security-summary-card" [class.active]="selectedSection === 'authentication'">
+            <div class="card-content" (click)="setActiveSection('authentication')">
+              <div class="icon-container">
+                <i class="fas fa-lock"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold">Authentication</h3>
+                <p class="text-text-medium">2FA enabled for 85% of admins</p>
+              </div>
+            </div>
+          </div>
+  
+          <div class="security-summary-card" [class.active]="selectedSection === 'activity'">
+            <div class="card-content" (click)="setActiveSection('activity')">
+              <div class="icon-container">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold">Activity Logs</h3>
+                <p class="text-text-medium">16 suspicious activities detected</p>
+              </div>
+            </div>
+          </div>
+  
+          <div class="security-summary-card" [class.active]="selectedSection === 'policies'">
+            <div class="card-content" (click)="setActiveSection('policies')">
+              <div class="icon-container">
+                <i class="fas fa-user-shield"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold">Password Policies</h3>
+                <p class="text-text-medium">Last updated 12 days ago</p>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Authentication Configuration Section -->
+        <div class="section-container" *ngIf="selectedSection === 'authentication'">
+          <div class="section-header">
+            <h2 class="text-2xl font-semibold">Authentication Configuration</h2>
+            <p class="text-text-medium mt-1">Configure how users authenticate to your platform</p>
+          </div>
+  
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div class="setting-card">
+              <div class="card-header">
+                <h3 class="text-lg font-semibold">Two-Factor Authentication</h3>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="tfa-toggle" [checked]="settings.tfaEnabled" (change)="toggleSetting('tfaEnabled')">
+                  <label for="tfa-toggle"></label>
+                </div>
+              </div>
+              <div class="card-body">
+                <p class="mb-4">Require two-factor authentication for:</p>
+                <div class="flex flex-col space-y-3">
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="tfa-admins" [checked]="settings.tfaForAdmins" (change)="toggleSetting('tfaForAdmins')">
+                    <label for="tfa-admins">All Administrators</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="tfa-employers" [checked]="settings.tfaForEmployers" (change)="toggleSetting('tfaForEmployers')">
+                    <label for="tfa-employers">Employers</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="tfa-jobseekers" [checked]="settings.tfaForJobSeekers" (change)="toggleSetting('tfaForJobSeekers')">
+                    <label for="tfa-jobseekers">Job Seekers</label>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <label class="block mb-2 text-sm font-medium">2FA Method</label>
+                  <select class="select-input" [(ngModel)]="settings.tfaMethod">
+                    <option value="app">Authenticator App</option>
+                    <option value="sms">SMS</option>
+                    <option value="email">Email</option>
+                    <option value="multiple">Multiple Methods</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+  
+            <div class="setting-card">
+              <div class="card-header">
+                <h3 class="text-lg font-semibold">Session Management</h3>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="session-toggle" [checked]="settings.advancedSessionControls" (change)="toggleSetting('advancedSessionControls')">
+                  <label for="session-toggle"></label>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="mb-4">
+                  <label class="block mb-2 text-sm font-medium">Session Timeout (minutes)</label>
+                  <input type="range" min="5" max="240" step="5" [(ngModel)]="settings.sessionTimeout" class="range-slider">
+                  <div class="flex justify-between">
+                    <span>{{settings.sessionTimeout}} minutes</span>
+                    <button class="reset-button" (click)="settings.sessionTimeout = 30">Reset</button>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label class="block mb-2 text-sm font-medium">Concurrent Sessions</label>
+                  <select class="select-input" [(ngModel)]="settings.maxConcurrentSessions">
+                    <option value="1">1 (Single session only)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="unlimited">Unlimited</option>
+                  </select>
+                </div>
+                <div class="checkbox-container mt-4">
+                  <input type="checkbox" id="force-logout" [checked]="settings.forceLogoutOnPasswordChange" (change)="toggleSetting('forceLogoutOnPasswordChange')">
+                  <label for="force-logout">Force logout on password change</label>
+                </div>
+              </div>
+            </div>
+  
+            <div class="setting-card">
+              <div class="card-header">
+                <h3 class="text-lg font-semibold">SSO Integration</h3>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="sso-toggle" [checked]="settings.ssoEnabled" (change)="toggleSetting('ssoEnabled')">
+                  <label for="sso-toggle"></label>
+                </div>
+              </div>
+              <div class="card-body">
+                <p class="mb-4">Configure Single Sign-On providers:</p>
+                <div class="flex flex-col space-y-3">
+                  <div class="sso-provider">
+                    <div class="flex items-center">
+                      <i class="fab fa-google mr-2"></i>
+                      <span>Google</span>
+                    </div>
+                    <div class="toggle-switch-small">
+                      <input type="checkbox" id="google-sso" [checked]="settings.googleSso" (change)="toggleSetting('googleSso')">
+                      <label for="google-sso"></label>
+                    </div>
+                  </div>
+                  <div class="sso-provider">
+                    <div class="flex items-center">
+                      <i class="fab fa-microsoft mr-2"></i>
+                      <span>Microsoft</span>
+                    </div>
+                    <div class="toggle-switch-small">
+                      <input type="checkbox" id="microsoft-sso" [checked]="settings.microsoftSso" (change)="toggleSetting('microsoftSso')">
+                      <label for="microsoft-sso"></label>
+                    </div>
+                  </div>
+                  <div class="sso-provider">
+                    <div class="flex items-center">
+                      <i class="fab fa-linkedin mr-2"></i>
+                      <span>LinkedIn</span>
+                    </div>
+                    <div class="toggle-switch-small">
+                      <input type="checkbox" id="linkedin-sso" [checked]="settings.linkedinSso" (change)="toggleSetting('linkedinSso')">
+                      <label for="linkedin-sso"></label>
+                    </div>
+                  </div>
+                </div>
+                <button class="admin-button mt-4">
+                  <i class="fas fa-cog mr-2"></i>
+                  Configure SSO Settings
+                </button>
+              </div>
+            </div>
+  
+            <div class="setting-card">
+              <div class="card-header">
+                <h3 class="text-lg font-semibold">CAPTCHA Protection</h3>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="captcha-toggle" [checked]="settings.captchaEnabled" (change)="toggleSetting('captchaEnabled')">
+                  <label for="captcha-toggle"></label>
+                </div>
+              </div>
+              <div class="card-body">
+                <p class="mb-4">Apply CAPTCHA verification to:</p>
+                <div class="flex flex-col space-y-3">
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="captcha-login" [checked]="settings.captchaOnLogin" (change)="toggleSetting('captchaOnLogin')">
+                    <label for="captcha-login">Login attempts</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="captcha-register" [checked]="settings.captchaOnRegister" (change)="toggleSetting('captchaOnRegister')">
+                    <label for="captcha-register">Registration</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="captcha-password" [checked]="settings.captchaOnPasswordReset" (change)="toggleSetting('captchaOnPasswordReset')">
+                    <label for="captcha-password">Password reset</label>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <label class="block mb-2 text-sm font-medium">CAPTCHA Type</label>
+                  <select class="select-input" [(ngModel)]="settings.captchaType">
+                    <option value="recaptcha">Google reCAPTCHA</option>
+                    <option value="hcaptcha">hCaptcha</option>
+                    <option value="custom">Custom Challenge</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Activity Logs Section -->
+        <div class="section-container" *ngIf="selectedSection === 'activity'">
+          <div class="section-header">
+            <h2 class="text-2xl font-semibold">Security Activity Logs</h2>
+            <p class="text-text-medium mt-1">Monitor and review security-related activities</p>
+          </div>
+  
+          <div class="security-metrics grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div class="metric-card">
+              <div class="icon-bg bg-red-100">
+                <i class="fas fa-exclamation-triangle text-red-500"></i>
+              </div>
+              <div>
+                <h4 class="font-medium">Failed Logins</h4>
+                <p class="text-2xl font-bold">47</p>
+                <p class="text-sm text-text-medium">Last 24 hours</p>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="icon-bg bg-yellow-100">
+                <i class="fas fa-user-lock text-yellow-500"></i>
+              </div>
+              <div>
+                <h4 class="font-medium">Locked Accounts</h4>
+                <p class="text-2xl font-bold">8</p>
+                <p class="text-sm text-text-medium">Currently locked</p>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="icon-bg bg-green-100">
+                <i class="fas fa-shield-alt text-green-500"></i>
+              </div>
+              <div>
+                <h4 class="font-medium">Security Score</h4>
+                <p class="text-2xl font-bold">87%</p>
+                <p class="text-sm text-text-medium">+5% from last week</p>
+              </div>
+            </div>
+          </div>
+  
+          <div class="mt-8">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold">Recent Security Events</h3>
+              <div class="flex space-x-2">
+                <select class="select-input-sm" [(ngModel)]="activityFilter">
+                  <option value="all">All Events</option>
+                  <option value="suspicious">Suspicious Only</option>
+                  <option value="login">Login Events</option>
+                  <option value="settings">Settings Changes</option>
+                </select>
+                <button class="admin-button-sm">
+                  <i class="fas fa-download mr-1"></i> Export
+                </button>
+              </div>
+            </div>
+  
+            <div class="security-log-table">
+              <table class="min-w-full">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>User</th>
+                    <th>IP Address</th>
+                    <th>Location</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let log of filteredLogs" [class.suspicious]="log.status === 'suspicious'">
+                    <td>
+                      <div class="flex items-center">
+                        <i class="{{log.icon}} mr-2"></i>
+                        <span>{{log.event}}</span>
+                      </div>
+                    </td>
+                    <td>{{log.user}}</td>
+                    <td>{{log.ip}}</td>
+                    <td>{{log.location}}</td>
+                    <td>{{log.timestamp}}</td>
+                    <td>
+                      <span class="status-badge" [class]="log.status">
+                        {{log.status}}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="flex space-x-2">
+                        <button class="action-btn" (click)="viewLogDetails(log)">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" *ngIf="log.status === 'suspicious'" (click)="markAsReviewed(log)">
+                          <i class="fas fa-check"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+  
+            <div class="flex justify-between items-center mt-4">
+              <div class="text-text-medium">
+                Showing <span class="font-medium">1-10</span> of <span class="font-medium">156</span> events
+              </div>
+              <div class="pagination">
+                <button class="pagination-btn">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="pagination-btn active">1</button>
+                <button class="pagination-btn">2</button>
+                <button class="pagination-btn">3</button>
+                <span class="pagination-ellipsis">...</span>
+                <button class="pagination-btn">16</button>
+                <button class="pagination-btn">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+  
+          <!-- IP Restrictions Section -->
+          <div class="mt-8">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold">IP Restrictions</h3>
+              <button class="admin-button-sm" (click)="showIpRestrictionModal = true">
+                <i class="fas fa-plus mr-1"></i> Add Rule
+              </button>
+            </div>
+  
+            <div class="ip-restrictions-table">
+              <table class="min-w-full">
+                <thead>
+                  <tr>
+                    <th>Rule Type</th>
+                    <th>IP Address/Range</th>
+                    <th>Applied To</th>
+                    <th>Added By</th>
+                    <th>Expiration</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let rule of ipRestrictions">
+                    <td>
+                      <span class="rule-type-badge" [class]="rule.type">
+                        {{rule.type}}
+                      </span>
+                    </td>
+                    <td>{{rule.ip}}</td>
+                    <td>{{rule.appliedTo}}</td>
+                    <td>{{rule.addedBy}}</td>
+                    <td>{{rule.expiration || 'Never'}}</td>
+                    <td>
+                      <div class="toggle-switch-small inline-block">
+                        <input type="checkbox" [id]="'rule-' + rule.id" [checked]="rule.active" (change)="toggleIpRule(rule)">
+                        <label [for]="'rule-' + rule.id"></label>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="flex space-x-2">
+                        <button class="action-btn" (click)="editIpRule(rule)">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" (click)="deleteIpRule(rule)">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Password Policies Section -->
+        <div class="section-container" *ngIf="selectedSection === 'policies'">
+          <div class="section-header">
+            <h2 class="text-2xl font-semibold">Password Policies</h2>
+            <p class="text-text-medium mt-1">Configure password requirements and policies</p>
+          </div>
+  
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div class="setting-card">
+              <div class="card-header">
+                <h3 class="text-lg font-semibold">Password Requirements</h3>
+              </div>
+              <div class="card-body">
+                <div class="mb-4">
+                  <label class="block mb-2 text-sm font-medium">Minimum Password Length</label>
+                  <div class="flex items-center">
+                    <input type="range" min="6" max="20" step="1" [(ngModel)]="passwordPolicy.minLength" class="range-slider">
+                    <span class="ml-4 w-8 text-center">{{passwordPolicy.minLength}}</span>
+                  </div>
+                </div>
+  
+                <div class="flex flex-col space-y-3 mb-4">
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="require-uppercase" [(ngModel)]="passwordPolicy.requireUppercase">
+                    <label for="require-uppercase">Require uppercase letters</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="require-lowercase" [(ngModel)]="passwordPolicy.requireLowercase">
+                    <label for="require-lowercase">Require lowercase letters</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="require-numbers" [(ngModel)]="passwordPolicy.requireNumbers">
+                    <label for="require-numbers">Require numbers</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="require-symbols" [(ngModel)]="passwordPolicy.requireSymbols">
+                    <label for="require-symbols">Require symbols</label>
+                  </div>
+                </div>
+  
+                <div class="password-strength-demo">
+                  <label class="block mb-2 text-sm font-medium">Password Strength Preview</label>
+                  <div class="password-strength-meter">
+                    <div class="strength-bar" [ngClass]="getPasswordStrengthClass()"></div>
+                  </div>
+                  <p class="text-sm mt-1">{{getPasswordStrengthLabel()}}</p>
+                </div>
+              </div>
+            </div>
+  
+            <div class="setting-card">
+              <div class="card-header">
+                <h3 class="text-lg font-semibold">Password Expiration</h3>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="expiration-toggle" [(ngModel)]="passwordPolicy.expirationEnabled">
+                  <label for="expiration-toggle"></label>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="mb-4" [class.disabled]="!passwordPolicy.expirationEnabled">
+                  <label class="block mb-2 text-sm font-medium">Password Expires After (days)</label>
+                  <select class="select-input" [(ngModel)]="passwordPolicy.expirationDays" [disabled]="!passwordPolicy.expirationEnabled">
+                    <option value="30">30 days</option>
+                    <option value="60">60 days</option>
+                    <option value="90">90 days</option>
+                    <option value="180">180 days</option>
+                    <option value="365">365 days</option>
+                  </select>
+                </div>
+  
+                <div class="mb-4" [class.disabled]="!passwordPolicy.expirationEnabled">
+                  <label class="block mb-2 text-sm font-medium">Notify Users Before Expiration</label>
+                  <select class="select-input" [(ngModel)]="passwordPolicy.expirationNotice" [disabled]="!passwordPolicy.expirationEnabled">
+                    <option value="3">3 days before</option>
+                    <option value="7">7 days before</option>
+                    <option value="14">14 days before</option>
+                  </select>
+                </div>
+  
+                <div class="checkbox-container" [class.disabled]="!passwordPolicy.expirationEnabled">
+                  <input type="checkbox" id="prevent-reuse" [(ngModel)]="passwordPolicy.preventReuse" [disabled]="!passwordPolicy.expirationEnabled">
+                  <label for="prevent-reuse">Prevent reuse of previous passwords</label>
+                </div>
+  
+                <div class="mt-4" [class.disabled]="!passwordPolicy.expirationEnabled || !passwordPolicy.preventReuse">
+                  <label class="block mb-2 text-sm font-medium">Number of Previous Passwords to Remember</label>
+                  <select class="select-input" [(ngModel)]="passwordPolicy.previousPasswordsCount" 
+                    [disabled]="!passwordPolicy.expirationEnabled || !passwordPolicy.preventReuse">
+                    <option value="3">3 passwords</option>
+                    <option value="5">5 passwords</option>
+                    <option value="10">10 passwords</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+  
+            <div class="setting-card">
+              <div class="card-header">
+                <h3 class="text-lg font-semibold">Account Lockout</h3>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="lockout-toggle" [(ngModel)]="passwordPolicy.lockoutEnabled">
+                  <label for="lockout-toggle"></label>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="mb-4" [class.disabled]="!passwordPolicy.lockoutEnabled">
+                  <label class="block mb-2 text-sm font-medium">Failed Login Attempts Before Lockout</label>
+                  <select class="select-input" [(ngModel)]="passwordPolicy.maxFailedAttempts" [disabled]="!passwordPolicy.lockoutEnabled">
+                    <option value="3">3 attempts</option>
+                    <option value="5">5 attempts</option>
+                    <option value="10">10 attempts</option>
+                  </select>
+                </div>
+  
+                <div class="mb-4" [class.disabled]="!passwordPolicy.lockoutEnabled">
+                  <label class="block mb-2 text-sm font-medium">Account Lockout Duration</label>
+                  <select class="select-input" [(ngModel)]="passwordPolicy.lockoutDuration" [disabled]="!passwordPolicy.lockoutEnabled">
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="1440">24 hours</option>
+                    <option value="0">Until administrator unlocks</option>
+                  </select>
+                </div>
+  
+                <div class="checkbox-container" [class.disabled]="!passwordPolicy.lockoutEnabled">
+                  <input type="checkbox" id="notify-admin" [(ngModel)]="passwordPolicy.notifyAdminOnLockout" [disabled]="!passwordPolicy.lockoutEnabled">
+                  <label for="notify-admin">Notify administrators on account lockout</label>
+                </div>
+  
+                <div class="checkbox-container" [class.disabled]="!passwordPolicy.lockoutEnabled">
+                  <input type="checkbox" id="progressive-lockout" [(ngModel)]="passwordPolicy.progressiveLockout" [disabled]="!passwordPolicy.lockoutEnabled">
+                  <label for="progressive-lockout">Enable progressive lockout durations</label>
+                </div>
+              </div>
+            </div>
+  
+            <div class="setting-card">
+              <div class="card-header">
+                <h3 class="text-lg font-semibold">Multi-factor Authentication</h3>
+              </div>
+              <div class="card-body">
+                <label class="block mb-2 text-sm font-medium">MFA Requirements by Role</label>
+                
+                <div class="mb-4">
+                  <div class="role-mfa-setting">
+                    <span>Administrators</span>
+                    <select class="select-input-sm" [(ngModel)]="passwordPolicy.mfaAdmins">
+                      <option value="required">Required</option>
+                      <option value="optional">Optional</option>
+                      <option value="disabled">Disabled</option>
+                    </select>
+                  </div>
+  
+                  <div class="role-mfa-setting">
+                    <span>Employers</span>
+                    <select class="select-input-sm" [(ngModel)]="passwordPolicy.mfaEmployers">
+                      <option value="required">Required</option>
+                      <option value="optional">Optional</option>
+                      <option value="disabled">Disabled</option>
+                    </select>
+                  </div>
+  
+                  <div class="role-mfa-setting">
+                    <span>Job Seekers</span>
+                    <select class="select-input-sm" [(ngModel)]="passwordPolicy.mfaJobSeekers">
+                      <option value="required">Required</option>
+                      <option value="optional">Optional</option>
+                      <option value="disabled">Disabled</option>
+                    </select>
+                  </div>
+                </div>
+  
+                <div class="mt-4">
+                  <label class="block mb-2 text-sm font-medium">Allowed MFA Methods</label>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="mfa-app" [(ngModel)]="passwordPolicy.mfaAppEnabled">
+                    <label for="mfa-app">Authenticator App</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="mfa-sms" [(ngModel)]="passwordPolicy.mfaSmsEnabled">
+                    <label for="mfa-sms">SMS</label>
+                  </div>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="mfa-email" [(ngModel)]="passwordPolicy.mfaEmailEnabled">
+                    <label for="mfa-email">Email</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <div class="flex justify-end mt-6">
+            <button class="admin-button-secondary mr-3">
+              Reset to Defaults
+            </button>
+            <button class="admin-button" (click)="savePasswordPolicies()">
+              <i class="fas fa-save mr-2"></i>
+              Save Policies
+            </button>
+          </div>
+        </div>
+  
+        <!-- IP Restriction Modal -->
+        <div class="modal-overlay" *ngIf="showIpRestrictionModal" (click)="showIpRestrictionModal = false">
+          <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3 class="text-xl font-semibold">Add IP Restriction</h3>
+              <button class="close-button" (click)="showIpRestrictionModal = false">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-4">
+                <label class="block mb-2">Rule Type</label>
+                <div class="flex space-x-3">
+                  <div class="radio-container">
+                    <input type="radio" id="rule-allow" name="ruleType" value="allow" [(ngModel)]="newIpRule.type">
+                    <label for="rule-allow">Allow</label>
+                  </div>
+                  <div class="radio-container">
+                    <input type="radio" id="rule-block" name="ruleType" value="block" [(ngModel)]="newIpRule.type">
+                    <label for="rule-block">Block</label>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="mb-4">
+                <label class="block mb-2">IP Address or Range</label>
+                <input type="text" class="text-input" placeholder="e.g., 192.168.1.1 or 192.168.1.0/24" [(ngModel)]="newIpRule.ip">
+              </div>
+  
+              <div class="mb-4">
+                <label class="block mb-2">Apply To</label>
+                <select class="select-input" [(ngModel)]="newIpRule.appliedTo">
+                  <option value="all">All Users</option>
+                  <option value="admins">Administrators Only</option>
+                  <option value="employers">Employers Only</option>
+                  <option value="jobseekers">Job Seekers Only</option>
+                </select>
+              </div>
+  
+              <div class="mb-4">
+                <div class="checkbox-container">
+                  <input type="checkbox" id="has-expiration" [(ngModel)]="newIpRule.hasExpiration">
+                  <label for="has-expiration">Set expiration</label>
+                </div>
+              </div>
+  
+              <div class="mb-4" *ngIf="newIpRule.hasExpiration">
+                <label class="block mb-2">Expiration Date</label>
+                <input type="date" class="text-input" [(ngModel)]="newIpRule.expirationDate">
+              </div>
+  
+              <div class="mb-4">
+                <label class="block mb-2">Note (optional)</label>
+                <textarea class="text-input" rows="3" placeholder="Reason for this restriction" [(ngModel)]="newIpRule.note"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="admin-button-secondary" (click)="showIpRestrictionModal = false">
+                Cancel
+              </button>
+              <button class="admin-button" (click)="addIpRule()">
+                Add Restriction
+              </button>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Notification Toast -->
+        <div class="notification-toast" *ngIf="showNotification" [@notificationAnimation]>
+          <div class="notification-content">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span>{{notificationMessage}}</span>
+          </div>
+          <button class="notification-close" (click)="showNotification = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
