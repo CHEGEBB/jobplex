@@ -245,7 +245,7 @@
           <div class="settings-section-content">
             <div class="current-plan">
               <div class="plan-badge">{{ currentPlan?.name || 'Free' }}</div>
-              <p class="text-gray-600">{{ currentPlan?.description || 'Basic access to job posting features' }}</p>
+              <p class="text-gray-600">{{ currentPlan.description || 'Basic access to job posting features' }}</p>
               
               <div class="plan-features">
                 <div class="feature-item" *ngFor="let feature of currentPlan?.features">
