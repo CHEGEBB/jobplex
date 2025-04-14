@@ -1,9 +1,9 @@
-// For Tailwind, you can often use @use instead of @import
 @use "tailwindcss" as *;
-// sass:ignore:end
-
-// Google Fonts can remain as is - this uses CSS @import which is different from Sass @import
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&family=Outfit:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+@import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
+@import '@fortawesome/fontawesome-free/css/solid.min.css';
+@import '@fortawesome/fontawesome-free/css/regular.min.css';
+@import '@fortawesome/fontawesome-free/css/brands.min.css';
 
 body {
     font-family: 'Poppins', sans-serif !important;

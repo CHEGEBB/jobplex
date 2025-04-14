@@ -82,9 +82,11 @@ $employer-gradient-end: rgba(40, 53, 147, 0.95);
   }
   
   /* Glassmorphism effect with higher quality */
+  &{
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
   
   &::before {
     content: "";
