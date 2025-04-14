@@ -1,0 +1,26 @@
+{
+    "builds": [
+      {
+        "src": "package.json",
+        "use": "@vercel/static-build",
+        "config": {
+          "installCommand": "npm install --legacy-peer-deps",
+          "buildCommand": "ng build --configuration production"
+        }
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(assets|webfonts|images)/(.*)",
+        "dest": "/$1/$2"
+      },
+      {
+        "src": "/(.*).(js|css|ico|json)",
+        "dest": "/$1.$2"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "/index.html"
+      }
+    ]
+  }
