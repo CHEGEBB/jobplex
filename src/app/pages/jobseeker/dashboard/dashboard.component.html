@@ -151,7 +151,7 @@
               <div *ngFor="let application of recentApplications" class="application-card">
                 <div class="application-header">
                   <div class="company-logo">
-                    <img *ngIf="application.company !== 'Custom'" [src]="'assets/images/companies/' + application.logo" [alt]="application.company" />
+                    <img *ngIf="application.company !== 'Custom'" [src]="'assets/images/companies' + application.logo" [alt]="application.company" />
                     <img *ngIf="application.company === 'Custom'" [src]="'https://source.unsplash.com/random/100x100?company'" [alt]="application.company" />
                   </div>
                   <button class="star-btn">
