@@ -51,26 +51,6 @@ export const routes: Routes = [
 {path:'admin/user-management',component:UserManagementComponent},
 {path:'admin/security',component:SecurityComponent},
 {path:'admin/ai-monitoring',component:AiMonitoringComponent},
-{path:'admin/system-metrics',component:SystemMetricsComponent}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Add other routes as needed
-  // { path: '**', redirectTo: '' } // Redirect unknown paths to home
+{path:'admin/system-metrics',component:SystemMetricsComponent},
+{ path: '**', redirectTo: '' }
 ];

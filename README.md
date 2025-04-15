@@ -10,10 +10,11 @@ Jobplex (based on SkillMatch AI concept) revolutionizes the hiring process by fo
 
 - **Frontend**: Angular 19 with standalone components
 - **Styling**: Tailwind CSS
-- **Backend**: Node.js with Express
-- **Database**: PostgreSQL
+- **Backend**: Node.js with Express (containerized with Docker)
+- **Database**: PostgreSQL (containerized with Docker)
 - **Authentication**: JWT with role-based access control
 - **AI Integration**: ChatGPT and Gemini APIs
+- **Containerization**: Docker with Docker Compose
 
 ## Project Structure
 
@@ -93,7 +94,7 @@ jobplex/
 └── README.md                          # Project documentation
 ```
 
-### Backend Structure (Node.js/Express)
+### Backend Structure (Node.js/Express with Docker)
 
 ```
 server/
@@ -131,7 +132,27 @@ server/
 │   └── db.config.js                 # Database connection
 │
 ├── server.js                        # Main server file
+├── Dockerfile                       # Docker configuration for Node.js
+├── .dockerignore                    # Files to exclude from Docker image
 └── package.json                     # Dependencies
+```
+
+### Docker Structure
+
+```
+jobplex/
+├── docker-compose.yml               # Docker Compose configuration
+├── .env                             # Environment variables for Docker
+├── docker/                          # Additional Docker configuration
+│   ├── postgres/                    # PostgreSQL Docker setup
+│   │   ├── Dockerfile               # PostgreSQL customization
+│   │   └── init/                    # Initialization scripts
+│   │       ├── 01-schema.sql        # Database schema
+│   │       └── 02-seed.sql          # Initial seed data
+│   └── nginx/                       # Nginx for production
+│       ├── Dockerfile               # Nginx configuration
+│       └── default.conf             # Nginx server configuration
+└── README.md                        # Project documentation
 ```
 
 ## Page Details
@@ -336,6 +357,8 @@ The AuthScreen component combines login and registration functionality in a sing
 
 ## Getting Started
 
+### Frontend Setup
+
 1. **Set up Angular project**
    ```bash
    npm install -g @angular/cli
@@ -370,33 +393,287 @@ The AuthScreen component combines login and registration functionality in a sing
    ng serve
    ```
 
-## Backend Setup
+### Backend Setup with Docker
 
-1. **Set up Node.js project**
-   ```bash
-   mkdir server
-   cd server
-   npm init -y
-   npm install express pg cors bcrypt jsonwebtoken
+1. **Install Docker and Docker Compose**
+   - Follow the installation guide at [Docker's official website](https://docs.docker.com/get-docker/)
+   - Install Docker Compose from [Docker Compose installation guide](https://docs.docker.com/compose/install/)
+
+2. **Create Docker Configuration Files**
+
+   **Create Dockerfile for Node.js backend**
+   ```dockerfile
+   # server/Dockerfile
+   FROM node:18-alpine
+
+   # Create app directory
+   WORKDIR /usr/src/app
+
+   # Install app dependencies
+   COPY package*.json ./
+   RUN npm install
+
+   # Bundle app source
+   COPY . .
+
+   # Expose API port
+   EXPOSE 3000
+
+   # Command to run the application
+   CMD ["node", "server.js"]
    ```
 
-2. **Set up PostgreSQL database**
-   ```bash
-   # After installing PostgreSQL
-   psql -U postgres
-   CREATE DATABASE jobplex;
-   \c jobplex
-   # Run schema.sql script
+   **Create .dockerignore file**
+   ```
+   # server/.dockerignore
+   node_modules
+   npm-debug.log
    ```
 
-3. **Start backend server**
+   **Create Docker Compose configuration**
+   ```yaml
+   # docker-compose.yml
+   version: '3.8'
+
+   services:
+     # Backend API service
+     api:
+       build:
+         context: ./server
+         dockerfile: Dockerfile
+       ports:
+         - "3000:3000"
+       environment:
+         NODE_ENV: development
+         DB_HOST: postgres
+         DB_PORT: 5432
+         DB_USER: postgres
+         DB_PASSWORD: postgres
+         DB_NAME: jobplex
+       volumes:
+         - ./server:/usr/src/app
+         - /usr/src/app/node_modules
+       depends_on:
+         - postgres
+       restart: unless-stopped
+
+     # PostgreSQL Database
+     postgres:
+       image: postgres:15-alpine
+       ports:
+         - "5432:5432"
+       environment:
+         POSTGRES_PASSWORD: postgres
+         POSTGRES_USER: postgres
+         POSTGRES_DB: jobplex
+       volumes:
+         - postgres_data:/var/lib/postgresql/data
+         - ./docker/postgres/init:/docker-entrypoint-initdb.d
+       restart: unless-stopped
+
+     # PgAdmin for database management (optional)
+     pgadmin:
+       image: dpage/pgadmin4
+       environment:
+         PGADMIN_DEFAULT_EMAIL: admin@jobplex.com
+         PGADMIN_DEFAULT_PASSWORD: admin
+       ports:
+         - "5050:80"
+       depends_on:
+         - postgres
+       restart: unless-stopped
+
+   volumes:
+     postgres_data:
+   ```
+
+3. **Create PostgreSQL initialization scripts**
+
+   Create directory for initialization scripts:
    ```bash
-   node server.js
+   mkdir -p docker/postgres/init
+   ```
+
+   Copy your schema and seed SQL files:
+   ```bash
+   cp server/db/schema.sql docker/postgres/init/01-schema.sql
+   cp server/db/seed.sql docker/postgres/init/02-seed.sql
+   ```
+
+4. **Create environment file for Docker**
+   ```bash
+   # .env
+   # PostgreSQL Environment Variables
+   POSTGRES_PASSWORD=postgres
+   POSTGRES_USER=postgres
+   POSTGRES_DB=jobplex
+
+   # Node API Environment Variables
+   NODE_ENV=development
+   DB_HOST=postgres
+   DB_PORT=5432
+   DB_USER=postgres
+   DB_PASSWORD=postgres
+   DB_NAME=jobplex
+   ```
+
+5. **Update database configuration**
+
+   Update `server/config/db.config.js` to use environment variables:
+   ```javascript
+   module.exports = {
+     host: process.env.DB_HOST || 'localhost',
+     port: process.env.DB_PORT || 5432,
+     database: process.env.DB_NAME || 'jobplex',
+     user: process.env.DB_USER || 'postgres',
+     password: process.env.DB_PASSWORD || 'postgres',
+   };
+   ```
+
+6. **Start the Docker containers**
+   ```bash
+   docker-compose up -d
+   ```
+
+7. **Access the services**
+   - Backend API: http://localhost:3000
+   - PgAdmin: http://localhost:5050 (login with admin@jobplex.com / admin)
+
+8. **View logs**
+   ```bash
+   # All services
+   docker-compose logs -f
+
+   # Specific service
+   docker-compose logs -f api
+   ```
+
+9. **Stop the containers**
+   ```bash
+   docker-compose down
+   ```
+
+## Development Workflow
+
+1. **Frontend Development**
+   - Make changes to the Angular application
+   - Run `ng serve` to test changes locally
+   - Angular app will be available at http://localhost:4200
+
+2. **Backend Development**
+   - Make changes to the Node.js application
+   - Changes are automatically applied due to volume mounting in Docker Compose
+   - If you need to restart the container: `docker-compose restart api`
+   - Backend API will be available at http://localhost:3000
+
+3. **Database Management**
+   - Access PgAdmin at http://localhost:5050
+   - Connect to the PostgreSQL server using the server address: `postgres`
+   - Use the credentials defined in the environment variables
+
+## Production Deployment
+
+For production deployment, we can extend our Docker setup:
+
+1. **Create production Docker Compose file**
+   ```yaml
+   # docker-compose.prod.yml
+   version: '3.8'
+
+   services:
+     # Frontend web server with Nginx
+     web:
+       build:
+         context: ./
+         dockerfile: docker/nginx/Dockerfile
+       ports:
+         - "80:80"
+         - "443:443"
+       depends_on:
+         - api
+       restart: unless-stopped
+
+     # Backend API service
+     api:
+       build:
+         context: ./server
+         dockerfile: Dockerfile
+       environment:
+         NODE_ENV: production
+         DB_HOST: postgres
+         DB_PORT: 5432
+         DB_USER: ${POSTGRES_USER}
+         DB_PASSWORD: ${POSTGRES_PASSWORD}
+         DB_NAME: ${POSTGRES_DB}
+       depends_on:
+         - postgres
+       restart: unless-stopped
+
+     # PostgreSQL Database
+     postgres:
+       image: postgres:15-alpine
+       environment:
+         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+         POSTGRES_USER: ${POSTGRES_USER}
+         POSTGRES_DB: ${POSTGRES_DB}
+       volumes:
+         - postgres_data:/var/lib/postgresql/data
+       restart: unless-stopped
+
+   volumes:
+     postgres_data:
+   ```
+
+2. **Create Nginx Dockerfile and configuration**
+   ```dockerfile
+   # docker/nginx/Dockerfile
+   FROM node:18-alpine AS build
+
+   WORKDIR /app
+   COPY package*.json ./
+   RUN npm install
+   COPY . .
+   RUN npm run build --prod
+
+   FROM nginx:alpine
+   COPY --from=build /app/dist/jobplex /usr/share/nginx/html
+   COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+   EXPOSE 80
+   CMD ["nginx", "-g", "daemon off;"]
+   ```
+
+   ```
+   # docker/nginx/default.conf
+   server {
+       listen 80;
+       server_name localhost;
+       root /usr/share/nginx/html;
+       index index.html;
+
+       location / {
+           try_files $uri $uri/ /index.html;
+       }
+
+       location /api {
+           proxy_pass http://api:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
+   ```
+
+3. **Deploy to production**
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
    ```
 
 ## Timeline
 
 - **Frontend Development**: By April 13, 2025
-- **Backend & AI Integration**: By April 20, 2025
+- **Backend & Docker Setup**: By April 17, 2025
+- **AI Integration**: By April 20, 2025
 - **Testing & Deployment**: April 21-23, 2025
 - **Final Presentation**: April 24, 2025
