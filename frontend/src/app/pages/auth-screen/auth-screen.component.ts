@@ -219,20 +219,37 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     
     this.isLoading = true;
     
-    // Simulate API call
-    setTimeout(() => {
-      this.isLoading = false;
-      console.log('Login with:', this.loginForm.value, 'Role:', this.selectedRole);
-      
-      // Navigate based on role
-      if (this.selectedRole === 'jobseeker') {
-        this.router.navigate(['/jobseeker/dashboard']);
-      } else if (this.selectedRole === 'employer') {
-        this.router.navigate(['/employer/dashboard']);
-      } else {
-        this.router.navigate(['/admin/dashboard']);
+    const credentials = {
+      email: this.loginForm.value.email,
+      password: this.loginForm.value.password
+    };
+    
+    this.authService.login(credentials).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        
+        // Validate that the user has the selected role
+        if (response.data.user.role !== this.selectedRole) {
+          // Show error - role mismatch
+          console.error('Role mismatch. Please select the correct role.');
+          return;
+        }
+        
+        // Navigate based on role
+        if (this.selectedRole === 'jobseeker') {
+          this.router.navigate(['/jobseeker/dashboard']);
+        } else if (this.selectedRole === 'employer') {
+          this.router.navigate(['/employer/dashboard']);
+        } else {
+          this.router.navigate(['/admin/dashboard']);
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Login error:', error);
+        // Show error message to user
       }
-    }, 1500);
+    });
   }
 
   onSignup(): void {
@@ -240,21 +257,38 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     
     this.isLoading = true;
     
-    // Simulate API call
-    setTimeout(() => {
-      this.isLoading = false;
-      console.log('Signup with:', this.signupForm.value, 'Role:', this.selectedRole);
-      
-      // Navigate based on role
-      if (this.selectedRole === 'jobseeker') {
-        this.router.navigate(['/jobseeker/dashboard']);
-      } else if (this.selectedRole === 'employer') {
-        this.router.navigate(['/employer/dashboard']);
-      } else {
-        this.router.navigate(['/admin/dashboard']);
+    // Prepare user data based on role
+    const userData: any = {
+      firstName: this.signupForm.value.firstName,
+      lastName: this.signupForm.value.lastName,
+      email: this.signupForm.value.email,
+      password: this.signupForm.value.password,
+      role: this.selectedRole
+    };
+    
+    // Add company name for employers
+    if (this.selectedRole === 'employer' && this.signupForm.value.companyName) {
+      userData.company = this.signupForm.value.companyName;
+    }
+    
+    this.authService.register(userData).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        console.log('Registration successful:', response);
+        
+        // Switch to login mode after successful registration
+        this.authMode = 'login';
+        
+        // Show success message
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Registration error:', error);
+        // Show error message to user
       }
-    }, 1500);
+    });
   }
+  
 
   loginWithGoogle(): void {
     this.isLoading = true;
