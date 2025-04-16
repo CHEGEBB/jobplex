@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Backend API service
   api:
@@ -16,11 +14,16 @@ services:
       DB_USER: postgres
       DB_PASSWORD: phil2003
       DB_NAME: jobplex
+      JWT_SECRET: your-secret-key-change-in-production
+      JWT_EXPIRES_IN: 1d
     volumes:
-      - ./backend:/usr/src/app
+      - ./backend/src:/usr/src/app/src
+      - ./backend/package.json:/usr/src/app/package.json
+      - ./backend/tsconfig.json:/usr/src/app/tsconfig.json
       - /usr/src/app/node_modules
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   # PostgreSQL Database
@@ -29,12 +32,17 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: phil2003
       POSTGRES_USER: postgres
       POSTGRES_DB: jobplex
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # PgAdmin (optional - for database management)
