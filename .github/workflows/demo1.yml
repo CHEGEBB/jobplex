@@ -22,8 +22,10 @@ jobs:
         with:
           path: ~/.npm
           key: deps-node-modules-${{ hashFiles('**/package-lock.json')}}
-      - name: Install Dependencies
-        run: npm install
+      - name: Install dependencies
+        run: |
+          cd frontend 
+          npm install
       - name: Build Code
         run: npm run build
       - name: Upload Artifacts
