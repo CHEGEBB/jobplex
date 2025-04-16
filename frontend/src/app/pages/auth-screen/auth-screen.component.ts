@@ -1,10 +1,10 @@
+// src/app/pages/auth-screen/auth-screen.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-
 
 @Component({
   selector: 'app-auth-screen',
@@ -22,6 +22,8 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
   showPassword = false;
   isLoading = false;
   passwordStrength = '';
+  errorMessage = '';
+  successMessage = '';
 
   // Slideshow Management
   slides = [
@@ -56,8 +58,7 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       image: 'assets/employer3.jpg',
       title: 'Empower Your Team',
       description: 'Build a strong team with the right talent.'
-    }
-    ,
+    },
     // Admin slides (index 6-7)
     {
       image: 'assets/admin.jpg',
@@ -65,7 +66,7 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       description: 'Powerful tools for administrators to oversee the entire ecosystem.'
     },
     {
-      image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      image: 'assets/admin2.jpg',
       title: 'Optimize Performance',
       description: 'Gain insights and analytics to enhance platform efficiency.'
     }
@@ -80,11 +81,11 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       welcomeText: 'Your skills. Your future. One platform.'
     },
     employer: {
-      slides: [3, 4,5],
+      slides: [3, 4, 5],
       welcomeText: 'Find the perfect candidates for your team.'
     },
     admin: {
-      slides: [6,7],
+      slides: [6, 7],
       welcomeText: 'Manage and optimize the entire platform.'
     }
   };
@@ -93,7 +94,6 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService
-
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -118,6 +118,14 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     this.signupForm.get('password')?.valueChanges.subscribe(value => {
       this.checkPasswordStrength(value);
     });
+
+    // Check if already authenticated and redirect accordingly
+    if (this.authService.isAuthenticated()) {
+      const userRole = this.authService.getUserRole();
+      if (userRole) {
+        this.router.navigate([`/${userRole}/dashboard`]);
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -175,6 +183,7 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
 
   setAuthMode(mode: 'login' | 'signup'): void {
     this.authMode = mode;
+    this.clearMessages();
   }
 
   changeRole(role: 'jobseeker' | 'employer' | 'admin'): void {
@@ -187,6 +196,7 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     // Reset forms when changing roles
     this.loginForm.reset({ rememberMe: false });
     this.signupForm.reset({ termsAgreement: false });
+    this.clearMessages();
   }
 
   updateRoleValidation(): void {
@@ -214,40 +224,34 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     this.showPassword = !this.showPassword;
   }
 
+  clearMessages(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
   onLogin(): void {
     if (this.loginForm.invalid) return;
     
+    this.clearMessages();
     this.isLoading = true;
     
     const credentials = {
       email: this.loginForm.value.email,
-      password: this.loginForm.value.password
+      password: this.loginForm.value.password,
+      role: this.selectedRole
     };
     
     this.authService.login(credentials).subscribe({
       next: (response) => {
         this.isLoading = false;
-        
-        // Validate that the user has the selected role
-        if (response.data.user.role !== this.selectedRole) {
-          // Show error - role mismatch
-          console.error('Role mismatch. Please select the correct role.');
-          return;
-        }
-        
-        // Navigate based on role
-        if (this.selectedRole === 'jobseeker') {
-          this.router.navigate(['/jobseeker/dashboard']);
-        } else if (this.selectedRole === 'employer') {
-          this.router.navigate(['/employer/dashboard']);
-        } else {
-          this.router.navigate(['/admin/dashboard']);
+        if (response.success) {
+          // Navigate based on role
+          this.router.navigate([`/${this.selectedRole}/dashboard`]);
         }
       },
       error: (error) => {
         this.isLoading = false;
-        console.error('Login error:', error);
-        // Show error message to user
+        this.errorMessage = error.message || 'Login failed. Please check your credentials.';
       }
     });
   }
@@ -255,75 +259,79 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
   onSignup(): void {
     if (this.signupForm.invalid) return;
     
+    this.clearMessages();
     this.isLoading = true;
     
-    // Prepare user data based on role
-    const userData: any = {
+    const signupData = {
       firstName: this.signupForm.value.firstName,
       lastName: this.signupForm.value.lastName,
       email: this.signupForm.value.email,
       password: this.signupForm.value.password,
-      role: this.selectedRole
+      role: this.selectedRole,
+      companyName: this.selectedRole === 'employer' ? this.signupForm.value.companyName : undefined
     };
     
-    // Add company name for employers
-    if (this.selectedRole === 'employer' && this.signupForm.value.companyName) {
-      userData.company = this.signupForm.value.companyName;
-    }
-    
-    this.authService.register(userData).subscribe({
+    this.authService.register(signupData).subscribe({
       next: (response) => {
         this.isLoading = false;
-        console.log('Registration successful:', response);
-        
-        // Switch to login mode after successful registration
-        this.authMode = 'login';
-        
-        // Show success message
+        if (response.success) {
+          this.successMessage = 'Registration successful! Please login with your credentials.';
+          this.authMode = 'login';
+          this.loginForm.patchValue({
+            email: signupData.email,
+            password: ''
+          });
+        }
       },
       error: (error) => {
         this.isLoading = false;
-        console.error('Registration error:', error);
-        // Show error message to user
+        this.errorMessage = error.message || 'Registration failed. Please try again.';
       }
     });
   }
-  
 
   loginWithGoogle(): void {
+    this.clearMessages();
     this.isLoading = true;
-    setTimeout(() => {
-      this.isLoading = false;
-      console.log('Login with Google for role:', this.selectedRole);
-      // Navigate based on role after Google authentication
-    }, 1500);
+    
+    this.authService.loginWithGoogle(this.selectedRole).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        if (response.success) {
+          this.router.navigate([`/${this.selectedRole}/dashboard`]);
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.message || 'Google login failed. Please try again.';
+      }
+    });
   }
 
   loginWithLinkedIn(): void {
+    this.clearMessages();
     this.isLoading = true;
-    setTimeout(() => {
-      this.isLoading = false;
-      console.log('Login with LinkedIn for role:', this.selectedRole);
-      // Navigate based on role after LinkedIn authentication
-    }, 1500);
+    
+    this.authService.loginWithLinkedIn(this.selectedRole).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        if (response.success) {
+          this.router.navigate([`/${this.selectedRole}/dashboard`]);
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.message || 'LinkedIn login failed. Please try again.';
+      }
+    });
   }
 
   signupWithGoogle(): void {
-    this.isLoading = true;
-    setTimeout(() => {
-      this.isLoading = false;
-      console.log('Signup with Google for role:', this.selectedRole);
-      // Navigate based on role after Google authentication
-    }, 1500);
+    this.loginWithGoogle(); // Reuse the same flow
   }
 
   signupWithLinkedIn(): void {
-    this.isLoading = true;
-    setTimeout(() => {
-      this.isLoading = false;
-      console.log('Signup with LinkedIn for role:', this.selectedRole);
-      // Navigate based on role after LinkedIn authentication
-    }, 1500);
+    this.loginWithLinkedIn(); // Reuse the same flow
   }
 
   goToForgotPassword(event: Event): void {
