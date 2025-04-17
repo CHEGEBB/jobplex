@@ -2,6 +2,8 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
+import { AuthService } from '../../../services/auth.service';
+import { User } from '../../../interfaces/auth.interface';
 
 interface JobApplication {
   id: number;
@@ -45,14 +47,18 @@ export class DashboardComponent implements OnInit {
   sidebarCollapsed = false;
   searchQuery = '';
   showProfileMenu = false;
+  currentUser: User | null = null;
+  
+  // Use a generated profile image with user's initials if no profile image exists
+  profileInitials: string = '';
   
   profileData = {
-    name: 'Elena Rodriguez',
+    name: '',
     profileViews: 1240,
     applications: 45,
     interviews: 12,
     savedJobs: 28,
-    image: 'assets/ana.jpg'
+    image: ''
   };
   
   skillsProgress: Skill[] = [
@@ -167,9 +173,48 @@ export class DashboardComponent implements OnInit {
     }
   ];
 
+  constructor(private authService: AuthService) {}
+
   ngOnInit() {
     // Check screen size for responsive sidebar
     this.sidebarCollapsed = window.innerWidth < 768;
+    
+    // Get current user from AuthService
+    this.currentUser = this.authService.getCurrentUser();
+    
+    // Update profile data with actual user information
+    if (this.currentUser) {
+      this.profileData.name = this.currentUser.firstName + ' ' + this.currentUser.lastName;
+      
+      // Generate initials for profile avatar if no image exists
+      this.profileInitials = this.getInitials(this.currentUser.firstName, this.currentUser.lastName);
+      
+      // If user has a profile photo, use it, otherwise use a default image
+      if (this.currentUser['profilePhoto']) {
+        this.profileData.image = this.currentUser['profilePhoto'];
+      } else {
+        // Use a default image or generated avatar
+        this.profileData.image = 'assets/ana.jpg'; // Default image as fallback
+      }
+    }
+    
+    // Subscribe to changes in authentication state
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.currentUser = user;
+        this.profileData.name = user.firstName + ' ' + user.lastName;
+        this.profileInitials = this.getInitials(user.firstName, user.lastName);
+        
+        if (user['profilePhoto']) {
+          this.profileData.image = user['profilePhoto'];
+        }
+      }
+    });
+  }
+
+  // Helper method to get initials from name
+  getInitials(firstName: string, lastName: string): string {
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
   }
 
   @HostListener('window:scroll', ['$event'])
@@ -221,5 +266,11 @@ export class DashboardComponent implements OnInit {
       event.stopPropagation();
     }
     this.showProfileMenu = !this.showProfileMenu;
+  }
+  
+  logout() {
+    this.authService.logout();
+    // Redirect to login page or home page
+    // You might want to inject Router and use it here
   }
 }

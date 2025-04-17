@@ -1,8 +1,9 @@
-// employer-dashboard.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SidebarEmployerComponent } from '../../../components/sidebar-employer/sidebar-employer.component';
+import { AuthService } from '../../../services/auth.service';
+import { User } from '../../../interfaces/auth.interface';
 
 @Component({
   selector: 'app-employer-dashboard',
@@ -12,9 +13,12 @@ import { SidebarEmployerComponent } from '../../../components/sidebar-employer/s
   styleUrls: ['./employer-dashboard.component.scss']
 })
 export class EmployerDashboardComponent implements OnInit {
-  employerName: string = 'Elizabeth Addams';
+  employerName: string = '';
   profileCompletion: number = 75;
   Number = Number; // Make Number available in the template
+  currentUser: User | null = null;
+  profileInitials: string = '';
+  profileImage: string = 'assets/eliza.jpg'; // Default image
   
   // Sample dashboard data
   dashboardStats = {
@@ -54,10 +58,47 @@ export class EmployerDashboardComponent implements OnInit {
     { label: 'Time to Hire', value: '12d', color: '#ff9800', increase: true, percent: 5 }
   ];
 
-  constructor() { }
+  constructor(private authService: AuthService) { }
 
   ngOnInit(): void {
-    // Initialization code would go here, like loading real data from services
+    // Get current user from AuthService
+    this.currentUser = this.authService.getCurrentUser();
+    
+    if (this.currentUser) {
+      // Set employer name from user data
+      this.employerName = this.currentUser.firstName + ' ' + this.currentUser.lastName;
+      
+      // Generate initials for profile avatar if needed
+      this.profileInitials = this.getInitials(this.currentUser.firstName, this.currentUser.lastName);
+      
+      // Set profile image if available
+      if (this.currentUser['profilePhoto']) {
+        this.profileImage = this.currentUser['profilePhoto'];
+      }
+      
+      // If company name is available, add it to the page
+      if (this.currentUser['companyName']) {
+        // You can use the company name somewhere in the UI if needed
+      }
+    }
+    
+    // Subscribe to changes in authentication state
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.currentUser = user;
+        this.employerName = user.firstName + ' ' + user.lastName;
+        this.profileInitials = this.getInitials(user.firstName, user.lastName);
+        
+        if (user['profilePhoto']) {
+          this.profileImage = user['profilePhoto'];
+        }
+      }
+    });
+  }
+  
+  // Helper method to get initials from name
+  getInitials(firstName: string, lastName: string): string {
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
   }
 
   // Methods for handling actions
@@ -77,5 +118,11 @@ export class EmployerDashboardComponent implements OnInit {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' at ' + 
            date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  logout() {
+    this.authService.logout();
+    // Redirect to login page or home page
+    // You might want to inject Router and use it here
   }
 }

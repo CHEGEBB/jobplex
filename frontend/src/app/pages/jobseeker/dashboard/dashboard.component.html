@@ -10,11 +10,6 @@
     <!-- Fixed Header - Separated from greeting -->
     <header class="dashboard-header">
       <div class="header-content">
-        <!-- Logo -->
-        <!-- <div class="logo sm:w-30 sm:h-20 md:w-40 md:h-30 md:mt-4">
-          <img src="assets/logo.png" alt="JobTracker Logo" />
-        </div> -->
-        
         <!-- Search Bar -->
         <div class="search-container">
           <i class="fas fa-search search-icon"></i>
@@ -40,12 +35,21 @@
             <span class="notification-badge">5</span>
           </button>
           <div class="profile-menu">
-            <img [src]="profileData.image" class="profile-image" alt="Profile" (click)="toggleProfileMenu()"/>
+            <!-- Use user's profile picture or a generated avatar with initials -->
+            <div *ngIf="profileData.image; else profileInitialsTemplate">
+              <img [src]="profileData.image" class="profile-image" alt="Profile" (click)="toggleProfileMenu()"/>
+            </div>
+            <ng-template #profileInitialsTemplate>
+              <div class="profile-initials" (click)="toggleProfileMenu()">
+                {{ profileInitials }}
+              </div>
+            </ng-template>
+            
             <div *ngIf="showProfileMenu" class="profile-dropdown">
               <ul>
                 <li><i class="fas fa-user"></i> My Profile</li>
                 <li><i class="fas fa-cog"></i> Settings</li>
-                <li><i class="fas fa-sign-out-alt"></i> Logout</li>
+                <li (click)="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
               </ul>
             </div>
           </div>
@@ -54,23 +58,21 @@
     </header>
     
     <!-- Greeting Section (Separate from sticky header) -->
-    <!-- Greeting Section (Similar to example) -->
-<section class="greeting-section ">
-  <div class="greeting-content">
-    <div class="greeting-text">
-      <h1 class="welcome-heading">Welcome to your Dashboard {{ profileData.name }}!</h1>
-      <p class="welcome-subtitle">Here's what's happening with your job search today.</p>
-      <button class="tutorial-btn">
-        <i class="fas fa-play-circle"></i>
-        Find Jobs Now
-      </button>
-    </div>
-    <div class="greeting-image">
-      <!-- You'll add your own downloaded SVG or image here -->
-      <img src="assets/job.svg" alt="Professional illustration">
-    </div>
-  </div>
-</section>
+    <section class="greeting-section">
+      <div class="greeting-content">
+        <div class="greeting-text">
+          <h1 class="welcome-heading">Welcome to your Dashboard {{ profileData.name }}!</h1>
+          <p class="welcome-subtitle">Here's what's happening with your job search today.</p>
+          <button class="tutorial-btn">
+            <i class="fas fa-play-circle"></i>
+            Find Jobs Now
+          </button>
+        </div>
+        <div class="greeting-image">
+          <img src="assets/job.svg" alt="Professional illustration">
+        </div>
+      </div>
+    </section>
     
     <!-- Stats Overview -->
     <section class="stats-section">

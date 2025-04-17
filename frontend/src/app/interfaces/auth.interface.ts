@@ -23,6 +23,7 @@ export interface LoginCredentials {
   }
   
   export interface User {
+    [x: string]: any;
     id: number;
     email: string;
     firstName: string;

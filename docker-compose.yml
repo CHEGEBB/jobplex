@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # Backend API service
   api:
@@ -5,44 +7,23 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "80:80"
     environment:
       NODE_ENV: development
-      PORT: 3000
-      DB_HOST: postgres
+      PORT: 80
+      DB_HOST: jobplex1.cixko6g8cczy.us-east-1.rds.amazonaws.com
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASSWORD: phil2003
+      DB_PASSWORD: philgabby2003
       DB_NAME: jobplex
+      DB_SSL: "false"  # Add this to explicitly disable SSL requirement
       JWT_SECRET: your-secret-key-change-in-production
       JWT_EXPIRES_IN: 1d
     volumes:
       - ./backend/src:/usr/src/app/src
       - ./backend/package.json:/usr/src/app/package.json
       - ./backend/tsconfig.json:/usr/src/app/tsconfig.json
-      - /usr/src/app/node_modules
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_PASSWORD: phil2003
-      POSTGRES_USER: postgres
-      POSTGRES_DB: jobplex
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - /usrsrc/app/node_modules
     restart: unless-stopped
 
   # PgAdmin (optional - for database management)
@@ -53,9 +34,4 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
-    depends_on:
-      - postgres
     restart: unless-stopped
-
-volumes:
-  postgres_data:
