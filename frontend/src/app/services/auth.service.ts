@@ -9,7 +9,7 @@ import { LoginCredentials, SignupData, AuthResponse, User } from '../interfaces/
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:3000/api/auth';
+  private readonly API_URL = 'http://18.208.134.30/api/auth';
   private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'user_data';
   
