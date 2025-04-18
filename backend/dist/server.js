@@ -25,6 +25,12 @@ app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use((0, helmet_1.default)());
 app.use((0, morgan_1.default)('dev'));
+// Example Express CORS config
+app.use((0, cors_1.default)({
+    origin: 'http://18.208.134.30/api',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 // Test database connection
 (0, db_config_1.testConnection)();
 // Routes

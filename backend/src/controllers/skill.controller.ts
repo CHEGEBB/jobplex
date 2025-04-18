@@ -6,11 +6,11 @@ import { UserRole } from '../interfaces/user.interface';
 export class SkillController {
   async createSkill(req: Request, res: Response) {
     try {
-      // Only admins can create new skills
-      if (req.user?.role !== UserRole.ADMIN) {
+      // Only jobseekers can create new skills
+      if (req.user?.role !== UserRole.JOBSEEKER) {
         return res.status(403).json({
           success: false,
-          message: 'Only admins can create new skills'
+          message: 'Only jobseekers can create new skills'
         });
       }
 
@@ -56,20 +56,20 @@ export class SkillController {
 
   async addUserSkill(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.id || parseInt(req.body.userId); // Allow passing userId in request body for testing
       
       if (!userId) {
         return res.status(401).json({ 
           success: false, 
-          message: 'Not authenticated' 
+          message: 'User ID is required' 
         });
       }
 
       const userSkillData: IUserSkill = {
         userId: userId,
-        skillId: req.body.skillId,
-        proficiencyLevel: req.body.proficiencyLevel,
-        yearsOfExperience: req.body.yearsOfExperience
+        skillId: parseInt(req.body.skillId),
+        proficiencyLevel: parseInt(req.body.proficiencyLevel),
+        yearsOfExperience: req.body.yearsOfExperience ? parseInt(req.body.yearsOfExperience) : undefined
       };
 
       const userSkill = await skillService.addUserSkill(userSkillData);
@@ -97,12 +97,12 @@ export class SkillController {
 
   async removeUserSkill(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.id || parseInt(req.query.userId as string); // Allow passing userId in query for testing
       
       if (!userId) {
         return res.status(401).json({ 
           success: false, 
-          message: 'Not authenticated' 
+          message: 'User ID is required' 
         });
       }
 

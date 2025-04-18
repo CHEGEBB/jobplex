@@ -9,11 +9,11 @@ const user_interface_1 = require("../interfaces/user.interface");
 class SkillController {
     async createSkill(req, res) {
         try {
-            // Only admins can create new skills
-            if (req.user?.role !== user_interface_1.UserRole.ADMIN) {
+            // Only jobseekers can create new skills
+            if (req.user?.role !== user_interface_1.UserRole.JOBSEEKER) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Only admins can create new skills'
+                    message: 'Only jobseekers can create new skills'
                 });
             }
             const skillData = {
@@ -57,18 +57,18 @@ class SkillController {
     }
     async addUserSkill(req, res) {
         try {
-            const userId = req.user?.id;
+            const userId = req.user?.id || parseInt(req.body.userId); // Allow passing userId in request body for testing
             if (!userId) {
                 return res.status(401).json({
                     success: false,
-                    message: 'Not authenticated'
+                    message: 'User ID is required'
                 });
             }
             const userSkillData = {
                 userId: userId,
-                skillId: req.body.skillId,
-                proficiencyLevel: req.body.proficiencyLevel,
-                yearsOfExperience: req.body.yearsOfExperience
+                skillId: parseInt(req.body.skillId),
+                proficiencyLevel: parseInt(req.body.proficiencyLevel),
+                yearsOfExperience: req.body.yearsOfExperience ? parseInt(req.body.yearsOfExperience) : undefined
             };
             const userSkill = await skill_service_1.default.addUserSkill(userSkillData);
             res.status(201).json({ success: true, data: userSkill });
@@ -95,11 +95,11 @@ class SkillController {
     }
     async removeUserSkill(req, res) {
         try {
-            const userId = req.user?.id;
+            const userId = req.user?.id || parseInt(req.query.userId); // Allow passing userId in query for testing
             if (!userId) {
                 return res.status(401).json({
                     success: false,
-                    message: 'Not authenticated'
+                    message: 'User ID is required'
                 });
             }
             const skillId = parseInt(req.params.skillId);

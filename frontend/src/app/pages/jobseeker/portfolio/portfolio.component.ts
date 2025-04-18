@@ -4,7 +4,9 @@ import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { FilterPipe } from '../../../pipes/filter.pipe';
+import { HttpClientModule } from '@angular/common/http';
+import { SkillService, Skill } from '../../../services/skill.service';
+import { finalize, tap } from 'rxjs/operators';
 
 interface Project {
   id: number;
@@ -15,13 +17,6 @@ interface Project {
   link?: string;
   github?: string;
   featured: boolean;
-}
-
-interface Skill {
-  name: string;
-  level: number; // 1-5
-  category: 'technical' | 'soft' | 'language' | 'tool';
-  yearsExperience?: number;
 }
 
 interface Certificate {
@@ -37,7 +32,7 @@ interface Certificate {
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, SidebarComponent, FormsModule, FilterPipe],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, SidebarComponent, FormsModule, HttpClientModule],
   templateUrl: './portfolio.component.html',
   styleUrls: ['./portfolio.component.scss'],
   animations: [
@@ -69,6 +64,9 @@ export class PortfolioComponent implements OnInit {
   searchQuery = '';
   activeProjectFilter = 'all';
   portfolioVisibility = 'public';
+  isLoading = false;
+  errorMessage = '';
+  successMessage = '';
 
   projects: Project[] = [
     {
@@ -98,98 +96,28 @@ export class PortfolioComponent implements OnInit {
       skills: ['Vue.js', 'D3.js', 'Node.js'],
       link: 'https://analytics-viz.example.com',
       featured: true
-    },
-    {
-      id: 4,
-      title: 'A complete e-commerce dashboard with analytics and inventory management',
-      description: 'A full-featured dashboard for online retailers that combines inventory management, order processing, customer data, and business analytics in one unified interface.',
-      image: 'assets/dash.webp',
-      skills: ['Angular', 'NgRx', 'Express', 'MongoDB'],
-      github: 'https://github.com/username/commerce-central',
-      featured: true
-    },
-    {
-      id: 5,
-      title: 'Mobile application for tracking workouts and nutrition plans',
-      description: 'A fitness tracking application that allows users to monitor workouts, track nutrition, and follow personalized fitness plans. Includes progress visualization and social sharing features.',
-      image: 'assets/work.jpg',
-      skills: ['React Native', 'GraphQL', 'AWS'],
-      github: 'https://github.com/username/fitness-tracker',
-      featured: true
-    },
-    {
-      id:6,
-      title: 'A web application for managing personal finances',
-      description: 'A personal finance management tool that helps users track expenses, set budgets, and analyze spending habits. Features include visual reports and financial goal setting.',
-      image: 'assets/expe.png',
-      skills: ['React', 'Redux', 'Chart.js'],
-      github:'https://github.com/username/finance-tracker',
-      featured: true
     }
   ];
 
-  skills: Skill[] = [
-    { name: 'JavaScript', level: 5, category: 'technical', yearsExperience: 4 },
-    { name: 'TypeScript', level: 4, category: 'technical', yearsExperience: 3 },
-    { name: 'React', level: 5, category: 'technical', yearsExperience: 3 },
-    { name: 'Angular', level: 4, category: 'technical', yearsExperience: 2 },
-    { name: 'Node.js', level: 4, category: 'technical', yearsExperience: 3 },
-    { name: 'MongoDB', level: 3, category: 'technical', yearsExperience: 2 },
-    { name: 'SQL', level: 4, category: 'technical', yearsExperience: 3 },
-    { name: 'HTML/CSS', level: 5, category: 'technical', yearsExperience: 5 },
-    { name: 'Python', level: 3, category: 'technical', yearsExperience: 2 },
-    { name: 'Team Leadership', level: 4, category: 'soft', yearsExperience: 2 },
-    { name: 'Problem Solving', level: 5, category: 'soft' },
-    { name: 'Communication', level: 4, category: 'soft' },
-    { name: 'Project Management', level: 3, category: 'soft', yearsExperience: 2 },
-    { name: 'English', level: 5, category: 'language' },
-    { name: 'Spanish', level: 3, category: 'language' },
-    { name: 'Figma', level: 4, category: 'tool', yearsExperience: 2 },
-    { name: 'Git', level: 5, category: 'tool', yearsExperience: 4 },
-    { name: 'Docker', level: 3, category: 'tool', yearsExperience: 1 },
-    { name: 'AWS', level: 3, category: 'tool', yearsExperience: 2 }
-  ];
-
-  certificates: Certificate[] = [
-    {
-      id: 1,
-      name: 'AWS Certified Solutions Architect',
-      issuer: 'Amazon Web Services',
-      date: '2024-01-15',
-      expiry: '2027-01-15',
-      credentialId: 'AWS-SA-12345',
-      link: 'https://aws.amazon.com/certification/certified-solutions-architect-associate/'
-    },
-    {
-      id: 2,
-      name: 'Professional Scrum Master I',
-      issuer: 'Scrum.org',
-      date: '2023-08-10',
-      credentialId: 'PSM-I-98765',
-      link: 'https://www.scrum.org/professional-scrum-certifications/professional-scrum-master-i-certification'
-    },
-    {
-      id: 3,
-      name: 'Google UX Design Professional Certificate',
-      issuer: 'Google',
-      date: '2023-05-22',
-      credentialId: 'GUX-54321',
-      link: 'https://www.coursera.org/professional-certificates/google-ux-design'
-    }
-  ];
+  skills: Skill[] = [];
+  certificates: Certificate[] = [];
 
   technicalSkillCount = 0;
   softSkillCount = 0;
   languageSkillCount = 0;
   toolSkillCount = 0;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder, 
+    private skillService: SkillService
+  ) {
     this.initForms();
   }
 
   ngOnInit(): void {
     this.filteredProjects = [...this.projects];
-    this.updateSkillCounts();
+    this.loadUserSkills();
+    this.loadUserCertificates();
     
     // Check screen size for responsive sidebar
     this.sidebarCollapsed = window.innerWidth < 768;
@@ -222,6 +150,55 @@ export class PortfolioComponent implements OnInit {
     });
   }
 
+  // Skills Methods
+  loadUserSkills(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    
+    this.skillService.getUserSkills()
+      .pipe(
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (skills) => {
+          this.skills = skills;
+          this.updateSkillCounts();
+          console.log("Skills loaded successfully", skills);
+        },
+        error: (error) => {
+          console.error('Failed to load skills:', error);
+          this.errorMessage = 'Failed to load skills. Please try again.';
+          this.loadSampleSkills(); // Fallback to sample data
+        }
+      });
+  }
+
+  loadSampleSkills(): void {
+    // This is only for fallback when API fails
+    this.skills = [
+      { name: 'JavaScript', level: 5, category: 'technical', yearsExperience: 4 },
+      { name: 'TypeScript', level: 4, category: 'technical', yearsExperience: 3 },
+      { name: 'React', level: 5, category: 'technical', yearsExperience: 3 },
+      { name: 'Angular', level: 4, category: 'technical', yearsExperience: 2 },
+      { name: 'Node.js', level: 4, category: 'technical', yearsExperience: 3 },
+      { name: 'MongoDB', level: 3, category: 'technical', yearsExperience: 2 },
+      { name: 'SQL', level: 4, category: 'technical', yearsExperience: 3 },
+      { name: 'HTML/CSS', level: 5, category: 'technical', yearsExperience: 5 },
+      { name: 'Python', level: 3, category: 'technical', yearsExperience: 2 },
+      { name: 'Team Leadership', level: 4, category: 'soft', yearsExperience: 2 },
+      { name: 'Problem Solving', level: 5, category: 'soft' },
+      { name: 'Communication', level: 4, category: 'soft' },
+      { name: 'Project Management', level: 3, category: 'soft', yearsExperience: 2 },
+      { name: 'English', level: 5, category: 'language' },
+      { name: 'Spanish', level: 3, category: 'language' },
+      { name: 'Figma', level: 4, category: 'tool', yearsExperience: 2 },
+      { name: 'Git', level: 5, category: 'tool', yearsExperience: 4 },
+      { name: 'Docker', level: 3, category: 'tool', yearsExperience: 1 },
+      { name: 'AWS', level: 3, category: 'tool', yearsExperience: 2 }
+    ];
+    this.updateSkillCounts();
+  }
+
   updateSkillCounts(): void {
     this.technicalSkillCount = this.skills.filter(s => s.category === 'technical').length;
     this.softSkillCount = this.skills.filter(s => s.category === 'soft').length;
@@ -229,70 +206,12 @@ export class PortfolioComponent implements OnInit {
     this.toolSkillCount = this.skills.filter(s => s.category === 'tool').length;
   }
 
-  onToggleSidebar(collapsed: boolean): void {
-    this.sidebarCollapsed = collapsed;
-  }
-
-  setActiveTab(tab: 'projects' | 'skills' | 'certificates'): void {
-    this.activeTab = tab;
-  }
-
-  setActiveSkillTab(tab: 'technical' | 'soft' | 'language' | 'tool'): void {
-    this.activeSkillTab = tab;
-  }
-
-  toggleAddProject(): void {
-    this.showAddProject = !this.showAddProject;
-    if (!this.showAddProject) {
-      this.projectForm.reset();
-      this.projectForm.controls['featured'].setValue(false);
-    }
-  }
-  getSkillBarWidth(level: number): string {
-    // Convert the level (1-5) to a percentage width
-    return `${level * 20}%`;
-  }
-  clearSearch() {
-    this.searchQuery = '';
-    // Add any additional logic needed when clearing the search
-  }
-  toggleAddSkill(): void {
-    this.showAddSkill = !this.showAddSkill;
-    if (!this.showAddSkill) {
-      this.skillForm.reset();
-      this.skillForm.controls['level'].setValue(3);
-      this.skillForm.controls['category'].setValue('technical');
-    }
-  }
-
-  toggleAddCertificate(): void {
-    this.showAddCertificate = !this.showAddCertificate;
-    if (!this.showAddCertificate) {
-      this.certificateForm.reset();
-    }
-  }
-
-  submitProject(): void {
-    if (this.projectForm.valid) {
-      const newProject: Project = {
-        id: this.projects.length + 1,
-        title: this.projectForm.value.title,
-        description: this.projectForm.value.description,
-        image: 'https://source.unsplash.com/random/800x600/?dashboard,tech',
-        skills: this.projectForm.value.skills.split(',').map((s: string) => s.trim()),
-        link: this.projectForm.value.link || undefined,
-        github: this.projectForm.value.github || undefined,
-        featured: this.projectForm.value.featured
-      };
-      
-      this.projects.unshift(newProject);
-      this.filteredProjects = [...this.projects];
-      this.toggleAddProject();
-    }
-  }
-
   submitSkill(): void {
     if (this.skillForm.valid) {
+      this.isLoading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
+      
       const newSkill: Skill = {
         name: this.skillForm.value.name,
         level: this.skillForm.value.level,
@@ -300,10 +219,90 @@ export class PortfolioComponent implements OnInit {
         yearsExperience: this.skillForm.value.yearsExperience || undefined
       };
       
-      this.skills.push(newSkill);
-      this.updateSkillCounts();
-      this.toggleAddSkill();
+      this.skillService.createAndAddUserSkill(newSkill)
+        .pipe(
+          finalize(() => {
+            this.isLoading = false;
+            this.toggleAddSkill();
+          })
+        )
+        .subscribe({
+          next: (skill) => {
+            // Add skill to the local array with the server-assigned ID
+            this.skills.push(skill);
+            this.updateSkillCounts();
+            this.successMessage = 'Skill added successfully!';
+            console.log("Skill added successfully", skill);
+          },
+          error: (error) => {
+            console.error('Error adding skill:', error);
+            this.errorMessage = error.message || 'Failed to add skill. Please try again.';
+          }
+        });
     }
+  }
+
+  deleteSkill(skillToDelete: Skill): void {
+    if (confirm('Are you sure you want to delete this skill?')) {
+      if (!skillToDelete.id) {
+        console.error('Cannot delete skill without ID');
+        this.errorMessage = 'Cannot delete skill without ID';
+        return;
+      }
+      
+      this.isLoading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
+      
+      this.skillService.removeUserSkill(skillToDelete.id)
+        .pipe(
+          finalize(() => this.isLoading = false)
+        )
+        .subscribe({
+          next: () => {
+            // Remove skill from local array
+            this.skills = this.skills.filter(s => s.id !== skillToDelete.id);
+            this.updateSkillCounts();
+            this.successMessage = 'Skill removed successfully!';
+          },
+          error: (error) => {
+            console.error('Error removing skill:', error);
+            this.errorMessage = error.message || 'Failed to remove skill. Please try again.';
+          }
+        });
+    }
+  }
+
+  // Certificates Methods
+  loadUserCertificates(): void {
+    // When we have certificates endpoint, we can replace this with real API call
+    this.certificates = [
+      {
+        id: 1,
+        name: 'AWS Certified Solutions Architect',
+        issuer: 'Amazon Web Services',
+        date: '2024-01-15',
+        expiry: '2027-01-15',
+        credentialId: 'AWS-SA-12345',
+        link: 'https://aws.amazon.com/certification/certified-solutions-architect-associate/'
+      },
+      {
+        id: 2,
+        name: 'Professional Scrum Master I',
+        issuer: 'Scrum.org',
+        date: '2023-08-10',
+        credentialId: 'PSM-I-98765',
+        link: 'https://www.scrum.org/professional-scrum-certifications/professional-scrum-master-i-certification'
+      },
+      {
+        id: 3,
+        name: 'Google UX Design Professional Certificate',
+        issuer: 'Google',
+        date: '2023-05-22',
+        credentialId: 'GUX-54321',
+        link: 'https://www.coursera.org/professional-certificates/google-ux-design'
+      }
+    ];
   }
 
   submitCertificate(): void {
@@ -323,6 +322,32 @@ export class PortfolioComponent implements OnInit {
     }
   }
 
+  deleteCertificate(id: number): void {
+    if (confirm('Are you sure you want to delete this certificate?')) {
+      this.certificates = this.certificates.filter(c => c.id !== id);
+    }
+  }
+
+  // Projects Methods
+  submitProject(): void {
+    if (this.projectForm.valid) {
+      const newProject: Project = {
+        id: this.projects.length + 1,
+        title: this.projectForm.value.title,
+        description: this.projectForm.value.description,
+        image: 'https://source.unsplash.com/random/800x600/?dashboard,tech',
+        skills: this.projectForm.value.skills.split(',').map((s: string) => s.trim()),
+        link: this.projectForm.value.link || undefined,
+        github: this.projectForm.value.github || undefined,
+        featured: this.projectForm.value.featured
+      };
+      
+      this.projects.unshift(newProject);
+      this.filteredProjects = [...this.projects];
+      this.toggleAddProject();
+    }
+  }
+
   deleteProject(id: number): void {
     if (confirm('Are you sure you want to delete this project?')) {
       this.projects = this.projects.filter(p => p.id !== id);
@@ -330,17 +355,55 @@ export class PortfolioComponent implements OnInit {
     }
   }
 
-  deleteSkill(skillToDelete: Skill): void {
-    if (confirm('Are you sure you want to delete this skill?')) {
-      this.skills = this.skills.filter(s => s.name !== skillToDelete.name);
-      this.updateSkillCounts();
+  // UI Helper Methods
+  onToggleSidebar(collapsed: boolean): void {
+    this.sidebarCollapsed = collapsed;
+  }
+
+  setActiveTab(tab: 'projects' | 'skills' | 'certificates'): void {
+    this.activeTab = tab;
+  }
+
+  setActiveSkillTab(tab: 'technical' | 'soft' | 'language' | 'tool'): void {
+    this.activeSkillTab = tab;
+  }
+
+  toggleAddProject(): void {
+    this.showAddProject = !this.showAddProject;
+    if (!this.showAddProject) {
+      this.projectForm.reset();
+      this.projectForm.controls['featured'].setValue(false);
     }
   }
 
-  deleteCertificate(id: number): void {
-    if (confirm('Are you sure you want to delete this certificate?')) {
-      this.certificates = this.certificates.filter(c => c.id !== id);
+  toggleAddSkill(): void {
+    this.showAddSkill = !this.showAddSkill;
+    if (!this.showAddSkill) {
+      this.skillForm.reset();
+      this.skillForm.controls['level'].setValue(3);
+      this.skillForm.controls['category'].setValue('technical');
     }
+  }
+
+  toggleAddCertificate(): void {
+    this.showAddCertificate = !this.showAddCertificate;
+    if (!this.showAddCertificate) {
+      this.certificateForm.reset();
+    }
+  }
+
+  getSkillBarWidth(level: number): string {
+    // Convert the level (1-5) to a percentage width
+    return `${level * 20}%`;
+  }
+
+  getSkillLevelText(level: number): string {
+    const levels = ['Beginner', 'Elementary', 'Intermediate', 'Advanced', 'Expert'];
+    return levels[level - 1] || 'Unknown';
+  }
+
+  getSkillsByCategory(category: 'technical' | 'soft' | 'language' | 'tool'): Skill[] {
+    return this.skills.filter(skill => skill.category === category);
   }
 
   filterProjects(filter: string): void {
@@ -373,108 +436,13 @@ export class PortfolioComponent implements OnInit {
     );
   }
 
-  getSkillLevelText(level: number): string {
-    const levels = ['Beginner', 'Elementary', 'Intermediate', 'Advanced', 'Expert'];
-    return levels[level - 1] || 'Unknown';
+  clearSearch() {
+    this.searchQuery = '';
+    this.filteredProjects = [...this.projects];
   }
 
   toggleProjectFeatured(project: Project): void {
     project.featured = !project.featured;
-  }
-
-  exportPortfolio(): void {
-    const portfolioData = {
-      projects: this.projects,
-      skills: this.skills,
-      certificates: this.certificates
-    };
-    
-    const dataStr = JSON.stringify(portfolioData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = 'portfolio-data.json';
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  }
-  
-  importPortfolio(event: Event): void {
-    const fileInput = event.target as HTMLInputElement;
-    
-    if (fileInput.files && fileInput.files[0]) {
-      const reader = new FileReader();
-      
-      reader.onload = (e: any) => {
-        try {
-          const importedData = JSON.parse(e.target.result);
-          
-          if (importedData.projects && Array.isArray(importedData.projects)) {
-            this.projects = importedData.projects;
-            this.filteredProjects = [...this.projects];
-          }
-          
-          if (importedData.skills && Array.isArray(importedData.skills)) {
-            this.skills = importedData.skills;
-            this.updateSkillCounts();
-          }
-          
-          if (importedData.certificates && Array.isArray(importedData.certificates)) {
-            this.certificates = importedData.certificates;
-          }
-          
-          alert('Portfolio data imported successfully!');
-        } catch (error) {
-          console.error('Error importing portfolio data:', error);
-          alert('Failed to import portfolio data. Please check the file format.');
-        }
-      };
-      
-      reader.readAsText(fileInput.files[0]);
-    }
-  }
-  
-  setPortfolioVisibility(visibility: 'public' | 'private' | 'unlisted'): void {
-    this.portfolioVisibility = visibility;
-    // In a real app, this would update the backend/database
-  }
-  
-  generateShareableLink(): string {
-    // In a real app, this would generate a proper sharing link
-    return `https://example.com/portfolio/${this.portfolioVisibility === 'unlisted' ? 'share/unique-id-123' : 'username'}`;
-  }
-  
-  sortProjectsByDate(): void {
-    // Assuming we add a date field to projects in the future
-    // For now, just reverse the order as a placeholder
-    this.projects.reverse();
-    this.filteredProjects = [...this.projects];
-  }
-  
-  sortProjectsByTitle(): void {
-    this.projects.sort((a, b) => a.title.localeCompare(b.title));
-    this.filteredProjects = [...this.projects];
-  }
-  
-  getSkillsByCategory(category: 'technical' | 'soft' | 'language' | 'tool'): Skill[] {
-    return this.skills.filter(skill => skill.category === category);
-  }
-  
-  getTotalExperienceYears(): number {
-    const technicalSkills = this.skills.filter(s => s.category === 'technical' && s.yearsExperience);
-    if (technicalSkills.length === 0) return 0;
-    
-    const maxYears = Math.max(...technicalSkills.map(s => s.yearsExperience || 0));
-    return maxYears;
-  }
-  
-  getAverageSkillLevel(category: 'technical' | 'soft' | 'language' | 'tool'): number {
-    const categorySkills = this.skills.filter(s => s.category === category);
-    if (categorySkills.length === 0) return 0;
-    
-    const sum = categorySkills.reduce((acc, skill) => acc + skill.level, 0);
-    return Math.round((sum / categorySkills.length) * 10) / 10; // Round to 1 decimal place
   }
   
   formatDate(dateString: string): string {
@@ -495,8 +463,8 @@ export class PortfolioComponent implements OnInit {
     return project.id;
   }
   
-  trackBySkillName(index: number, skill: Skill): string {
-    return skill.name;
+  trackBySkillId(index: number, skill: Skill): number | string {
+    return skill.id || skill.name;
   }
   
   trackByCertificateId(index: number, certificate: Certificate): number {
