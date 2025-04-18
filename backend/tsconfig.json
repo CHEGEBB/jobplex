@@ -10,6 +10,6 @@
       "forceConsistentCasingInFileNames": true,
       "resolveJsonModule": true
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "test-db.js"],
     "exclude": ["node_modules", "dist"]
   }
