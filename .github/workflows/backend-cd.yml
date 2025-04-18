@@ -1,0 +1,29 @@
+name: Backend CD Pipeline
+on:
+  workflow_run:
+    workflows: ["Backend CI Pipeline"]
+    branches: [main]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Delete Old Docker Container
+        run: sudo docker rm -f backend_users || true
+
+      - name: Pull Docker Image
+        run: sudo docker pull chegebb/backendusers:latest
+
+      - name: Run Docker Container
+        run: >
+          sudo docker run -d -p 80:3000 
+          --name backend_users 
+          -e DB_HOST=jobplex1.cixko6g8cczy.us-east-1.rds.amazonaws.com 
+          -e DB_PORT=5432 
+          -e DB_USER=postgres 
+          -e DB_NAME=jobplex 
+          -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          chegebb/backendusers:latest
