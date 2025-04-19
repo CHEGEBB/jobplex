@@ -1,43 +1,30 @@
-import { Router } from 'express';
-import jobController from '../controllers/job.controller';
-import { authenticateToken, authorizeRoles } from '../middleware/auth.middleware';
-import { UserRole } from '../interfaces/user.interface';
+// src/routes/job.routes.ts
+import express from 'express';
+import { 
+  getAllJobs, 
+  getJobById, 
+  createJob, 
+  updateJob, 
+  deleteJob,
+  applyForJob,
+  getJobMatches
+} from '../controllers/job.controller';
+import { verifyToken } from '../middleware/auth.middleware';
+import { isEmployer, isJobSeeker } from '../middleware/role.middleware';
 
-const router = Router();
+const router = express.Router();
 
-/**
- * @route   POST /api/jobs
- * @desc    Create a new job posting
- * @access  Private/Employer
- */
-router.post('/', authenticateToken, authorizeRoles(UserRole.EMPLOYER), jobController.createJob);
+// Public routes
+router.get('/', getAllJobs);
+router.get('/:id', getJobById);
 
-/**
- * @route   GET /api/jobs
- * @desc    Get all jobs (paginated)
- * @access  Public
- */
-router.get('/', jobController.getAllJobs);
+// Employer routes
+router.post('/', verifyToken, isEmployer, createJob);
+router.put('/:id', verifyToken, isEmployer, updateJob);
+router.delete('/:id', verifyToken, isEmployer, deleteJob);
 
-/**
- * @route   GET /api/jobs/:id
- * @desc    Get job by ID
- * @access  Public
- */
-router.get('/:id', jobController.getJobById);
-
-/**
- * @route   PUT /api/jobs/:id
- * @desc    Update job posting
- * @access  Private/Employer
- */
-router.put('/:id', authenticateToken, authorizeRoles(UserRole.EMPLOYER), jobController.updateJob);
-
-/**
- * @route   DELETE /api/jobs/:id
- * @desc    Delete job posting
- * @access  Private/Employer
- */
-router.delete('/:id', authenticateToken, authorizeRoles(UserRole.EMPLOYER, UserRole.ADMIN), jobController.deleteJob);
+// Job seeker routes
+router.post('/:id/apply', verifyToken, isJobSeeker, applyForJob);
+router.get('/matches/me', verifyToken, isJobSeeker, getJobMatches);
 
 export default router;

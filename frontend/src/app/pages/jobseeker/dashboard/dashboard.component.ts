@@ -173,6 +173,7 @@ export class DashboardComponent implements OnInit {
     }
   ];
 
+
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
@@ -180,7 +181,15 @@ export class DashboardComponent implements OnInit {
     this.sidebarCollapsed = window.innerWidth < 768;
     
     // Get current user from AuthService
-    this.currentUser = this.authService.getCurrentUser();
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      this.currentUser = {
+        ...user,
+        role: user.role === 'jobseeker' ? 'jobseeker' : user.role // Ensure role transformation matches expected values
+      };
+    } else {
+      this.currentUser = null;
+    }
     
     // Update profile data with actual user information
     if (this.currentUser) {
@@ -201,12 +210,15 @@ export class DashboardComponent implements OnInit {
     // Subscribe to changes in authentication state
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        this.currentUser = user;
+        this.currentUser = {
+          ...user,
+          role: user.role === 'jobseeker' ? 'jobseeker' : user.role // Transform role to match expected type
+        };
         this.profileData.name = user.firstName + ' ' + user.lastName;
         this.profileInitials = this.getInitials(user.firstName, user.lastName);
         
-        if (user['profilePhoto']) {
-          this.profileData.image = user['profilePhoto'];
+        if (user.profilePhoto) {
+          this.profileData.image = user.profilePhoto;
         }
       }
     });

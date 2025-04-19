@@ -3,7 +3,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import { notFoundHandler, errorHandler } from './middleware/error.middleware';
 
 // Import routes
 import authRoutes from './routes/auth.routes';

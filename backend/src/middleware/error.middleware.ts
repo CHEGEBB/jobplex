@@ -1,34 +1,16 @@
+// src/middleware/error.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 
-export interface ApiError extends Error {
-  statusCode?: number;
-  data?: any;
-}
+const notFoundHandler = (req: Request, res: Response) => {
+  res.status(404).json({ message: 'Resource not found' });
+};
 
-export const errorHandler = (
-  err: ApiError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-
-  res.status(statusCode).json({
-    success: false,
-    error: message,
-    data: err.data || null,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined 
   });
 };
 
-export const notFoundHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  res.status(404).json({
-    success: false,
-    error: `Cannot ${req.method} ${req.originalUrl}`
-  });
-};
+export { notFoundHandler, errorHandler };

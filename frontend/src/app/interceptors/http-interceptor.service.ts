@@ -1,4 +1,3 @@
-// src/app/interceptors/auth.interceptor.ts
 import { Injectable } from '@angular/core';
 import {
   HttpRequest,
@@ -10,16 +9,23 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service'; 
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    // Get the auth token from local storage
-    const token = localStorage.getItem('token');
+    // Get the token from AuthService
+    const token = this.authService.token;
     
-    // Clone the request and add the authorization header if token exists
+    // Debug: Check if token exists when making requests
+    console.log('Token being used in interceptor:', token ? 'Token exists' : 'No token');
+    
+    // If token exists, add it to the request headers
     if (token) {
       request = request.clone({
         setHeaders: {
@@ -27,16 +33,16 @@ export class AuthInterceptor implements HttpInterceptor {
         }
       });
     }
-
+    
     // Handle the request and catch any errors
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        // If we get a 401 or 403, the token might be expired or invalid
-        if (error.status === 401 || error.status === 403) {
-          console.error('Auth error:', error);
-          // Optionally redirect to login
-          // this.router.navigate(['/login']);
+        // Handle 401 Unauthorized errors by redirecting to login
+        if (error.status === 401) {
+          console.log('401 error caught in interceptor, logging out');
+          this.authService.logout(); // Use the service's logout method
         }
+        
         return throwError(() => error);
       })
     );

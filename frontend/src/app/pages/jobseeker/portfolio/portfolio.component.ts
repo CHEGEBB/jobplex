@@ -1,26 +1,28 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { HttpClientModule } from '@angular/common/http';
-import { SkillService, Skill } from '../../../services/skill.service';
-import { finalize, tap } from 'rxjs/operators';
+import { Skill, SkillService, CreateSkillRequest } from '../../../services/skill.service';
+import { CommonModule } from '@angular/common';
+import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
+
+// Extend the Skill interface with level property or create a local interface
+interface SkillWithLevel extends Skill {
+  level: number;
+}
 
 interface Project {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  image: string;
   skills: string[];
-  link?: string;
   github?: string;
+  link?: string;
+  image: string;
   featured: boolean;
 }
 
 interface Certificate {
-  id: number;
+  id: string;
   name: string;
   issuer: string;
   date: string;
@@ -31,116 +33,95 @@ interface Certificate {
 
 @Component({
   selector: 'app-portfolio',
-  standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, SidebarComponent, FormsModule, HttpClientModule],
   templateUrl: './portfolio.component.html',
+  imports: [ReactiveFormsModule, CommonModule, SidebarComponent,FormsModule],
   styleUrls: ['./portfolio.component.scss'],
   animations: [
     trigger('fadeIn', [
       transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-in', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
+        style({ opacity: 0 }),
+        animate('300ms', style({ opacity: 1 })),
+      ]),
     ]),
     trigger('slideIn', [
       transition(':enter', [
-        style({ transform: 'translateX(-20px)', opacity: 0 }),
-        animate('400ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))
-      ])
-    ])
-  ]
+        style({ transform: 'translateY(-20px)', opacity: 0 }),
+        animate('300ms ease-out', style({ transform: 'translateY(0)', opacity: 1 })),
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ transform: 'translateY(-20px)', opacity: 0 })),
+      ]),
+    ]),
+  ],
 })
 export class PortfolioComponent implements OnInit {
-  sidebarCollapsed = false;
+  // Tab navigation
   activeTab: 'projects' | 'skills' | 'certificates' = 'projects';
+  
+  // Skills tab
   activeSkillTab: 'technical' | 'soft' | 'language' | 'tool' = 'technical';
-  showAddProject = false;
+  skills: SkillWithLevel[] = []; // Updated to SkillWithLevel interface
   showAddSkill = false;
-  showAddCertificate = false;
-  projectForm!: FormGroup;
-  skillForm!: FormGroup;
-  certificateForm!: FormGroup;
+  skillForm: FormGroup;
+  
+  // Projects tab
+  projects: Project[] = [];
   filteredProjects: Project[] = [];
-  searchQuery = '';
-  activeProjectFilter = 'all';
-  portfolioVisibility = 'public';
+  showAddProject = false;
+  projectForm: FormGroup;
+  activeProjectFilter: string = 'all';
+  searchQuery: string = '';
+  
+  // Certificates tab
+  certificates: Certificate[] = [];
+  showAddCertificate = false;
+  certificateForm: FormGroup;
+  
+  // UI state
+  sidebarCollapsed = false;
   isLoading = false;
   errorMessage = '';
   successMessage = '';
-
-  projects: Project[] = [
-    {
-      id: 1,
-      title: 'A responsive dashboard for managing online store operations',
-      description: 'An e-commerce analytics platform that provides real-time insights on product performance, customer behavior, and sales trends. The dashboard includes interactive visualizations and actionable recommendations.',
-      image: 'assets/eccomerce.png',
-      skills: ['React', 'Redux', 'Chart.js'],
-      github: 'https://github.com/username/ecommerce-dashboard',
-      link: 'https://dashboard-demo.example.com',
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'Mobile application for connecting professionals',
-      description: 'A networking app designed for industry professionals to connect, share ideas, and collaborate on projects. Features include event discovery, messaging, and professional profile management.',
-      image: 'assets/app.jpg',
-      skills: ['Flutter', 'Firebase', 'Material UI'],
-      github: 'https://github.com/username/pro-connect',
-      featured: true
-    },
-    {
-      id: 3,
-      title: 'Data visualization and analytics dashboard',
-      description: 'A comprehensive analytics solution that transforms complex data into intuitive visualizations. Designed for business intelligence needs with customizable widgets and report generation.',
-      image: 'assets/data.webp',
-      skills: ['Vue.js', 'D3.js', 'Node.js'],
-      link: 'https://analytics-viz.example.com',
-      featured: true
-    }
-  ];
-
-  skills: Skill[] = [];
-  certificates: Certificate[] = [];
-
-  technicalSkillCount = 0;
-  softSkillCount = 0;
-  languageSkillCount = 0;
-  toolSkillCount = 0;
-
+  
+  // For getting skill counts by category
+  get technicalSkillCount(): number {
+    return this.skills.filter(s => this.mapProficiencyToCategory(s.proficiency) === 'technical').length;
+  }
+  
+  get softSkillCount(): number {
+    return this.skills.filter(s => this.mapProficiencyToCategory(s.proficiency) === 'soft').length;
+  }
+  
+  get languageSkillCount(): number {
+    return this.skills.filter(s => this.mapProficiencyToCategory(s.proficiency) === 'language').length;
+  }
+  
+  get toolSkillCount(): number {
+    return this.skills.filter(s => this.mapProficiencyToCategory(s.proficiency) === 'tool').length;
+  }
+  
   constructor(
-    private fb: FormBuilder, 
+    private formBuilder: FormBuilder,
     private skillService: SkillService
   ) {
-    this.initForms();
-  }
-
-  ngOnInit(): void {
-    this.filteredProjects = [...this.projects];
-    this.loadUserSkills();
-    this.loadUserCertificates();
+    // Initialize forms
+    this.skillForm = this.formBuilder.group({
+      name: ['', [Validators.required]],
+      category: ['technical', [Validators.required]],
+      level: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
+      yearsExperience: [null]
+    });
     
-    // Check screen size for responsive sidebar
-    this.sidebarCollapsed = window.innerWidth < 768;
-  }
-
-  initForms(): void {
-    this.projectForm = this.fb.group({
+    this.projectForm = this.formBuilder.group({
       title: ['', [Validators.required]],
       description: ['', [Validators.required, Validators.minLength(10)]],
       skills: ['', [Validators.required]],
-      link: [''],
       github: [''],
+      link: [''],
       featured: [false]
     });
-
-    this.skillForm = this.fb.group({
-      name: ['', [Validators.required]],
-      level: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
-      category: ['technical', [Validators.required]],
-      yearsExperience: [null]
-    });
-
-    this.certificateForm = this.fb.group({
+    
+    this.certificateForm = this.formBuilder.group({
       name: ['', [Validators.required]],
       issuer: ['', [Validators.required]],
       date: ['', [Validators.required]],
@@ -149,264 +130,246 @@ export class PortfolioComponent implements OnInit {
       link: ['']
     });
   }
-
-  // Skills Methods
-  loadUserSkills(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    
-    this.skillService.getUserSkills()
-      .pipe(
-        finalize(() => this.isLoading = false)
-      )
-      .subscribe({
-        next: (skills) => {
-          this.skills = skills;
-          this.updateSkillCounts();
-          console.log("Skills loaded successfully", skills);
-        },
-        error: (error) => {
-          console.error('Failed to load skills:', error);
-          this.errorMessage = 'Failed to load skills. Please try again.';
-          this.loadSampleSkills(); // Fallback to sample data
-        }
-      });
+  
+  ngOnInit(): void {
+    this.loadSkills();
+    this.loadProjects();
+    this.loadCertificates();
   }
-
-  loadSampleSkills(): void {
-    // This is only for fallback when API fails
-    this.skills = [
-      { name: 'JavaScript', level: 5, category: 'technical', yearsExperience: 4 },
-      { name: 'TypeScript', level: 4, category: 'technical', yearsExperience: 3 },
-      { name: 'React', level: 5, category: 'technical', yearsExperience: 3 },
-      { name: 'Angular', level: 4, category: 'technical', yearsExperience: 2 },
-      { name: 'Node.js', level: 4, category: 'technical', yearsExperience: 3 },
-      { name: 'MongoDB', level: 3, category: 'technical', yearsExperience: 2 },
-      { name: 'SQL', level: 4, category: 'technical', yearsExperience: 3 },
-      { name: 'HTML/CSS', level: 5, category: 'technical', yearsExperience: 5 },
-      { name: 'Python', level: 3, category: 'technical', yearsExperience: 2 },
-      { name: 'Team Leadership', level: 4, category: 'soft', yearsExperience: 2 },
-      { name: 'Problem Solving', level: 5, category: 'soft' },
-      { name: 'Communication', level: 4, category: 'soft' },
-      { name: 'Project Management', level: 3, category: 'soft', yearsExperience: 2 },
-      { name: 'English', level: 5, category: 'language' },
-      { name: 'Spanish', level: 3, category: 'language' },
-      { name: 'Figma', level: 4, category: 'tool', yearsExperience: 2 },
-      { name: 'Git', level: 5, category: 'tool', yearsExperience: 4 },
-      { name: 'Docker', level: 3, category: 'tool', yearsExperience: 1 },
-      { name: 'AWS', level: 3, category: 'tool', yearsExperience: 2 }
-    ];
-    this.updateSkillCounts();
-  }
-
-  updateSkillCounts(): void {
-    this.technicalSkillCount = this.skills.filter(s => s.category === 'technical').length;
-    this.softSkillCount = this.skills.filter(s => s.category === 'soft').length;
-    this.languageSkillCount = this.skills.filter(s => s.category === 'language').length;
-    this.toolSkillCount = this.skills.filter(s => s.category === 'tool').length;
-  }
-
-  submitSkill(): void {
-    if (this.skillForm.valid) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
-      
-      const newSkill: Skill = {
-        name: this.skillForm.value.name,
-        level: this.skillForm.value.level,
-        category: this.skillForm.value.category,
-        yearsExperience: this.skillForm.value.yearsExperience || undefined
-      };
-      
-      console.log('Creating skill with data:', newSkill);
-      
-      this.skillService.createSkill(newSkill)
-        .pipe(
-          finalize(() => {
-            this.isLoading = false;
-          })
-        )
-        .subscribe({
-          next: (skill) => {
-            this.skills.push(skill);
-            this.updateSkillCounts();
-            this.successMessage = 'Skill added successfully!';
-            console.log("Skill added successfully", skill);
-            this.toggleAddSkill(); // Only hide the form on success
-          },
-          error: (error) => {
-            console.error('Error adding skill:', error);
-            this.errorMessage = 'Failed to add skill: ' + (error.message || 'Unknown error');
-            // Don't close the form so user can try again
-          }
-        });
-    }
-  }
-  deleteSkill(skillToDelete: Skill): void {
-    if (confirm('Are you sure you want to delete this skill?')) {
-      if (!skillToDelete.id) {
-        console.error('Cannot delete skill without ID');
-        this.errorMessage = 'Cannot delete skill without ID';
-        return;
-      }
-      
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
-      
-      this.skillService.removeUserSkill(skillToDelete.id)
-        .pipe(
-          finalize(() => this.isLoading = false)
-        )
-        .subscribe({
-          next: () => {
-            // Remove skill from local array
-            this.skills = this.skills.filter(s => s.id !== skillToDelete.id);
-            this.updateSkillCounts();
-            this.successMessage = 'Skill removed successfully!';
-          },
-          error: (error) => {
-            console.error('Error removing skill:', error);
-            this.errorMessage = error.message || 'Failed to remove skill. Please try again.';
-          }
-        });
-    }
-  }
-
-  // Certificates Methods
-  loadUserCertificates(): void {
-    // When we have certificates endpoint, we can replace this with real API call
-    this.certificates = [
-      {
-        id: 1,
-        name: 'AWS Certified Solutions Architect',
-        issuer: 'Amazon Web Services',
-        date: '2024-01-15',
-        expiry: '2027-01-15',
-        credentialId: 'AWS-SA-12345',
-        link: 'https://aws.amazon.com/certification/certified-solutions-architect-associate/'
-      },
-      {
-        id: 2,
-        name: 'Professional Scrum Master I',
-        issuer: 'Scrum.org',
-        date: '2023-08-10',
-        credentialId: 'PSM-I-98765',
-        link: 'https://www.scrum.org/professional-scrum-certifications/professional-scrum-master-i-certification'
-      },
-      {
-        id: 3,
-        name: 'Google UX Design Professional Certificate',
-        issuer: 'Google',
-        date: '2023-05-22',
-        credentialId: 'GUX-54321',
-        link: 'https://www.coursera.org/professional-certificates/google-ux-design'
-      }
-    ];
-  }
-
-  submitCertificate(): void {
-    if (this.certificateForm.valid) {
-      const newCertificate: Certificate = {
-        id: this.certificates.length + 1,
-        name: this.certificateForm.value.name,
-        issuer: this.certificateForm.value.issuer,
-        date: this.certificateForm.value.date,
-        expiry: this.certificateForm.value.expiry || undefined,
-        credentialId: this.certificateForm.value.credentialId || undefined,
-        link: this.certificateForm.value.link || undefined
-      };
-      
-      this.certificates.unshift(newCertificate);
-      this.toggleAddCertificate();
-    }
-  }
-
-  deleteCertificate(id: number): void {
-    if (confirm('Are you sure you want to delete this certificate?')) {
-      this.certificates = this.certificates.filter(c => c.id !== id);
-    }
-  }
-
-  // Projects Methods
-  submitProject(): void {
-    if (this.projectForm.valid) {
-      const newProject: Project = {
-        id: this.projects.length + 1,
-        title: this.projectForm.value.title,
-        description: this.projectForm.value.description,
-        image: 'https://source.unsplash.com/random/800x600/?dashboard,tech',
-        skills: this.projectForm.value.skills.split(',').map((s: string) => s.trim()),
-        link: this.projectForm.value.link || undefined,
-        github: this.projectForm.value.github || undefined,
-        featured: this.projectForm.value.featured
-      };
-      
-      this.projects.unshift(newProject);
-      this.filteredProjects = [...this.projects];
-      this.toggleAddProject();
-    }
-  }
-
-  deleteProject(id: number): void {
-    if (confirm('Are you sure you want to delete this project?')) {
-      this.projects = this.projects.filter(p => p.id !== id);
-      this.filteredProjects = [...this.projects];
-    }
-  }
-
-  // UI Helper Methods
-  onToggleSidebar(collapsed: boolean): void {
-    this.sidebarCollapsed = collapsed;
-  }
-
+  
+  // Navigation methods
   setActiveTab(tab: 'projects' | 'skills' | 'certificates'): void {
     this.activeTab = tab;
   }
-
+  
   setActiveSkillTab(tab: 'technical' | 'soft' | 'language' | 'tool'): void {
     this.activeSkillTab = tab;
   }
-
-  toggleAddProject(): void {
-    this.showAddProject = !this.showAddProject;
-    if (!this.showAddProject) {
-      this.projectForm.reset();
-      this.projectForm.controls['featured'].setValue(false);
+  
+  onToggleSidebar(collapsed: boolean): void {
+    this.sidebarCollapsed = collapsed;
+  }
+  
+  // Skills methods
+  loadSkills(): void {
+    this.isLoading = true;
+    this.skillService.getMySkills().subscribe({
+      next: (data) => {
+        // Convert Skill objects to SkillWithLevel objects
+        this.skills = data.map(skill => {
+          // Calculate level from proficiency
+          const level = this.calculateLevelFromProficiency(skill.proficiency);
+          return { ...skill, level };
+        });
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Failed to load skills';
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  // Helper method to calculate level from proficiency string
+  calculateLevelFromProficiency(proficiency: string): number {
+    switch (proficiency) {
+      case 'beginner': return 1;
+      case 'intermediate': return 3;
+      case 'advanced': return 4;
+      case 'expert': return 5;
+      default: return 3;
     }
   }
-
+  
   toggleAddSkill(): void {
     this.showAddSkill = !this.showAddSkill;
     if (!this.showAddSkill) {
-      this.skillForm.reset();
-      this.skillForm.controls['level'].setValue(3);
-      this.skillForm.controls['category'].setValue('technical');
+      this.skillForm.reset({
+        category: 'technical',
+        level: 3
+      });
     }
   }
-
-  toggleAddCertificate(): void {
-    this.showAddCertificate = !this.showAddCertificate;
-    if (!this.showAddCertificate) {
-      this.certificateForm.reset();
+  
+  submitSkill(): void {
+    if (this.skillForm.invalid) {
+      return;
+    }
+    
+    const formValue = this.skillForm.value;
+    
+    // Map our form values to the API expected format
+    const skillToCreate: CreateSkillRequest = {
+      name: formValue.name,
+      proficiency: this.mapLevelToProficiency(formValue.level),
+      yearsExperience: formValue.yearsExperience || 0
+    };
+    
+    this.isLoading = true;
+    this.skillService.createSkill(skillToCreate).subscribe({
+      next: (newSkill) => {
+        // Add the new skill to our local array with level property
+        const skillWithLevel: SkillWithLevel = {
+          ...newSkill,
+          level: formValue.level
+        };
+        this.skills.push(skillWithLevel);
+        this.isLoading = false;
+        this.successMessage = 'Skill added successfully';
+        this.toggleAddSkill();
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Failed to add skill';
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  deleteSkill(skill: SkillWithLevel): void {
+    if (confirm(`Are you sure you want to delete the skill: ${skill.name}?`)) {
+      this.isLoading = true;
+      this.skillService.deleteSkill(skill.id).subscribe({
+        next: () => {
+          // Remove from local array
+          this.skills = this.skills.filter(s => s.id !== skill.id);
+          this.isLoading = false;
+          this.successMessage = 'Skill deleted successfully';
+        },
+        error: (error) => {
+          this.errorMessage = error.message || 'Failed to delete skill';
+          this.isLoading = false;
+        }
+      });
     }
   }
-
-  getSkillBarWidth(level: number): string {
-    // Convert the level (1-5) to a percentage width
-    return `${level * 20}%`;
+  
+  getSkillsByCategory(category: string): SkillWithLevel[] {
+    return this.skills.filter(skill => this.mapProficiencyToCategory(skill.proficiency) === category);
   }
-
+  
+  // Helper methods for skill display
+  mapProficiencyToCategory(proficiency: string): 'technical' | 'soft' | 'language' | 'tool' {
+    // This is a simplified mapping - you might want to implement a more sophisticated logic
+    // based on your actual data schema
+    switch (proficiency) {
+      case 'beginner':
+      case 'intermediate':
+        return 'technical';
+      case 'advanced':
+        return 'language';
+      case 'expert':
+        return 'tool';
+      default:
+        return 'soft';
+    }
+  }
+  
+  mapLevelToProficiency(level: number): 'beginner' | 'intermediate' | 'advanced' | 'expert' {
+    switch (level) {
+      case 1: return 'beginner';
+      case 2: return 'beginner';
+      case 3: return 'intermediate';
+      case 4: return 'advanced';
+      case 5: return 'expert';
+      default: return 'intermediate';
+    }
+  }
+  
   getSkillLevelText(level: number): string {
-    const levels = ['Beginner', 'Elementary', 'Intermediate', 'Advanced', 'Expert'];
-    return levels[level - 1] || 'Unknown';
+    switch (level) {
+      case 1: return 'Beginner';
+      case 2: return 'Elementary';
+      case 3: return 'Intermediate';
+      case 4: return 'Advanced';
+      case 5: return 'Expert';
+      default: return 'Intermediate';
+    }
   }
-
-  getSkillsByCategory(category: 'technical' | 'soft' | 'language' | 'tool'): Skill[] {
-    return this.skills.filter(skill => skill.category === category);
+  
+  getSkillBarWidth(level: number): string {
+    // Convert level (1-5) to percentage
+    const percentage = (level / 5) * 100;
+    return `${percentage}%`;
   }
-
+  
+  // Project methods
+  loadProjects(): void {
+    // This would normally connect to a project service
+    // For now, we'll use mock data
+    this.projects = [
+      {
+        id: '1',
+        title: 'Portfolio Website',
+        description: 'A personal portfolio website built with Angular and Tailwind CSS to showcase projects and skills.',
+        skills: ['Angular', 'TypeScript', 'Tailwind CSS'],
+        github: 'https://github.com/username/portfolio',
+        link: 'https://portfolio.example.com',
+        image: 'https://via.placeholder.com/600x400',
+        featured: true
+      },
+      {
+        id: '2',
+        title: 'Job Board Application',
+        description: 'A full-stack job board application with user authentication, job posting, and application tracking.',
+        skills: ['React', 'Node.js', 'Express', 'PostgreSQL'],
+        github: 'https://github.com/username/job-board',
+        image: 'https://via.placeholder.com/600x400',
+        featured: false
+      }
+    ];
+    this.filteredProjects = [...this.projects];
+  }
+  
+  toggleAddProject(): void {
+    this.showAddProject = !this.showAddProject;
+    if (!this.showAddProject) {
+      this.projectForm.reset({
+        featured: false
+      });
+    }
+  }
+  
+  submitProject(): void {
+    if (this.projectForm.invalid) {
+      return;
+    }
+    
+    const formValue = this.projectForm.value;
+    
+    // Create a new project
+    const newProject: Project = {
+      id: Date.now().toString(),
+      title: formValue.title,
+      description: formValue.description,
+      skills: formValue.skills.split(',').map((skill: string) => skill.trim()),
+      github: formValue.github,
+      link: formValue.link,
+      image: 'https://via.placeholder.com/600x400',
+      featured: formValue.featured
+    };
+    
+    // Add to local array
+    this.projects.push(newProject);
+    this.filterProjects(this.activeProjectFilter);
+    this.successMessage = 'Project added successfully';
+    this.toggleAddProject();
+  }
+  
+  deleteProject(id: string): void {
+    if (confirm('Are you sure you want to delete this project?')) {
+      this.projects = this.projects.filter(p => p.id !== id);
+      this.filterProjects(this.activeProjectFilter);
+      this.successMessage = 'Project deleted successfully';
+    }
+  }
+  
+  toggleProjectFeatured(project: Project): void {
+    project.featured = !project.featured;
+    this.successMessage = project.featured ? 
+      'Project marked as featured' : 
+      'Project removed from featured';
+  }
+  
   filterProjects(filter: string): void {
     this.activeProjectFilter = filter;
     
@@ -415,60 +378,131 @@ export class PortfolioComponent implements OnInit {
     } else if (filter === 'featured') {
       this.filteredProjects = this.projects.filter(p => p.featured);
     } else {
+      // Filter by technology
       this.filteredProjects = this.projects.filter(p => 
-        p.skills.some(skill => skill.toLowerCase().includes(filter.toLowerCase()))
+        p.skills.some(skill => skill.toLowerCase() === filter.toLowerCase())
+      );
+    }
+    
+    // Apply search filter if there's a search query
+    if (this.searchQuery) {
+      this.applySearchFilter();
+    }
+  }
+  
+  searchProjects(event: Event): void {
+    this.applySearchFilter();
+  }
+  
+  applySearchFilter(): void {
+    const query = this.searchQuery.toLowerCase().trim();
+    
+    // First apply the active tab filter
+    this.filterProjects(this.activeProjectFilter);
+    
+    // Then apply the search query filter
+    if (query) {
+      this.filteredProjects = this.filteredProjects.filter(p => 
+        p.title.toLowerCase().includes(query) || 
+        p.description.toLowerCase().includes(query) ||
+        p.skills.some(skill => skill.toLowerCase().includes(query))
       );
     }
   }
-
-  searchProjects(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.searchQuery = target.value;
-    
-    if (this.searchQuery.trim() === '') {
-      this.filterProjects(this.activeProjectFilter);
+  
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.filterProjects(this.activeProjectFilter);
+  }
+  
+  // Certificate methods
+  loadCertificates(): void {
+    // This would normally connect to a certificate service
+    // For now, we'll use mock data
+    this.certificates = [
+      {
+        id: '1',
+        name: 'Angular Developer Certification',
+        issuer: 'Google',
+        date: '2023-01-15',
+        expiry: '2025-01-15',
+        credentialId: 'CERT-12345',
+        link: 'https://example.com/cert/12345'
+      },
+      {
+        id: '2',
+        name: 'AWS Certified Developer',
+        issuer: 'Amazon Web Services',
+        date: '2022-06-10',
+        expiry: '2025-06-10',
+        credentialId: 'AWS-DEV-98765',
+        link: 'https://example.com/cert/98765'
+      }
+    ];
+  }
+  
+  toggleAddCertificate(): void {
+    this.showAddCertificate = !this.showAddCertificate;
+    if (!this.showAddCertificate) {
+      this.certificateForm.reset();
+    }
+  }
+  
+  submitCertificate(): void {
+    if (this.certificateForm.invalid) {
       return;
     }
     
-    this.filteredProjects = this.projects.filter(p => 
-      p.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-      p.skills.some(skill => skill.toLowerCase().includes(this.searchQuery.toLowerCase()))
-    );
-  }
-
-  clearSearch() {
-    this.searchQuery = '';
-    this.filteredProjects = [...this.projects];
-  }
-
-  toggleProjectFeatured(project: Project): void {
-    project.featured = !project.featured;
+    const formValue = this.certificateForm.value;
+    
+    // Create a new certificate
+    const newCertificate: Certificate = {
+      id: Date.now().toString(),
+      name: formValue.name,
+      issuer: formValue.issuer,
+      date: formValue.date,
+      expiry: formValue.expiry,
+      credentialId: formValue.credentialId,
+      link: formValue.link
+    };
+    
+    // Add to local array
+    this.certificates.push(newCertificate);
+    this.successMessage = 'Certificate added successfully';
+    this.toggleAddCertificate();
   }
   
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  deleteCertificate(id: string): void {
+    if (confirm('Are you sure you want to delete this certificate?')) {
+      this.certificates = this.certificates.filter(c => c.id !== id);
+      this.successMessage = 'Certificate deleted successfully';
+    }
   }
   
   isExpired(expiryDate?: string): boolean {
     if (!expiryDate) return false;
-    
-    const expiry = new Date(expiryDate);
-    const today = new Date();
-    
-    return today > expiry;
+    return new Date(expiryDate) < new Date();
   }
   
-  trackByProjectId(index: number, project: Project): number {
-    return project.id;
+  formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   }
   
-  trackBySkillId(index: number, skill: Skill): number | string {
-    return skill.id || skill.name;
+  // Trackers for ngFor
+  trackByProjectId(index: number, item: Project): string {
+    return item.id;
   }
   
-  trackByCertificateId(index: number, certificate: Certificate): number {
-    return certificate.id;
+  trackBySkillId(index: number, item: SkillWithLevel): number {
+    return item.id;
+  }
+  
+  trackByCertificateId(index: number, item: Certificate): string {
+    return item.id;
   }
 }

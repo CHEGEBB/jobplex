@@ -1,20 +1,18 @@
-import { Router } from 'express';
-import authController from '../controllers/auth.controller';
+// src/routes/auth.routes.ts
+import express from 'express';
+import { 
+  register, 
+  login, 
+  forgotPassword, 
+  resetPassword 
+} from '../controllers/auth.controller';
 
-const router = Router();
+const router = express.Router();
 
-/**
- * @route   POST /api/auth/register
- * @desc    Register a new user
- * @access  Public
- */
-router.post('/register', authController.register);
-
-/**
- * @route   POST /api/auth/login
- * @desc    Authenticate user & get token
- * @access  Public
- */
-router.post('/login', authController.login);
+// Public routes
+router.post('/register', register);
+router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 export default router;

@@ -21,8 +21,6 @@ import { UserManagementComponent } from './pages/admin/user-management/user-mana
 import { SecurityComponent } from './pages/admin/security/security.component';
 import { AiMonitoringComponent } from './pages/admin/ai-monitoring/ai-monitoring.component';
 import { SystemMetricsComponent } from './pages/admin/system-metrics/system-metrics.component';
-import { AuthGuard } from './services/auth.guard';
-
 
 export const routes: Routes = [
   { path: '', component: HomeComponent }, // Default route points to home

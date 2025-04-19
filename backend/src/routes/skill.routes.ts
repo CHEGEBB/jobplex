@@ -1,29 +1,26 @@
 // src/routes/skill.routes.ts
-import { Router } from 'express';
-import skillController from '../controllers/skill.controller';
-// import { authenticateToken } from '../middleware/auth.middleware';
+import express from 'express';
+import { 
+  getAllSkills, 
+  getSkillById, 
+  createSkill, 
+  updateSkill, 
+  deleteSkill,
+  getUserSkills
+} from '../controllers/skill.controller';
+import { verifyToken } from '../middleware/auth.middleware';
+import { isJobSeeker } from '../middleware/role.middleware';
 
-const router = Router();
+const router = express.Router();
 
-// All routes require authentication
-// router.use(authenticateToken);
+// Public routes
+router.get('/', getAllSkills);
+router.get('/:id', getSkillById);
 
-// Get all skills for the authenticated user
-router.get('/', skillController.getUserSkills);
-
-// Get skills by category
-router.get('/category/:category', skillController.getUserSkillsByCategory);
-
-// Get a specific skill by ID
-router.get('/:id', skillController.getSkillById);
-
-// Create a new skill
-router.post('/', skillController.createSkill);
-
-// Update an existing skill
-router.put('/:id', skillController.updateSkill);
-
-// Delete a skill
-router.delete('/:id', skillController.deleteSkill);
+// Protected routes for job seekers
+router.get('/user/me', verifyToken, isJobSeeker, getUserSkills);
+router.post('/', verifyToken, isJobSeeker, createSkill);
+router.put('/:id', verifyToken, isJobSeeker, updateSkill);
+router.delete('/:id', verifyToken, isJobSeeker, deleteSkill);
 
 export default router;
