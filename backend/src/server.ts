@@ -25,7 +25,7 @@ app.use(helmet());
 app.use(morgan('dev'));
 
 app.use(cors({
-  origin: 'http://jobplex-frontend.s3-website-us-east-1.amazonaws.com',
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
