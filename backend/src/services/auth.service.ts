@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { pool } from '../config/db.config';
+import pool from '../config/db.config';
 import { IUser, UserRole, IUserResponse } from '../interfaces/user.interface';
 
 import { Secret } from 'jsonwebtoken';

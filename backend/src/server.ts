@@ -3,7 +3,6 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { testConnection } from './config/db.config';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
 // Import routes
@@ -25,8 +24,11 @@ app.use(express.json());
 app.use(helmet());
 app.use(morgan('dev'));
 
-// Test database connection
-testConnection();
+app.use(cors({
+  origin: 'http://jobplex-frontend.s3-website-us-east-1.amazonaws.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
