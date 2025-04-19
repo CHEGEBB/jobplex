@@ -1,12 +1,12 @@
 // src/routes/skill.routes.ts
 import { Router } from 'express';
 import skillController from '../controllers/skill.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
+// import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
 // All routes require authentication
-router.use(authenticateToken);
+// router.use(authenticateToken);
 
 // Get all skills for the authenticated user
 router.get('/', skillController.getUserSkills);
