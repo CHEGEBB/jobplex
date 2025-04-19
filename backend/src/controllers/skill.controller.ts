@@ -10,7 +10,7 @@ export const getAllSkills = async (req: Request, res: Response) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching skills:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
   }
 };
 
@@ -28,29 +28,38 @@ export const getSkillById = async (req: Request, res: Response) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error fetching skill:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
   }
 };
 
 // Create new skill (job seeker only)
 export const createSkill = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  const { name, proficiency, yearsExperience }: CreateSkillRequest = req.body;
-  
-  // Validate required fields
-  if (!name || !proficiency) {
-    return res.status(400).json({ message: 'Name and proficiency are required' });
-  }
-  
-  // Validate proficiency value
-  const validProficiencies = ['beginner', 'intermediate', 'advanced', 'expert'];
-  if (!validProficiencies.includes(proficiency)) {
-    return res.status(400).json({ 
-      message: `Proficiency must be one of: ${validProficiencies.join(', ')}` 
-    });
-  }
-  
   try {
+    const userId = req.user?.id;
+    
+    // Check if user ID exists
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated or missing ID' });
+    }
+    
+    const { name, proficiency, yearsExperience }: CreateSkillRequest = req.body;
+    
+    // Log the request data for debugging
+    console.log('Create skill request:', { userId, name, proficiency, yearsExperience });
+    
+    // Validate required fields
+    if (!name || !proficiency) {
+      return res.status(400).json({ message: 'Name and proficiency are required' });
+    }
+    
+    // Validate proficiency value
+    const validProficiencies = ['beginner', 'intermediate', 'advanced', 'expert'];
+    if (!validProficiencies.includes(proficiency)) {
+      return res.status(400).json({ 
+        message: `Proficiency must be one of: ${validProficiencies.join(', ')}` 
+      });
+    }
+    
     // Check if skill with same name already exists for this user
     const existingSkill = await pool.query(
       'SELECT * FROM skills WHERE user_id = $1 AND LOWER(name) = LOWER($2)',
@@ -59,20 +68,36 @@ export const createSkill = async (req: Request, res: Response) => {
     
     if (existingSkill.rows.length > 0) {
       return res.status(409).json({ 
-        message: 'You already have a skill with this name'
+        message: 'You already have a skill with this name' 
       });
     }
     
-    // Insert new skill
-    const result = await pool.query(
-      'INSERT INTO skills (user_id, name, proficiency, years_experience) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, name, proficiency, yearsExperience || null]
-    );
-    
-    res.status(201).json(result.rows[0]);
+    // Insert new skill with proper error handling
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      const result = await client.query(
+        'INSERT INTO skills (user_id, name, proficiency, years_experience) VALUES ($1, $2, $3, $4) RETURNING *',
+        [userId, name, proficiency, yearsExperience || null]
+      );
+      
+      await client.query('COMMIT');
+      res.status(201).json(result.rows[0]);
+    } catch (insertError) {
+      await client.query('ROLLBACK');
+      console.error('Database error when creating skill:', insertError);
+      throw insertError; // This will be caught by the outer try-catch
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error('Error creating skill:', error);
-    res.status(500).json({ message: 'Server error' });
+    // More detailed error response
+    res.status(500).json({ 
+      message: 'Server error',
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 };
 
@@ -80,6 +105,11 @@ export const createSkill = async (req: Request, res: Response) => {
 export const updateSkill = async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = req.user?.id;
+  
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated or missing ID' });
+  }
+  
   const { name, proficiency, yearsExperience }: UpdateSkillRequest = req.body;
   
   // Validate that at least one field is being updated
@@ -139,7 +169,7 @@ export const updateSkill = async (req: Request, res: Response) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating skill:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
   }
 };
 
@@ -147,6 +177,10 @@ export const updateSkill = async (req: Request, res: Response) => {
 export const deleteSkill = async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = req.user?.id;
+  
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated or missing ID' });
+  }
   
   try {
     // Check if skill exists and belongs to the user
@@ -169,13 +203,17 @@ export const deleteSkill = async (req: Request, res: Response) => {
     res.json({ message: 'Skill deleted successfully' });
   } catch (error) {
     console.error('Error deleting skill:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
   }
 };
 
 // Get skills for current user (job seeker only)
 export const getUserSkills = async (req: Request, res: Response) => {
   const userId = req.user?.id;
+  
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated or missing ID' });
+  }
   
   try {
     const result = await pool.query(
@@ -186,6 +224,6 @@ export const getUserSkills = async (req: Request, res: Response) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching user skills:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
   }
 };
