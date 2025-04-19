@@ -1,7 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
+import { AuthService } from './auth.service'; // Import AuthService
 
 export interface Skill {
   id: number;
@@ -25,39 +26,51 @@ export interface CreateSkillRequest {
 export class SkillService {
   private readonly API_URL = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService // Inject AuthService
+  ) { }
+
+  // Helper method to get headers with auth token
+  private getAuthHeaders() {
+    const token = this.authService.token;
+    return {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      })
+    };
+  }
 
   getAllSkills(): Observable<Skill[]> {
-    return this.http.get<Skill[]>(`${this.API_URL}/skills`);
+    return this.http.get<Skill[]>(`${this.API_URL}/skills`, this.getAuthHeaders());
   }
 
   getSkillById(id: number): Observable<Skill> {
-    return this.http.get<Skill>(`${this.API_URL}/skills/${id}`);
+    return this.http.get<Skill>(`${this.API_URL}/skills/${id}`, this.getAuthHeaders());
   }
 
   createSkill(skill: CreateSkillRequest): Observable<Skill> {
-    return this.http.post<Skill>(`${this.API_URL}/skills`, skill);
+    return this.http.post<Skill>(`${this.API_URL}/skills`, skill, this.getAuthHeaders());
   }
 
   updateSkill(id: number, skill: Partial<CreateSkillRequest>): Observable<Skill> {
-    return this.http.put<Skill>(`${this.API_URL}/skills/${id}`, skill);
+    return this.http.put<Skill>(`${this.API_URL}/skills/${id}`, skill, this.getAuthHeaders());
   }
 
   deleteSkill(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/skills/${id}`);
+    return this.http.delete<void>(`${this.API_URL}/skills/${id}`, this.getAuthHeaders());
   }
 
   getMySkills(): Observable<Skill[]> {
-    return this.http.get<Skill[]>(`${this.API_URL}/skills/my-skills`);
+    return this.http.get<Skill[]>(`${this.API_URL}/skills/my-skills`, this.getAuthHeaders());
   }
 
-  // This is useful for extracting skills from uploaded resume or job descriptions
   extractSkillsFromText(text: string): Observable<string[]> {
-    return this.http.post<string[]>(`${this.API_URL}/skills/extract`, { text });
+    return this.http.post<string[]>(`${this.API_URL}/skills/extract`, { text }, this.getAuthHeaders());
   }
 
-  // For skill recommendations based on user profile or job requirements
   getSkillRecommendations(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.API_URL}/skills/recommendations`);
+    return this.http.get<string[]>(`${this.API_URL}/skills/recommendations`, this.getAuthHeaders());
   }
 }

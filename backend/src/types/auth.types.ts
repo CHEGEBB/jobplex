@@ -13,7 +13,7 @@ export interface UserPayload {
   export interface RegisterRequest {
     email: string;
     password: string;
-    role: 'job_seeker' | 'employer';
+    role: 'jobseeker' | 'employer';
     firstName: string;
     lastName: string;
   }

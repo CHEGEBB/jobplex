@@ -10,7 +10,7 @@ export const register = async (req: Request, res: Response):Promise<void> => {
   const { email, password, role, firstName, lastName }: RegisterRequest = req.body;
   
   // Validate input
-  if (!email || !password || !role || !['job_seeker', 'employer'].includes(role)) {
+  if (!email || !password || !role || !['jobseeker', 'employer'].includes(role)) {
     res.status(400).json({ message: 'Invalid input data' });
     return;
   }
@@ -42,9 +42,9 @@ export const register = async (req: Request, res: Response):Promise<void> => {
       const user = userResult.rows[0];
       
       // Create respective profile based on role
-      if (role === 'job_seeker') {
+      if (role === 'jobseeker') {
         await client.query(
-          'INSERT INTO job_seeker_profiles (user_id) VALUES ($1)',
+          'INSERT INTO jobseeker_profiles (user_id) VALUES ($1)',
           [user.id]
         );
       } else if (role === 'employer') {
