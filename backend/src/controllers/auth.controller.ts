@@ -1,12 +1,21 @@
 // src/controllers/auth.controller.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import dotenv from 'dotenv';
 import pool from '../config/db.config';
 import { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth.types';
 
+// Load environment variables to ensure they're available
+dotenv.config();
+
+// Get JWT configuration with fallbacks
+const JWT_SECRET = process.env.JWT_SECRET || 'default_secret_key_please_change_in_production';
+// Define the JWT expiration value properly typed for SignOptions
+const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '24h';
+
 // Register new user
-export const register = async (req: Request, res: Response):Promise<void> => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   const { email, password, role, firstName, lastName }: RegisterRequest = req.body;
   
   // Validate input
@@ -15,13 +24,12 @@ export const register = async (req: Request, res: Response):Promise<void> => {
     return;
   }
 
-
   try {
     // Check if user already exists
     const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userCheck.rows.length > 0) {
-       res.status(409).json({ message: 'User already exists with this email' });
-       return;
+      res.status(409).json({ message: 'User already exists with this email' });
+      return;
     }
 
     // Hash password
@@ -56,11 +64,11 @@ export const register = async (req: Request, res: Response):Promise<void> => {
       
       await client.query('COMMIT');
       
-      // Generate JWT token
+      // Generate JWT token with explicit type handling
       const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
-        process.env.JWT_SECRET || 'default_secret',
-        { expiresIn: parseInt(process.env.JWT_EXPIRATION || '86400', 10) } // Convert to number if necessary
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRATION as any }  // Force type casting to resolve the type issue
       );
       
       res.status(201).json({
@@ -87,11 +95,12 @@ export const register = async (req: Request, res: Response):Promise<void> => {
 };
 
 // Login user
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   const { email, password }: LoginRequest = req.body;
   
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' });
+    res.status(400).json({ message: 'Email and password are required' });
+    return;
   }
 
   try {
@@ -102,7 +111,8 @@ export const login = async (req: Request, res: Response) => {
     );
     
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
     }
     
     const user = result.rows[0];
@@ -111,14 +121,15 @@ export const login = async (req: Request, res: Response) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
     }
     
-    // Generate JWT token
+    // Generate JWT token with type casting to resolve the issue
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'default_secret',
-      { expiresIn: process.env.JWT_EXPIRATION ? parseInt(process.env.JWT_EXPIRATION, 10) : '24h' }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRATION as any }  // Force type casting
     );
     
     res.json({
@@ -139,11 +150,12 @@ export const login = async (req: Request, res: Response) => {
 };
 
 // Forgot password
-export const forgotPassword = async (req: Request, res: Response) => {
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
   const { email }: ForgotPasswordRequest = req.body;
   
   if (!email) {
-    return res.status(400).json({ message: 'Email is required' });
+    res.status(400).json({ message: 'Email is required' });
+    return;
   }
 
   try {
@@ -152,16 +164,17 @@ export const forgotPassword = async (req: Request, res: Response) => {
     
     if (result.rows.length === 0) {
       // For security reasons, don't reveal that the email doesn't exist
-      return res.status(200).json({ message: 'If your email exists in our system, a password reset link will be sent' });
+      res.status(200).json({ message: 'If your email exists in our system, a password reset link will be sent' });
+      return;
     }
     
     const user = result.rows[0];
     
-    // Generate reset token
+    // Generate reset token with proper typing
     const resetToken = jwt.sign(
       { id: user.id, email: user.email, purpose: 'reset_password' },
-      process.env.JWT_SECRET || 'default_secret',
-      { expiresIn: '1h' }
+      JWT_SECRET,
+      { expiresIn: '1h' as any }  // Type casting for consistency
     );
     
     // Store token in database (in a real app, you would have a password_resets table)
@@ -178,19 +191,27 @@ export const forgotPassword = async (req: Request, res: Response) => {
 };
 
 // Reset password
-export const resetPassword = async (req: Request, res: Response) => {
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
   const { token, password }: ResetPasswordRequest = req.body;
   
   if (!token || !password) {
-    return res.status(400).json({ message: 'Token and password are required' });
+    res.status(400).json({ message: 'Token and password are required' });
+    return;
   }
 
   try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret') as { id: number; email: string; purpose: string };
+    // Verify token with proper type assertion
+    interface TokenPayload {
+      id: number;
+      email: string;
+      purpose: string;
+    }
+    
+    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
     
     if (decoded.purpose !== 'reset_password') {
-      return res.status(400).json({ message: 'Invalid token' });
+      res.status(400).json({ message: 'Invalid token' });
+      return;
     }
     
     // Hash new password
@@ -208,7 +229,8 @@ export const resetPassword = async (req: Request, res: Response) => {
     console.error('Reset password error:', error);
     
     if ((error as Error).name === 'JsonWebTokenError' || (error as Error).name === 'TokenExpiredError') {
-      return res.status(400).json({ message: 'Invalid or expired token' });
+      res.status(400).json({ message: 'Invalid or expired token' });
+      return;
     }
     
     res.status(500).json({ message: 'Server error resetting password' });
