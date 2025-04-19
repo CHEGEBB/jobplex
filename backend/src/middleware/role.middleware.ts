@@ -1,37 +1,52 @@
 // src/middleware/role.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 
+// Middleware to check if user is a jobseeker
 export const isJobSeeker = (req: Request, res: Response, next: NextFunction) => {
-  if (req.user && req.user.role === 'jobseeker') {
-    return next();
+  // Check if user object exists (should be set by verifyToken middleware)
+  if (!req.user) {
+    return res.status(401).json({ message: 'Authentication required' });
   }
-  return res.status(403).json({ message: 'Requires job seeker role' });
+  
+  console.log('User role check:', req.user.role);
+  
+  // Check if user role is jobseeker
+  if (req.user.role !== 'jobseeker') {
+    return res.status(403).json({ message: 'Access denied. Only job seekers can perform this action.' });
+  }
+  
+  // User is a jobseeker, proceed to next middleware/controller
+  next();
 };
 
+// Middleware to check if user is an employer
 export const isEmployer = (req: Request, res: Response, next: NextFunction) => {
-  if (req.user && req.user.role === 'employer') {
-    return next();
+  // Check if user object exists
+  if (!req.user) {
+    return res.status(401).json({ message: 'Authentication required' });
   }
-  return res.status(403).json({ message: 'Requires employer role' });
+  
+  // Check if user role is employer
+  if (req.user.role !== 'employer') {
+    return res.status(403).json({ message: 'Access denied. Only employers can perform this action.' });
+  }
+  
+  // User is an employer, proceed to next middleware/controller
+  next();
 };
 
+// Middleware to check if user is an admin
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (req.user && req.user.role === 'admin') {
-    return next();
+  // Check if user object exists
+  if (!req.user) {
+    return res.status(401).json({ message: 'Authentication required' });
   }
-  return res.status(403).json({ message: 'Requires admin role' });
-};
-
-export const isOwnerOrAdmin = (resourceOwnerId: string) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-    
-    if (req.user.role === 'admin' || req.user.id === parseInt(resourceOwnerId)) {
-      return next();
-    }
-    
-    return res.status(403).json({ message: 'Unauthorized: You must be the owner or an admin' });
-  };
+  
+  // Check if user role is admin
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied. Only admins can perform this action.' });
+  }
+  
+  // User is an admin, proceed to next middleware/controller
+  next();
 };

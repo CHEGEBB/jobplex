@@ -28,12 +28,13 @@ export class SkillService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService // Inject AuthService
+    private authService: AuthService
   ) { }
 
   // Helper method to get headers with auth token
   private getAuthHeaders() {
     const token = this.authService.token;
+    console.log('Using token for request:', token ? 'Token exists' : 'No token');
     return {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
@@ -43,16 +44,16 @@ export class SkillService {
   }
 
   getAllSkills(): Observable<Skill[]> {
-    return this.http.get<Skill[]>(`${this.API_URL}/skills`, this.getAuthHeaders());
+    return this.http.get<Skill[]>(`${this.API_URL}/skills`);
   }
 
   getSkillById(id: number): Observable<Skill> {
-    return this.http.get<Skill>(`${this.API_URL}/skills/${id}`, this.getAuthHeaders());
+    return this.http.get<Skill>(`${this.API_URL}/skills/${id}`);
   }
 
   createSkill(skill: CreateSkillRequest): Observable<Skill> {
     console.log('Before skill creation, token:', this.authService.token);
-console.log('Before skill creation, user role:', this.authService.getUserRole());
+    console.log('Before skill creation, user role:', this.authService.getUserRole());
     return this.http.post<Skill>(`${this.API_URL}/skills`, skill, this.getAuthHeaders());
   }
 
