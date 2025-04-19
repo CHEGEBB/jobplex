@@ -1,4 +1,4 @@
-import { pool } from '../config/db.config';
+import pool from '../config/db.config';
 import { IUser, IUserResponse } from '../interfaces/user.interface';
 import bcrypt from 'bcrypt';
 

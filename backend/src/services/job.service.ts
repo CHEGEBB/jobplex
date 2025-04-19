@@ -1,4 +1,4 @@
-import { pool } from '../config/db.config';
+import pool from '../config/db.config';
 import { IJob, IJobWithSkills } from '../interfaces/job.interface';
 
 class JobService {
