@@ -17,7 +17,7 @@ export interface Skill {
   providedIn: 'root'
 })
 export class SkillService {
-  private apiUrl = environment.apiUrl + '/api/skills';
+  private apiUrl = environment.apiUrl + '/skills';
 
   constructor(private http: HttpClient) {}
 
