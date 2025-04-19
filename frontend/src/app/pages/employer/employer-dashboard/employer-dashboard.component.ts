@@ -62,7 +62,7 @@ export class EmployerDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     // Get current user from AuthService
-    this.currentUser = this.authService.getCurrentUser();
+    this.currentUser = this.authService.currentUserValue;
     
     if (this.currentUser) {
       // Set employer name from user data

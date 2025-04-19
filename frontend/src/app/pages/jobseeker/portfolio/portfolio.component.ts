@@ -7,6 +7,7 @@ import { PortfolioService, Skill, Project, Certificate } from '../../../services
 
 interface SkillWithLevel extends Skill {
   level: number;
+  yearsExperience?: number; 
 }
 
 @Component({
@@ -124,7 +125,8 @@ export class PortfolioComponent implements OnInit {
       next: (data) => {
         this.skills = data.map(skill => ({
           ...skill,
-          level: this.calculateLevelFromProficiency(skill.proficiency)
+          level: this.calculateLevelFromProficiency(skill.proficiency),
+          yearsExperience: skill.years_experience // Map snake_case to camelCase
         }));
         this.isLoading = false;
       },
@@ -173,6 +175,23 @@ export class PortfolioComponent implements OnInit {
     }
   }
 
+  // Add to portfolio.component.ts
+searchProjects(event: any): void {
+  // Implementation to search projects based on event input
+  const searchTerm = event.target.value.toLowerCase();
+  // Add your search logic here
+}
+
+clearSearch(): void {
+  // Implementation to clear search
+  // Reset search field and show all projects
+}
+
+toggleProjectFeatured(project: any): void {
+  // Implementation to toggle a project's featured status
+  project.featured = !project.featured;
+  // Save changes to database/service
+}
   // Projects Methods
   loadProjects(): void {
     this.isLoading = true;
@@ -348,6 +367,12 @@ export class PortfolioComponent implements OnInit {
   getSkillBarWidth(level: number): string {
     return `${(level / 5) * 100}%`;
   }
+  getSkillsByCategory(category: string): SkillWithLevel[] {
+    return this.skills.filter(skill => 
+      this.mapProficiencyToCategory(skill.proficiency) === category
+    );
+  }
+  
 
   filterProjects(filter: string): void {
     this.activeProjectFilter = filter;
