@@ -75,4 +75,4 @@ const testConnection = async (): Promise<void> => {
   }
 };
 
-export { pool, testConnection };
+export default pool;

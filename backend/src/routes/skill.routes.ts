@@ -1,50 +1,29 @@
+// src/routes/skill.routes.ts
 import { Router } from 'express';
 import skillController from '../controllers/skill.controller';
-import { authenticateToken, authorizeRoles } from '../middleware/auth.middleware';
-import { UserRole } from '../interfaces/user.interface';
+import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
-/**
- * @route   POST /api/skills
- * @desc    Create a new skill
- */
-// Modified route in skill.routes.ts
-router.post('/', authenticateToken, authorizeRoles( UserRole.JOBSEEKER), skillController.createSkill);
+// All routes require authentication
+router.use(authenticateToken);
 
-/**
- * @route   GET /api/skills
- * @desc    Get all skills
- * @access  Public
- */
-router.get('/', skillController.getAllSkills);
+// Get all skills for the authenticated user
+router.get('/', skillController.getUserSkills);
 
-/**
- * @route   GET /api/skills/:id
- * @desc    Get skill by ID
- * @access  Public
- */
+// Get skills by category
+router.get('/category/:category', skillController.getUserSkillsByCategory);
+
+// Get a specific skill by ID
 router.get('/:id', skillController.getSkillById);
 
-/**
- * @route   POST /api/skills/user
- * @desc    Add a skill to current user
- * @access  Private
- */
-router.post('/user', authenticateToken, skillController.addUserSkill);
+// Create a new skill
+router.post('/', skillController.createSkill);
 
-/**
- * @route   GET /api/skills/user/:userId
- * @desc    Get skills for a specific user
- * @access  Public
- */
-router.get('/user/:userId', skillController.getUserSkills);
+// Update an existing skill
+router.put('/:id', skillController.updateSkill);
 
-/**
- * @route   DELETE /api/skills/user/:skillId
- * @desc    Remove a skill from current user
- * @access  Private
- */
-router.delete('/user/:skillId', authenticateToken, skillController.removeUserSkill);
+// Delete a skill
+router.delete('/:id', skillController.deleteSkill);
 
 export default router;

@@ -1,161 +1,159 @@
-import { pool } from '../config/db.config';
-import { ISkill, IUserSkill } from '../interfaces/skill.interface';
+// src/services/skill.service.ts
+import { Pool } from 'pg';
+import { Skill, SkillCreateDTO, SkillUpdateDTO } from '../interfaces/skill.interface';
+import pool from '../config/db.config';
 
-class SkillService {
-  async createSkill(skillData: ISkill): Promise<ISkill> {
-    // Check if skill already exists
-    const existingSkill = await pool.query(
-      'SELECT * FROM skills WHERE name = $1',
-      [skillData.name]
-    );
+export class SkillService {
+  private db: Pool;
 
-    if (existingSkill.rowCount && existingSkill.rowCount > 0) {
-      throw { statusCode: 400, message: 'Skill already exists' };
+  constructor() {
+    this.db = pool;
+  }
+
+  /**
+   * Get all skills for a specific user
+   */
+  async getUserSkills(userId: number): Promise<Skill[]> {
+    const query = `
+      SELECT id, name, level, category, years_experience as "yearsExperience", 
+             created_at as "createdAt", updated_at as "updatedAt"
+      FROM skills 
+      WHERE user_id = $1
+      ORDER BY category, name
+    `;
+    
+    const { rows } = await this.db.query(query, [userId]);
+    return rows;
+  }
+
+  /**
+   * Get skills by category for a specific user
+   */
+  async getUserSkillsByCategory(userId: number, category: string): Promise<Skill[]> {
+    const query = `
+      SELECT id, name, level, category, years_experience as "yearsExperience", 
+             created_at as "createdAt", updated_at as "updatedAt"
+      FROM skills 
+      WHERE user_id = $1 AND category = $2
+      ORDER BY name
+    `;
+    
+    const { rows } = await this.db.query(query, [userId, category]);
+    return rows;
+  }
+
+  /**
+   * Get a specific skill by ID
+   */
+  async getSkillById(skillId: number): Promise<Skill | null> {
+    const query = `
+      SELECT id, name, level, category, years_experience as "yearsExperience", 
+             user_id as "userId", created_at as "createdAt", updated_at as "updatedAt"
+      FROM skills 
+      WHERE id = $1
+    `;
+    
+    const { rows } = await this.db.query(query, [skillId]);
+    return rows.length ? rows[0] : null;
+  }
+
+  /**
+   * Create a new skill for a user
+   */
+  async createSkill(userId: number, skillData: SkillCreateDTO): Promise<Skill> {
+    const query = `
+      INSERT INTO skills (name, level, category, years_experience, user_id)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, name, level, category, years_experience as "yearsExperience", 
+               user_id as "userId", created_at as "createdAt", updated_at as "updatedAt"
+    `;
+    
+    const values = [
+      skillData.name,
+      skillData.level,
+      skillData.category,
+      skillData.yearsExperience || null,
+      userId
+    ];
+    
+    const { rows } = await this.db.query(query, values);
+    return rows[0];
+  }
+
+  /**
+   * Update an existing skill
+   */
+  async updateSkill(skillId: number, userId: number, skillData: SkillUpdateDTO): Promise<Skill | null> {
+    // First check if skill exists and belongs to the user
+    const skill = await this.getSkillById(skillId);
+    if (!skill || skill.userId !== userId) {
+      return null;
     }
-
-    // Create new skill
-    const result = await pool.query(
-      `INSERT INTO skills (name, category, created_at, updated_at) 
-       VALUES ($1, $2, NOW(), NOW()) 
-       RETURNING *`,
-      [skillData.name, skillData.category]
-    );
-
-    const skill = result.rows[0];
-    return {
-      id: skill.id,
-      name: skill.name,
-      category: skill.category,
-      createdAt: skill.created_at,
-      updatedAt: skill.updated_at
-    };
-  }
-
-  async getAllSkills(): Promise<ISkill[]> {
-    const result = await pool.query(
-      'SELECT * FROM skills ORDER BY category, name'
-    );
-
-    return result.rows.map(skill => ({
-      id: skill.id,
-      name: skill.name,
-      category: skill.category,
-      createdAt: skill.created_at,
-      updatedAt: skill.updated_at
-    }));
-  }
-
-  async getSkillById(id: number): Promise<ISkill> {
-    const result = await pool.query(
-      'SELECT * FROM skills WHERE id = $1',
-      [id]
-    );
-
-    if (result.rowCount === 0) {
-      throw { statusCode: 404, message: 'Skill not found' };
+    
+    // Build the SET clause dynamically based on provided fields
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+    
+    if (skillData.name !== undefined) {
+      updates.push(`name = $${paramIndex++}`);
+      values.push(skillData.name);
     }
-
-    const skill = result.rows[0];
-    return {
-      id: skill.id,
-      name: skill.name,
-      category: skill.category,
-      createdAt: skill.created_at,
-      updatedAt: skill.updated_at
-    };
-  }
-
-  async addUserSkill(userSkillData: IUserSkill): Promise<IUserSkill> {
-    // Check if user already has this skill
-    const existingUserSkill = await pool.query(
-      'SELECT * FROM user_skills WHERE user_id = $1 AND skill_id = $2',
-      [userSkillData.userId, userSkillData.skillId]
-    );
-
-    if (existingUserSkill.rowCount && existingUserSkill.rowCount > 0) {
-      // Update existing user skill
-      const result = await pool.query(
-        `UPDATE user_skills 
-         SET proficiency_level = $1, years_of_experience = $2, updated_at = NOW() 
-         WHERE user_id = $3 AND skill_id = $4 
-         RETURNING *`,
-        [
-          userSkillData.proficiencyLevel,
-          userSkillData.yearsOfExperience || null,
-          userSkillData.userId,
-          userSkillData.skillId
-        ]
-      );
-
-      const userSkill = result.rows[0];
-      return {
-        id: userSkill.id,
-        userId: userSkill.user_id,
-        skillId: userSkill.skill_id,
-        proficiencyLevel: userSkill.proficiency_level,
-        yearsOfExperience: userSkill.years_of_experience,
-        createdAt: userSkill.created_at,
-        updatedAt: userSkill.updated_at
-      };
-    } else {
-      // Create new user skill
-      const result = await pool.query(
-        `INSERT INTO user_skills (user_id, skill_id, proficiency_level, years_of_experience, created_at, updated_at) 
-         VALUES ($1, $2, $3, $4, NOW(), NOW()) 
-         RETURNING *`,
-        [
-          userSkillData.userId,
-          userSkillData.skillId,
-          userSkillData.proficiencyLevel,
-          userSkillData.yearsOfExperience || null
-        ]
-      );
-
-      const userSkill = result.rows[0];
-      return {
-        id: userSkill.id,
-        userId: userSkill.user_id,
-        skillId: userSkill.skill_id,
-        proficiencyLevel: userSkill.proficiency_level,
-        yearsOfExperience: userSkill.years_of_experience,
-        createdAt: userSkill.created_at,
-        updatedAt: userSkill.updated_at
-      };
+    
+    if (skillData.level !== undefined) {
+      updates.push(`level = $${paramIndex++}`);
+      values.push(skillData.level);
     }
-  }
-
-  async getUserSkills(userId: number): Promise<Array<IUserSkill & { skillName: string; category: string }>> {
-    const result = await pool.query(
-      `SELECT us.*, s.name as skill_name, s.category 
-       FROM user_skills us 
-       JOIN skills s ON us.skill_id = s.id 
-       WHERE us.user_id = $1 
-       ORDER BY us.proficiency_level DESC`,
-      [userId]
-    );
-
-    return result.rows.map(row => ({
-      id: row.id,
-      userId: row.user_id,
-      skillId: row.skill_id,
-      proficiencyLevel: row.proficiency_level,
-      yearsOfExperience: row.years_of_experience,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      skillName: row.skill_name,
-      category: row.category
-    }));
-  }
-
-  async removeUserSkill(userId: number, skillId: number): Promise<void> {
-    const result = await pool.query(
-      'DELETE FROM user_skills WHERE user_id = $1 AND skill_id = $2',
-      [userId, skillId]
-    );
-
-    if (result.rowCount === 0) {
-      throw { statusCode: 404, message: 'User skill not found' };
+    
+    if (skillData.category !== undefined) {
+      updates.push(`category = $${paramIndex++}`);
+      values.push(skillData.category);
     }
+    
+    if (skillData.yearsExperience !== undefined) {
+      updates.push(`years_experience = $${paramIndex++}`);
+      values.push(skillData.yearsExperience);
+    }
+    
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    
+    // Add skill ID and user ID to values array
+    values.push(skillId);
+    values.push(userId);
+    
+    const query = `
+      UPDATE skills
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex++} AND user_id = $${paramIndex++}
+      RETURNING id, name, level, category, years_experience as "yearsExperience", 
+                user_id as "userId", created_at as "createdAt", updated_at as "updatedAt"
+    `;
+    
+    const { rows } = await this.db.query(query, values);
+    return rows.length ? rows[0] : null;
+  }
+
+  /**
+   * Delete a skill
+   */
+  async deleteSkill(skillId: number, userId: number): Promise<boolean> {
+    const query = `
+      DELETE FROM skills
+      WHERE id = $1 AND user_id = $2
+      RETURNING id
+    `;
+    
+    const { rowCount } = await this.db.query(query, [skillId, userId]);
+    return (rowCount ?? 0) > 0;
+  }
+
+  /**
+   * Check if a user owns a specific skill
+   */
+  async isUserSkill(skillId: number, userId: number): Promise<boolean> {
+    const query = 'SELECT id FROM skills WHERE id = $1 AND user_id = $2';
+    const { rowCount } = await this.db.query(query, [skillId, userId]);
+    return (rowCount ?? 0) > 0;
   }
 }
 
