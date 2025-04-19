@@ -219,29 +219,30 @@ export class PortfolioComponent implements OnInit {
         yearsExperience: this.skillForm.value.yearsExperience || undefined
       };
       
-      this.skillService.createAndAddUserSkill(newSkill)
+      console.log('Creating skill with data:', newSkill);
+      
+      this.skillService.createSkill(newSkill)
         .pipe(
           finalize(() => {
             this.isLoading = false;
-            this.toggleAddSkill();
           })
         )
         .subscribe({
           next: (skill) => {
-            // Add skill to the local array with the server-assigned ID
             this.skills.push(skill);
             this.updateSkillCounts();
             this.successMessage = 'Skill added successfully!';
             console.log("Skill added successfully", skill);
+            this.toggleAddSkill(); // Only hide the form on success
           },
           error: (error) => {
             console.error('Error adding skill:', error);
-            this.errorMessage = error.message || 'Failed to add skill. Please try again.';
+            this.errorMessage = 'Failed to add skill: ' + (error.message || 'Unknown error');
+            // Don't close the form so user can try again
           }
         });
     }
   }
-
   deleteSkill(skillToDelete: Skill): void {
     if (confirm('Are you sure you want to delete this skill?')) {
       if (!skillToDelete.id) {
