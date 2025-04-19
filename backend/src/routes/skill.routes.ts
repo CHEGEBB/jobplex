@@ -8,9 +8,9 @@ const router = Router();
 /**
  * @route   POST /api/skills
  * @desc    Create a new skill
- * @access  Private/Admin
  */
-router.post('/', authenticateToken, authorizeRoles(UserRole.ADMIN), skillController.createSkill);
+// Modified route in skill.routes.ts
+router.post('/', authenticateToken, authorizeRoles( UserRole.JOBSEEKER), skillController.createSkill);
 
 /**
  * @route   GET /api/skills
