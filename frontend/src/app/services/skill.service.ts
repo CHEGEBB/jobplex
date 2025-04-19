@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
-import { AuthService } from './auth.service'; // Import AuthService
+import { AuthService } from './auth.service';
 
 export interface Skill {
   id: number;
