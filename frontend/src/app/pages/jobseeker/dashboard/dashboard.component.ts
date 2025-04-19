@@ -1,10 +1,11 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
-import { AuthService } from '../../../services/auth.service';
-import { User } from '../../../interfaces/auth.interface';
+import { AuthService, User } from '../../../services/auth.service';
+import { Subject, takeUntil } from 'rxjs';
 
+// Interfaces
 interface JobApplication {
   id: number;
   company: string;
@@ -43,43 +44,42 @@ interface Skill {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   sidebarCollapsed = false;
   searchQuery = '';
   showProfileMenu = false;
   currentUser: User | null = null;
-  
-  // Use a generated profile image with user's initials if no profile image exists
-  profileInitials: string = '';
-  
+  profileInitials = '';
+
   profileData = {
     name: '',
     profileViews: 1240,
     applications: 45,
     interviews: 12,
     savedJobs: 28,
-    image: ''
+    image: 'assets/ana.jpg' // Default fallback image
   };
-  
+
+  // Sample data arrays (keep your existing data)
   skillsProgress: Skill[] = [
     { name: 'UI Design', percentage: 85 },
     { name: 'UX Research', percentage: 70 },
     { name: 'Prototyping', percentage: 90 },
     { name: 'User Testing', percentage: 65 }
   ];
-  
+
   recentActivity: ActivityItem[] = [
     { id: 1, company: 'Google', type: 'View', time: '2 hours ago', logo: 'google.svg' },
     { id: 2, company: 'Microsoft', type: 'Application', time: '1 day ago', logo: 'microsoft.svg' },
     { id: 3, company: 'Apple', type: 'Interview', time: '2 days ago', logo: 'apple.svg' }
   ];
-  
+
   bestJobMatches: JobMatch[] = [
     { id: 1, position: 'Senior UX Designer', company: 'Figma', matchPercentage: 95 },
     { id: 2, position: 'Product Designer', company: 'Adobe', matchPercentage: 89 },
     { id: 3, position: 'UI Engineer', company: 'Google', matchPercentage: 82 }
   ];
-  
   recentApplications: JobApplication[] = [
     { 
       id: 1, 
@@ -173,116 +173,99 @@ export class DashboardComponent implements OnInit {
     }
   ];
 
+  
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
-  ngOnInit() {
-    // Check screen size for responsive sidebar
+  ngOnInit(): void {
+    this.handleResponsiveLayout();
+    this.initializeUserData();
+    this.setupAuthSubscription();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private handleResponsiveLayout(): void {
     this.sidebarCollapsed = window.innerWidth < 768;
-    
-    // Get current user from AuthService
-    const user = this.authService.getCurrentUser();
-    if (user) {
-      this.currentUser = {
-        ...user,
-        role: user.role === 'jobseeker' ? 'jobseeker' : user.role // Ensure role transformation matches expected values
-      };
-    } else {
-      this.currentUser = null;
-    }
-    
-    // Update profile data with actual user information
-    if (this.currentUser) {
-      this.profileData.name = this.currentUser.firstName + ' ' + this.currentUser.lastName;
-      
-      // Generate initials for profile avatar if no image exists
-      this.profileInitials = this.getInitials(this.currentUser.firstName, this.currentUser.lastName);
-      
-      // If user has a profile photo, use it, otherwise use a default image
-      if (this.currentUser['profilePhoto']) {
-        this.profileData.image = this.currentUser['profilePhoto'];
-      } else {
-        // Use a default image or generated avatar
-        this.profileData.image = 'assets/ana.jpg'; // Default image as fallback
-      }
-    }
-    
-    // Subscribe to changes in authentication state
-    this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        this.currentUser = {
-          ...user,
-          role: user.role === 'jobseeker' ? 'jobseeker' : user.role // Transform role to match expected type
-        };
-        this.profileData.name = user.firstName + ' ' + user.lastName;
-        this.profileInitials = this.getInitials(user.firstName, user.lastName);
-        
-        if (user.profilePhoto) {
-          this.profileData.image = user.profilePhoto;
-        }
-      }
-    });
   }
 
-  // Helper method to get initials from name
-  getInitials(firstName: string, lastName: string): string {
-    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  private initializeUserData(): void {
+    const user = this.authService.currentUserValue;
+    if (user) this.updateUserProfile(user);
   }
 
-  @HostListener('window:scroll', ['$event'])
-  onWindowScroll() {
+  private setupAuthSubscription(): void {
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        this.currentUser = user;
+        if (user) this.updateUserProfile(user);
+      });
+  }
+
+  private updateUserProfile(user: User): void {
+    this.profileData.name = `${user.firstName} ${user.lastName}`;
+    this.profileInitials = this.getInitials(user.firstName, user.lastName);
+    this.profileData.image = user.profilePhoto || this.profileData.image;
+  }
+
+  private getInitials(firstName: string, lastName: string): string {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.sidebarCollapsed = window.innerWidth < 768;
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
     const header = document.querySelector('.dashboard-header') as HTMLElement;
-    
-    if (window.scrollY > 0) {
-      header.classList.add('scrolled');
-    } else {
-      header.classList.remove('scrolled');
-    }
+    header?.classList.toggle('scrolled', window.scrollY > 0);
   }
 
   @HostListener('window:click', ['$event'])
-  onWindowClick(event: MouseEvent) {
-    // Close profile menu when clicking outside
+  onWindowClick(event: MouseEvent): void {
     if (this.showProfileMenu && !(event.target as HTMLElement).closest('.profile-menu')) {
       this.showProfileMenu = false;
     }
   }
 
-  onToggleSidebar(collapsed: boolean) {
+  onToggleSidebar(collapsed: boolean): void {
     this.sidebarCollapsed = collapsed;
   }
 
   getStatusClass(status: string): string {
-    switch(status) {
-      case 'Applied': return 'bg-blue-100 text-blue-800';
-      case 'In Review': return 'bg-yellow-100 text-yellow-800';
-      case 'Interview': return 'bg-purple-100 text-purple-800';
-      case 'Offer': return 'bg-green-100 text-green-800';
-      case 'Rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    const statusClasses = {
+      'Applied': 'bg-blue-100 text-blue-800',
+      'In Review': 'bg-yellow-100 text-yellow-800',
+      'Interview': 'bg-purple-100 text-purple-800',
+      'Offer': 'bg-green-100 text-green-800',
+      'Rejected': 'bg-red-100 text-red-800'
+    };
+    return statusClasses[status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800';
   }
 
-  onSearchInput(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchQuery = input.value;
-    // Implement search functionality here
+  onSearchInput(event: Event): void {
+    this.searchQuery = (event.target as HTMLInputElement).value;
   }
 
-  clearSearch() {
+  clearSearch(): void {
     this.searchQuery = '';
   }
 
-  toggleProfileMenu(event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
+  toggleProfileMenu(event?: Event): void {
+    event?.stopPropagation();
     this.showProfileMenu = !this.showProfileMenu;
   }
-  
-  logout() {
+
+  logout(): void {
     this.authService.logout();
-    // Redirect to login page or home page
-    // You might want to inject Router and use it here
   }
 }

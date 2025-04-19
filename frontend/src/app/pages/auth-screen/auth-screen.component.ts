@@ -1,4 +1,3 @@
-// src/app/pages/auth-screen/auth-screen.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -14,7 +13,6 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./auth-screen.component.scss']
 })
 export class AuthScreenComponent implements OnInit, OnDestroy {
-  // Form Management
   loginForm: FormGroup;
   signupForm: FormGroup;
   authMode: 'login' | 'signup' = 'login';
@@ -25,9 +23,7 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
   errorMessage = '';
   successMessage = '';
 
-  // Slideshow Management
   slides = [
-    // Jobseeker slides (index 0-2)
     {
       image: 'assets/seeker1.jpg',
       title: 'Find Your Dream Job',
@@ -43,7 +39,6 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       title: 'Discover Your Potential',
       description: 'Uncover new possibilities with AI-powered skill matching.'
     },
-    // Employer slides (index 3-5)
     {
       image: 'assets/employer.jpg',
       title: 'Hire Top Talent',
@@ -59,7 +54,6 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       title: 'Empower Your Team',
       description: 'Build a strong team with the right talent.'
     },
-    // Admin slides (index 6-7)
     {
       image: 'assets/admin.jpg',
       title: 'Manage Your Platform',
@@ -71,10 +65,10 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       description: 'Gain insights and analytics to enhance platform efficiency.'
     }
   ];
+  
   currentSlide = 0;
   private slideSubscription: Subscription | null = null;
   
-  // Role-specific content
   roleContent = {
     jobseeker: {
       slides: [0, 1, 2],
@@ -119,8 +113,7 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       this.checkPasswordStrength(value);
     });
 
-    // Check if already authenticated and redirect accordingly
-    if (this.authService.isAuthenticated()) {
+    if (this.authService.isLoggedIn()) {
       const userRole = this.authService.getUserRole();
       if (userRole) {
         this.router.navigate([`/${userRole}/dashboard`]);
@@ -135,7 +128,6 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
   }
 
   startSlideshow(): void {
-    // Start automatic slideshow
     this.slideSubscription = interval(6000).subscribe(() => {
       this.nextSlide();
     });
@@ -151,11 +143,8 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
   passwordMatchValidator(group: FormGroup): { [key: string]: boolean } | null {
     const password = group.get('password')?.value;
     const confirmPassword = group.get('confirmPassword')?.value;
-    if (password && confirmPassword && password !== confirmPassword) {
-      group.get('confirmPassword')?.setErrors({ passwordMismatch: true });
-      return { passwordMismatch: true };
-    }
-    return null;
+    return password && confirmPassword && password !== confirmPassword ? 
+      { passwordMismatch: true } : null;
   }
 
   checkPasswordStrength(password: string): void {
@@ -176,7 +165,7 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       this.passwordStrength = 'weak';
     } else if (length >= 8 && criteria === 2) {
       this.passwordStrength = 'medium';
-    } else if (length >= 8 && criteria >= 3) {
+    } else {
       this.passwordStrength = 'strong';
     }
   }
@@ -189,11 +178,7 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
   changeRole(role: 'jobseeker' | 'employer' | 'admin'): void {
     this.selectedRole = role;
     this.updateRoleValidation();
-    
-    // Reset to first slide of the role
     this.currentSlide = this.roleContent[role].slides[0];
-    
-    // Reset forms when changing roles
     this.loginForm.reset({ rememberMe: false });
     this.signupForm.reset({ termsAgreement: false });
     this.clearMessages();
@@ -201,14 +186,12 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
 
   updateRoleValidation(): void {
     const companyNameControl = this.signupForm.get('companyName');
-    
     if (this.selectedRole === 'employer') {
       companyNameControl?.setValidators(Validators.required);
     } else {
       companyNameControl?.clearValidators();
       companyNameControl?.setValue('');
     }
-    
     companyNameControl?.updateValueAndValidity();
   }
 
@@ -242,16 +225,10 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     };
     
     this.authService.login(credentials).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        if (response.success) {
-          // Navigate based on role
-          this.router.navigate([`/${this.selectedRole}/dashboard`]);
-        }
-      },
+      next: () => this.isLoading = false,
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Login failed. Please check your credentials.';
+        this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
       }
     });
   }
@@ -268,24 +245,23 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       email: this.signupForm.value.email,
       password: this.signupForm.value.password,
       role: this.selectedRole,
-      companyName: this.selectedRole === 'employer' ? this.signupForm.value.companyName : undefined
+      companyName: this.selectedRole === 'employer' ? 
+        this.signupForm.value.companyName : undefined
     };
     
     this.authService.register(signupData).subscribe({
-      next: (response) => {
+      next: () => {
         this.isLoading = false;
-        if (response.success) {
-          this.successMessage = 'Registration successful! Please login with your credentials.';
-          this.authMode = 'login';
-          this.loginForm.patchValue({
-            email: signupData.email,
-            password: ''
-          });
-        }
+        this.successMessage = 'Registration successful! Please login with your credentials.';
+        this.authMode = 'login';
+        this.loginForm.patchValue({
+          email: signupData.email,
+          password: ''
+        });
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Registration failed. Please try again.';
+        this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
       }
     });
   }
@@ -295,15 +271,10 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     
     this.authService.loginWithGoogle(this.selectedRole).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        if (response.success) {
-          this.router.navigate([`/${this.selectedRole}/dashboard`]);
-        }
-      },
+      next: () => this.isLoading = false,
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Google login failed. Please try again.';
+        this.errorMessage = error.error?.message || 'Google login failed. Please try again.';
       }
     });
   }
@@ -313,25 +284,20 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     
     this.authService.loginWithLinkedIn(this.selectedRole).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        if (response.success) {
-          this.router.navigate([`/${this.selectedRole}/dashboard`]);
-        }
-      },
+      next: () => this.isLoading = false,
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'LinkedIn login failed. Please try again.';
+        this.errorMessage = error.error?.message || 'LinkedIn login failed. Please try again.';
       }
     });
   }
 
   signupWithGoogle(): void {
-    this.loginWithGoogle(); // Reuse the same flow
+    this.loginWithGoogle();
   }
 
   signupWithLinkedIn(): void {
-    this.loginWithLinkedIn(); // Reuse the same flow
+    this.loginWithLinkedIn();
   }
 
   goToForgotPassword(event: Event): void {

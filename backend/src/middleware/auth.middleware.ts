@@ -1,38 +1,77 @@
 // src/middleware/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { UserPayload } from '../types/auth.types';
+import pool from '../config/db.config';
+
+interface DecodedToken {
+  id: number;
+  email: string;
+  role: string;
+  iat: number;
+  exp: number;
+}
 
 declare global {
   namespace Express {
     interface Request {
-      user?: UserPayload;
+      user?: DecodedToken;
     }
   }
 }
 
-export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  
-  console.log('Auth header:', authHeader ? 'present' : 'missing');
-  
-  if (!authHeader) {
-    return res.status(401).json({ message: 'No token provided' });
-  }
-  
-  const token = authHeader.split(' ')[1];
-  
+export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const decoded = jwt.verify(
-      token, 
-      process.env.JWT_SECRET || 'default_secret'
-    ) as UserPayload;
+    // Get the token from authorization header or from request cookies
+    const authHeader = req.headers.authorization;
+    let token: string | undefined;
     
-    console.log('Decoded token role:', decoded.role);
+    if (authHeader) {
+      // Format: "Bearer <token>"
+      const parts = authHeader.split(' ');
+      if (parts.length === 2 && parts[0] === 'Bearer') {
+        token = parts[1];
+      } else {
+        token = authHeader; // In case the "Bearer " prefix is missing
+      }
+    }
     
+    // Log for debugging
+    console.log('Auth header:', authHeader);
+    console.log('Extracted token:', token ? 'Token exists' : 'No token');
+    
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+    
+    // Verify token
+    const secret = process.env.JWT_SECRET || 'default_secret';
+    const decoded = jwt.verify(token, secret) as DecodedToken;
+    
+    // Log for debugging
+    console.log('Token verified, decoded user ID:', decoded.id);
+    
+    // Check if user exists in the database
+    const userResult = await pool.query('SELECT id, email, role FROM users WHERE id = $1', [decoded.id]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+    
+    // Attach user info to request
     req.user = decoded;
+    
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+    console.error('Auth middleware error:', error);
+    
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: 'Token expired' });
+    }
+    
+    return res.status(500).json({ message: 'Authentication failed' });
   }
 };
