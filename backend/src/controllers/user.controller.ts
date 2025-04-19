@@ -26,9 +26,9 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     let profile = null;
     
     // Get profile based on role
-    if (user.role === 'job_seeker') {
+    if (user.role === 'jobseeker') {
       const profileResult = await pool.query(
-        'SELECT * FROM job_seeker_profiles WHERE user_id = $1',
+        'SELECT * FROM jobseeker_profiles WHERE user_id = $1',
         [userId]
       );
       
@@ -96,10 +96,10 @@ export const updateCurrentUser = async (req: Request, res: Response) => {
       }
       
       // Update profile based on role
-      if (userRole === 'job_seeker') {
+      if (userRole === 'jobseeker') {
         if (title !== undefined || bio !== undefined || location !== undefined) {
           await client.query(
-            'UPDATE job_seeker_profiles SET title = COALESCE($1, title), bio = COALESCE($2, bio), location = COALESCE($3, location), updated_at = CURRENT_TIMESTAMP WHERE user_id = $4',
+            'UPDATE jobseeker_profiles SET title = COALESCE($1, title), bio = COALESCE($2, bio), location = COALESCE($3, location), updated_at = CURRENT_TIMESTAMP WHERE user_id = $4',
             [title, bio, location, userId]
           );
         }
@@ -123,9 +123,9 @@ export const updateCurrentUser = async (req: Request, res: Response) => {
       let profile = null;
       
       // Get updated profile based on role
-      if (userRole === 'job_seeker') {
+      if (userRole === 'jobseeker') {
         const profileResult = await client.query(
-          'SELECT * FROM job_seeker_profiles WHERE user_id = $1',
+          'SELECT * FROM jobseeker_profiles WHERE user_id = $1',
           [userId]
         );
         
@@ -182,9 +182,9 @@ export const getUserById = async (req: Request, res: Response) => {
     let profile = null;
     
     // Get profile based on role
-    if (user.role === 'job_seeker') {
+    if (user.role === 'jobseeker') {
       const profileResult = await pool.query(
-        'SELECT * FROM job_seeker_profiles WHERE user_id = $1',
+        'SELECT * FROM jobseeker_profiles WHERE user_id = $1',
         [id]
       );
       
@@ -256,10 +256,10 @@ export const updateUserById = async (req: Request, res: Response) => {
       }
       
       // Update profile based on role
-      if (userRole === 'job_seeker') {
+      if (userRole === 'jobseeker') {
         if (title !== undefined || bio !== undefined || location !== undefined) {
           await client.query(
-            'UPDATE job_seeker_profiles SET title = COALESCE($1, title), bio = COALESCE($2, bio), location = COALESCE($3, location), updated_at = CURRENT_TIMESTAMP WHERE user_id = $4',
+            'UPDATE jobseeker_profiles SET title = COALESCE($1, title), bio = COALESCE($2, bio), location = COALESCE($3, location), updated_at = CURRENT_TIMESTAMP WHERE user_id = $4',
             [title, bio, location, id]
           );
         }

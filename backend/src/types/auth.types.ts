@@ -2,7 +2,7 @@
 export interface UserPayload {
     id: number;
     email: string;
-    role: 'job_seeker' | 'employer' | 'admin';
+    role: 'jobseeker' | 'employer' | 'admin';
   }
   
   export interface LoginRequest {

@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const isJobSeeker = (req: Request, res: Response, next: NextFunction) => {
-  if (req.user && req.user.role === 'job_seeker') {
+  if (req.user && req.user.role === 'jobseeker') {
     return next();
   }
   return res.status(403).json({ message: 'Requires job seeker role' });
