@@ -14,6 +14,8 @@ declare global {
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   
+  console.log('Auth header:', authHeader ? 'present' : 'missing');
+  
   if (!authHeader) {
     return res.status(401).json({ message: 'No token provided' });
   }
@@ -25,6 +27,8 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
       token, 
       process.env.JWT_SECRET || 'default_secret'
     ) as UserPayload;
+    
+    console.log('Decoded token role:', decoded.role);
     
     req.user = decoded;
     next();

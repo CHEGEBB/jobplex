@@ -18,9 +18,9 @@ router.get('/', getAllSkills);
 router.get('/:id', getSkillById);
 
 // Protected routes for job seekers
-router.get('/user/me', isJobSeeker, getUserSkills);
-router.post('/', isJobSeeker, createSkill);
-router.put('/:id', isJobSeeker, updateSkill);
-router.delete('/:id', isJobSeeker, deleteSkill);
+router.get('/user/me', verifyToken, isJobSeeker, getUserSkills);
+router.post('/', verifyToken, isJobSeeker, createSkill);
+router.put('/:id', verifyToken, isJobSeeker, updateSkill);
+router.delete('/:id', verifyToken, isJobSeeker, deleteSkill);
 
 export default router;

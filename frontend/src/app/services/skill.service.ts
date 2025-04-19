@@ -51,6 +51,8 @@ export class SkillService {
   }
 
   createSkill(skill: CreateSkillRequest): Observable<Skill> {
+    console.log('Before skill creation, token:', this.authService.token);
+console.log('Before skill creation, user role:', this.authService.getUserRole());
     return this.http.post<Skill>(`${this.API_URL}/skills`, skill, this.getAuthHeaders());
   }
 
