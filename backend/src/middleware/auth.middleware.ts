@@ -44,7 +44,7 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
     }
     
     // Verify token
-    const secret = process.env.JWT_SECRET || 'default_secret';
+    const secret = process.env.JWT_SECRET || 'your_secret_key_here';
     const decoded = jwt.verify(token, secret) as DecodedToken;
     
     // Log for debugging

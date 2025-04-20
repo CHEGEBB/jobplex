@@ -44,7 +44,7 @@ export interface User {
 })
 export class AuthService {
   private readonly API_URL = environment.apiUrl;
-  private readonly TOKEN_KEY = 'jwt_token';
+  private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'current_user';
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);

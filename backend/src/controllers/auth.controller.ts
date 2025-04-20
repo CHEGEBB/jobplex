@@ -10,7 +10,7 @@ import { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequ
 dotenv.config();
 
 // Get JWT configuration with fallbacks
-const JWT_SECRET = process.env.JWT_SECRET || 'default_secret_key_please_change_in_production';
+const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_here';
 // Define the JWT expiration value properly typed for SignOptions
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '24h';
 

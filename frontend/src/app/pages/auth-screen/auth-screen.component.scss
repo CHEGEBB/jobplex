@@ -622,3 +622,99 @@ $transition: all 0.3s ease;
     flex-direction: column;
   }
 }
+/* auth.component.scss */
+
+/* Role-specific overlay colors */
+.jobseeker-overlay {
+  background: linear-gradient(rgba(37, 99, 235, 0.7), rgba(37, 99, 235, 0.9));
+}
+
+.employer-overlay {
+  background: linear-gradient(rgba(22, 163, 74, 0.7), rgba(22, 163, 74, 0.9));
+}
+
+.admin-overlay {
+  background: linear-gradient(rgba(124, 58, 237, 0.7), rgba(124, 58, 237, 0.9));
+}
+
+/* Custom styling that complements Tailwind */
+.auth-container {
+  overflow: hidden;
+}
+
+/* Slideshow animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide.active {
+  z-index: 1;
+}
+
+/* Password strength animations */
+.strength-bar {
+  transition: width 0.3s ease;
+}
+
+/* Custom spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Form transitions */
+.auth-form {
+  transition: opacity 0.3s ease;
+}
+
+/* Mobile responsiveness adjustments */
+@media (max-width: 640px) {
+  .form-container {
+    padding: 1rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .half-width {
+    width: 100%;
+  }
+}
+
+/* Focus states for accessibility */
+button:focus, 
+input:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Additional custom styling */
+.input-container {
+  transition: all 0.2s ease;
+}
+
+.input-container:focus-within {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.toggle-password {
+  cursor: pointer;
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
