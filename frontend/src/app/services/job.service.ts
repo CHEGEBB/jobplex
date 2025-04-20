@@ -102,10 +102,11 @@ export class JobService {
   // Helper method to get auth headers
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    return new HttpHeaders({
+    const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     });
+   return headers;
   }
 
   // Get all jobs with optional filters
@@ -176,15 +177,25 @@ export class JobService {
   // Create new job
   createJob(jobData: CreateJobRequest): Observable<Job> {
     const formattedJob = this.formatJobForBackend(jobData);
+    const headers = this.getAuthHeaders();
+    
+    // Debug: Check token before sending
+    console.log('FULL JOB DATA BEING SENT:', JSON.stringify(formattedJob, null, 2));
+    console.log('Using token for auth:', this.authService.getToken());
+    console.log('Headers being sent:', headers);
+    
+  
     return this.http.post<any>(this.apiUrl, formattedJob, {
-      headers: this.getAuthHeaders()
+      headers: headers
     }).pipe(
       map(job => this.formatJobForFrontend(job)),
       tap(() => this.refreshJobStats()),
-      catchError(this.handleError<Job>('createJob'))
+      catchError((error) => {
+        console.error('Create job error details:', error);
+        return this.handleError<Job>('createJob')(error);
+      })
     );
   }
-
   // Update job
   updateJob(id: number, jobData: Partial<CreateJobRequest>): Observable<Job> {
     const formattedJob = this.formatJobForBackend(jobData);

@@ -162,7 +162,7 @@
   
           <!-- Empty state -->
           <div *ngIf="filteredJobs.length === 0" class="empty-state">
-            <img src="assets/images/empty-jobs.svg" alt="No jobs found" class="empty-img">
+            <img src="assets/empty.svg" alt="No jobs found" class="empty-img">
             <h3>No job posts found</h3>
             <p>{{getEmptyStateMessage()}}</p>
             <button (click)="toggleJobForm()" class="btn-employer mt-4">

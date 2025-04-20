@@ -220,6 +220,8 @@ export const getJobById = async (req: Request, res: Response) => {
 
 // Create new job (employer only)
 export const createJob = async (req: Request, res: Response) => {
+  console.log('Request user:', req.user);
+  console.log('Request body:', req.body);
   const userId = req.user?.id;
   const { 
     title, 
@@ -234,7 +236,7 @@ export const createJob = async (req: Request, res: Response) => {
     education_level,
     requirements,
     benefits,
-    deadline_date,
+    deadline_date: rawDeadlineDate,
     min_salary,
     max_salary,
     salary_visible = true,
@@ -247,6 +249,8 @@ export const createJob = async (req: Request, res: Response) => {
     team_access = 'all',
     scheduled_date
   } = req.body;
+
+  const deadline_date = rawDeadlineDate === '' ? null : rawDeadlineDate;
   
   // Validate required fields
   if (!title || !description) {
@@ -283,7 +287,8 @@ export const createJob = async (req: Request, res: Response) => {
     await client.query('BEGIN');
     
     // Insert job
-    const jobResult = await client.query(
+    const jobResult = // Modify the INSERT parameters to use sanitized values
+    await client.query(
       `INSERT INTO jobs (
         employer_id, title, description, location, salary_range, job_type,
         status, department, work_mode, experience_level, education_level,
@@ -295,9 +300,18 @@ export const createJob = async (req: Request, res: Response) => {
       [
         userId, title, description, location, salary_range, job_type,
         status, department, work_mode, experience_level, education_level,
-        requirements, benefits, deadline_date, min_salary, max_salary,
-        salary_visible, internal, career_site, linkedin, indeed,
-        team_access, scheduled_date
+        requirements || null,  // Handle empty strings for nullable fields
+        benefits || null,
+        deadline_date, 
+        min_salary, 
+        max_salary,
+        salary_visible, 
+        internal, 
+        career_site, 
+        linkedin, 
+        indeed,
+        team_access, 
+        scheduled_date
       ]
     );
     
@@ -375,8 +389,15 @@ export const createJob = async (req: Request, res: Response) => {
     res.status(201).json(completeJob.rows[0]);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error creating job:', error);
-    res.status(500).json({ message: 'Server error' });
+    if (error instanceof Error) {
+      console.error('Error creating job:', error.stack); // Log detailed error
+    } else {
+      console.error('Error creating job:', error); // Log generic error
+    }
+    res.status(500).json({ 
+      message: 'Server error',
+      error: error instanceof Error ? error.message : 'Unknown error' // Safely handle unknown error type
+    });
   } finally {
     client.release();
   }
