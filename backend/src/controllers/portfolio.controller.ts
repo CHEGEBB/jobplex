@@ -11,8 +11,12 @@ import {
 } from '../types/portfolio.types';
 
 // PostgreSQL setup for schema
-const setupSchema = async () => {
+export const setupSchema = async () => {
   try {
+    console.log('Setting up portfolio schema with connection:');
+    console.log(`Host: ${process.env.DB_HOST}`);
+    console.log(`Database: ${process.env.DB_NAME}`);
+    
     // Create projects table if it doesn't exist
     await pool.query(`
       CREATE TABLE IF NOT EXISTS projects (
@@ -49,11 +53,12 @@ const setupSchema = async () => {
     console.log('Portfolio schema setup completed');
   } catch (error) {
     console.error('Error setting up portfolio schema:', error);
+    throw error; // Rethrow so the server can handle it
   }
 };
 
-// Run schema setup
-setupSchema();
+// IMPORTANT: Don't call setupSchema() here immediately
+// Instead, we'll call it from server.ts after the server starts
 
 // SKILLS CONTROLLERS
 export const getMySkills = async (req: Request, res: Response) => {

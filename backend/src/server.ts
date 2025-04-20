@@ -12,6 +12,10 @@ import jobRoutes from './routes/job.routes';
 import skillRoutes from './routes/skill.routes';
 import portfolioRoutes from './routes/portfolio.routes';
 
+// Import the setupSchema function
+import { setupSchema } from './controllers/portfolio.controller';
+import pool from './config/db.config'; // Import the pool for testing connection
+
 // Load environment variables
 dotenv.config();
 
@@ -52,9 +56,28 @@ app.get('/api/health', (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start server and initialize database
+const startServer = async () => {
+  try {
+    // First test the database connection
+    const client = await pool.connect();
+    const result = await client.query('SELECT NOW()');
+    console.log('Database connected successfully:', result.rows[0]);
+    client.release();
+    
+    // Then setup schema
+    await setupSchema();
+    
+    // Finally start the server
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1); // Exit if we can't connect to the database
+  }
+};
+
+startServer();
 
 export default app;
