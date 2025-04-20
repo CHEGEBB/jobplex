@@ -1,14 +1,15 @@
-const { ID } = require('appwrite');
-const { storage } = require('../config/appwrite');
-const pool = require('../config/db.config');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+import { Request, Response } from 'express';
+import { ID } from 'appwrite';
+import { storage } from '../config/appwrite';
+import pool from '../config/db.config';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 const CV_BUCKET_ID = process.env.APPWRITE_BUCKET_ID || '68052646000a993ccf3f';
 
 // Helper function to save buffer to temporary file
-async function saveBufferToTempFile(buffer, originalName) {
+async function saveBufferToTempFile(buffer: Buffer, originalName: string): Promise<string> {
   const tempDir = os.tmpdir();
   const tempFilePath = path.join(tempDir, `upload-${Date.now()}-${originalName}`);
   
@@ -20,11 +21,11 @@ async function saveBufferToTempFile(buffer, originalName) {
   });
 }
 
-exports.uploadCV = async (req, res) => {
+export const uploadCV = async (req: Request, res: Response) => {
   try {
     const user = req.user;
     const file = req.file;
-    let tempFilePath = null;
+    let tempFilePath: string | null = null;
     
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
@@ -41,11 +42,12 @@ exports.uploadCV = async (req, res) => {
       // Create a unique file ID
       const fileId = ID.unique();
       
-      // Upload the file to Appwrite directly from the path
+      // Upload the file to Appwrite using a readable stream
+      const fileBuffer = fs.readFileSync(tempFilePath);
       const appwriteFile = await storage.createFile(
         CV_BUCKET_ID,
         fileId,
-        tempFilePath
+        new File([fileBuffer], file.originalname)
       );
       
       // Begin transaction
@@ -96,11 +98,11 @@ exports.uploadCV = async (req, res) => {
     }
   } catch (error) {
     console.error('CV upload error:', error);
-    res.status(500).json({ message: 'CV upload failed', error: error.message });
+    res.status(500).json({ message: 'CV upload failed', error: (error as Error).message });
   }
 };
 
-exports.getUserCVs = async (req, res) => {
+export const getUserCVs = async (req: Request, res: Response) => {
   try {
     const user = req.user;
     
@@ -120,7 +122,7 @@ exports.getUserCVs = async (req, res) => {
   }
 };
 
-exports.setPrimaryCV = async (req, res) => {
+export const setPrimaryCV = async (req: Request, res: Response) => {
   try {
     const { cvId } = req.params;
     const user = req.user;
@@ -170,7 +172,7 @@ exports.setPrimaryCV = async (req, res) => {
   }
 };
 
-exports.deleteCV = async (req, res) => {
+export const deleteCV = async (req: Request, res: Response) => {
   try {
     const { cvId } = req.params;
     const user = req.user;
@@ -209,7 +211,7 @@ exports.deleteCV = async (req, res) => {
           [user.id]
         );
         
-        if (remainingCVsResult.rowCount > 0) {
+        if ((remainingCVsResult.rowCount ?? 0) > 0) {
           await client.query(
             'UPDATE cvs SET is_primary = TRUE WHERE id = $1',
             [remainingCVsResult.rows[0].id]
@@ -232,7 +234,7 @@ exports.deleteCV = async (req, res) => {
 };
 
 // Tag-related functions
-exports.addTag = async (req, res) => {
+export const addTag = async (req: Request, res: Response) => {
   try {
     const { cvId } = req.params;
     const { tag } = req.body;
@@ -293,7 +295,7 @@ exports.addTag = async (req, res) => {
   }
 };
 
-exports.removeTag = async (req, res) => {
+export const removeTag = async (req: Request, res: Response) => {
   try {
     const { cvId, tag } = req.params;
     const user = req.user;
@@ -321,7 +323,7 @@ exports.removeTag = async (req, res) => {
       const currentTags = cv.tags || [];
       
       // Remove the tag if it exists
-      const updatedTags = currentTags.filter(t => t !== tag);
+      const updatedTags: string[] = currentTags.filter((t: string) => t !== tag);
       
       // Update CV with new tags array
       const result = await client.query(
