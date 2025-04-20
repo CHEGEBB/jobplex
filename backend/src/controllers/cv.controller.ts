@@ -210,7 +210,7 @@ export const deleteCV = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error('Error deleting CV:', error);
-    res.status(500).json({ message: 'Failed to delete CV' });
+    res.status(500).json({ message: 'Failed to delete CV 😭😭' });
   }
 };
 
