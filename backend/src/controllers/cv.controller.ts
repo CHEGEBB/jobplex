@@ -2,22 +2,30 @@ import { Request, Response } from 'express';
 import { ID } from 'appwrite';
 import { storage } from '../config/appwrite';
 import pool from '../config/db.config';
-import { Readable } from 'stream';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 const CV_BUCKET_ID = process.env.APPWRITE_BUCKET_ID || '68052646000a993ccf3f';
 
-// Helper function to convert Buffer to Stream
-function bufferToStream(buffer: Buffer): Readable {
-  const stream = new Readable();
-  stream.push(buffer);
-  stream.push(null);
-  return stream;
+// Helper function to save buffer to temporary file
+async function saveBufferToTempFile(buffer: Buffer, originalName: string): Promise<string> {
+  const tempDir = os.tmpdir();
+  const tempFilePath = path.join(tempDir, `upload-${Date.now()}-${originalName}`);
+  
+  return new Promise((resolve, reject) => {
+    fs.writeFile(tempFilePath, buffer, (err) => {
+      if (err) reject(err);
+      else resolve(tempFilePath);
+    });
+  });
 }
 
 export const uploadCV = async (req: Request, res: Response) => {
   try {
     const user = req.user;
     const file = req.file;
+    let tempFilePath: string | null = null;
     
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
@@ -27,56 +35,73 @@ export const uploadCV = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
     
-    // Upload to Appwrite using a stream from buffer
-    const fileId = ID.unique();
-    const appwriteFile = await storage.createFile(
-      CV_BUCKET_ID,
-      fileId,
-      new File([file.buffer], file.originalname, { type: file.mimetype }),
-      [file.originalname]
-    );
-    
-    // Begin transaction
-    const client = await pool.connect();
-    
     try {
-      await client.query('BEGIN');
+      // Save buffer to temporary file
+      tempFilePath = await saveBufferToTempFile(file.buffer, file.originalname);
       
-      // Check if this is the user's first CV
-      const countResult = await client.query(
-        'SELECT COUNT(*) FROM cvs WHERE user_id = $1',
-        [user.id]
+      // Create a unique file ID
+      const fileId = ID.unique();
+      
+      // Use Copilot's solution: Create a File object from the file content
+      const fileContent = fs.readFileSync(tempFilePath);
+      const fileObject = new File([fileContent], file.originalname, { type: file.mimetype });
+      
+      // Upload to Appwrite
+      const appwriteFile = await storage.createFile(
+        CV_BUCKET_ID,
+        fileId,
+        fileObject
       );
       
-      const isFirstCV = parseInt(countResult.rows[0].count) === 0;
+      // Begin transaction
+      const client = await pool.connect();
       
-      // Store metadata in PostgreSQL
-      const result = await client.query(
-        `INSERT INTO cvs
-          (user_id, appwrite_file_id, file_url, file_name, is_primary, tags)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING *`,
-        [
-          user.id, 
-          appwriteFile.$id, 
-          `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${CV_BUCKET_ID}/files/${appwriteFile.$id}/view`, 
-          file.originalname,
-          isFirstCV, // Set as primary if first CV
-          []  // Empty tags array initially
-        ]
-      );
-      
-      await client.query('COMMIT');
-      res.status(201).json(result.rows[0]);
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
+      try {
+        await client.query('BEGIN');
+        
+        // Check if this is the user's first CV
+        const countResult = await client.query(
+          'SELECT COUNT(*) FROM cvs WHERE user_id = $1',
+          [user.id]
+        );
+        
+        const isFirstCV = parseInt(countResult.rows[0].count) === 0;
+        
+        // Store metadata in PostgreSQL
+        const result = await client.query(
+          `INSERT INTO cvs
+            (user_id, appwrite_file_id, file_url, file_name, is_primary, tags)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING *`,
+          [
+            user.id, 
+            appwriteFile.$id, 
+            `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${CV_BUCKET_ID}/files/${appwriteFile.$id}/view`, 
+            file.originalname,
+            isFirstCV, // Set as primary if first CV
+            []  // Empty tags array initially
+          ]
+        );
+        
+        await client.query('COMMIT');
+        res.status(201).json(result.rows[0]);
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
     } finally {
-      client.release();
+      // Clean up temp file if it was created
+      if (tempFilePath) {
+        fs.unlink(tempFilePath, (err) => {
+          if (err) console.error('Error deleting temp file:', err);
+        });
+      }
     }
   } catch (error) {
     console.error('CV upload error:', error);
-    res.status(500).json({ message: 'CV upload failed' });
+    res.status(500).json({ message: 'CV upload failed', error: (error as Error).message });
   }
 };
 
@@ -211,7 +236,7 @@ export const deleteCV = async (req: Request, res: Response) => {
   }
 };
 
-// New tag-related functions
+// Tag-related functions
 export const addTag = async (req: Request, res: Response) => {
   try {
     const { cvId } = req.params;
