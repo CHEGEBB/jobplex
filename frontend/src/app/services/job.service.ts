@@ -228,6 +228,8 @@ export class JobService {
       catchError(this.handleError<Job>('updateJobStatus'))
     );
   }
+  // In job.service.ts
+
 
   // Get job matches (for job seekers)
   getJobMatches(): Observable<{ matches: Job[], userSkills: string[], totalMatches: number }> {
@@ -245,11 +247,15 @@ export class JobService {
 
   // Apply for a job (for job seekers)
   applyForJob(jobId: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/${jobId}/apply`, {}, {
+    const applicationData = {}; // Define or replace with the actual data structure
+    return this.http.post<any>(`${this.apiUrl}/jobs/apply`, applicationData, {
       headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(this.handleError('applyForJob'))
-    );
+    });
+    // return this.http.post<any>(`${this.apiUrl}/${jobId}/apply`, {}, {
+    //   headers: this.getAuthHeaders()
+    // }).pipe(
+    //   catchError(this.handleError('applyForJob'))
+    // );
   }
 
   // Refresh job statistics

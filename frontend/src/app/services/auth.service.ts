@@ -95,6 +95,29 @@ export class AuthService {
       );
   }
 
+  // Add this method to your AuthService
+getCurrentUserProfile(): Observable<User> {
+  // If we already have the user data stored locally, return it
+  const currentUser = this.currentUserValue;
+  if (currentUser) {
+    return of(currentUser);
+  }
+  
+  // Otherwise, fetch it from the server
+  return this.http.get<User>(`${this.API_URL}/users/me`, {
+    headers: {
+      Authorization: `Bearer ${this.getToken()}`
+    }
+  }).pipe(
+    tap(user => {
+      // Update the stored user
+      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+      this.currentUserSubject.next(user);
+    }),
+    catchError(this.handleError)
+  );
+}
+
   login(credentials: LoginRequest): Observable<AuthResponse> {
     console.log('Login service called with:', credentials);
     

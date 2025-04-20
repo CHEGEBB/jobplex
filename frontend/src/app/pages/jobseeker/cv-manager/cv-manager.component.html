@@ -1,129 +1,235 @@
 <!-- Layout with sidebar and main content -->
 <div class="cv-container flex h-screen bg-slate-50">
-<app-sidebar 
-  [collapsed]="sidebarCollapsed" 
-  (toggleSidebar)="onToggleSidebar($event)">
-</app-sidebar>
+  <app-sidebar 
+    [collapsed]="sidebarCollapsed" 
+    (toggleSidebar)="onToggleSidebar($event)">
+  </app-sidebar>
 
-<main class="main-content" [class.expanded]="sidebarCollapsed">
-  <!-- Header section with title and actions -->
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-800">CV Manager</h1>
-      <p class="text-gray-500 mt-1">Upload, organize, and manage your CVs</p>
-    </div>
-    
-    <div class="flex items-center mt-4 md:mt-0 space-x-3">
-      <!-- View toggle button -->
-      <button 
-        (click)="toggleView()" 
-        class="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <i *ngIf="isGridView" class="fa fa-list mr-1 text-gray-500"></i>
-        <i *ngIf="!isGridView" class="fa fa-th-large mr-1 text-gray-500"></i>
-        <span>{{ isGridView ? 'List View' : 'Grid View' }}</span>
-      </button>
-    </div>
-  </div>
-  
-  <!-- Upload area -->
-  <div class="mb-6">
-    <div 
-      (dragover)="onDragOver($event)" 
-      (dragleave)="onDragLeave($event)" 
-      (drop)="onDrop($event)" 
-      [class.border-blue-400]="isDragging" 
-      [class.bg-blue-50]="isDragging"
-      class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors duration-200">
+  <main class="main-content" [class.expanded]="sidebarCollapsed">
+    <!-- Header section with title and actions -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">CV Manager</h1>
+        <p class="text-gray-500 mt-1">Upload, organize, and manage your CVs</p>
+      </div>
       
-      <div class="flex flex-col items-center">
-        <i class="fa fa-upload text-4xl text-gray-400 mb-2"></i>
-        <p class="text-lg font-medium text-gray-700">Drag and drop your CV files here</p>
-        <p class="text-sm text-gray-500 mb-4">or</p>
+      <div class="flex items-center mt-4 md:mt-0 space-x-3">
+        <!-- Loading indicator -->
+        <div *ngIf="isLoading" class="flex items-center text-blue-600">
+          <svg class="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Processing...
+        </div>
+
+        <!-- View toggle button -->
         <button 
-          (click)="triggerFileInput()" 
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-          Select Files
+          (click)="toggleView()" 
+          class="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <i *ngIf="isGridView" class="fa fa-list mr-1 text-gray-500"></i>
+          <i *ngIf="!isGridView" class="fa fa-th-large mr-1 text-gray-500"></i>
+          <span>{{ isGridView ? 'List View' : 'Grid View' }}</span>
         </button>
-        <input 
-          #fileInput 
-          type="file" 
-          accept=".pdf" 
-          multiple 
-          (change)="onFileSelected($event)" 
-          class="hidden">
-        <p class="text-xs text-gray-500 mt-2">Only PDF files are accepted</p>
       </div>
     </div>
-  </div>
-  
-  <!-- CV List section -->
-  <div *ngIf="cvList.length > 0">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Your CV Collection</h2>
     
-    <!-- Grid View -->
-    <div *ngIf="isGridView" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" @fadeInOut>
-      <div *ngFor="let cv of cvList" class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200" @slideInOut>
-        <!-- CV Card Header -->
-        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-          <div class="flex items-center">
-            <i class="fa fa-file-pdf-o text-gray-500 mr-2"></i>
-            <span class="font-medium text-gray-800 truncate max-w-[150px]">{{ cv.name }}</span>
+    <!-- Error message -->
+    <div *ngIf="hasError" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+      <p>{{ errorMessage }}</p>
+      <button (click)="loadCVs()" class="mt-2 text-sm font-medium text-red-700 underline">Try Again</button>
+    </div>
+    
+    <!-- Upload area -->
+    <div class="mb-6">
+      <div 
+        (dragover)="onDragOver($event)" 
+        (dragleave)="onDragLeave($event)" 
+        (drop)="onDrop($event)" 
+        [class.border-blue-400]="isDragging" 
+        [class.bg-blue-50]="isDragging"
+        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors duration-200">
+        
+        <div class="flex flex-col items-center">
+          <i class="fa fa-upload text-4xl text-gray-400 mb-2"></i>
+          <p class="text-lg font-medium text-gray-700">Drag and drop your CV files here</p>
+          <p class="text-sm text-gray-500 mb-4">or</p>
+          <button 
+            (click)="triggerFileInput()" 
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            Select Files
+          </button>
+          <input 
+            #fileInput 
+            type="file" 
+            accept=".pdf" 
+            multiple 
+            (change)="onFileSelected($event)" 
+            class="hidden">
+          <p class="text-xs text-gray-500 mt-2">Only PDF files are accepted</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- CV List section -->
+    <div *ngIf="cvList.length > 0">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Your CV Collection</h2>
+      
+      <!-- Grid View -->
+      <div *ngIf="isGridView" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" @fadeInOut>
+        <div *ngFor="let cv of cvList" class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200" @slideInOut>
+          <!-- CV Card Header -->
+          <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <div class="flex items-center">
+              <i class="fa fa-file-pdf-o text-gray-500 mr-2"></i>
+              <span class="font-medium text-gray-800 truncate max-w-[150px]">{{ cv.file_name }}</span>
+            </div>
+            
+            <!-- Primary badge -->
+            <div *ngIf="cv.is_primary" class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
+              <i class="fa fa-star text-blue-800 text-sm mr-1"></i>
+              Primary
+            </div>
           </div>
           
-          <!-- Primary badge -->
-          <div *ngIf="cv.isPrimary" class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
-            <i class="fa fa-star text-blue-800 text-sm mr-1"></i>
-            Primary
+          <!-- CV Preview -->
+          <div class="relative h-48 bg-gray-100 flex items-center justify-center">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <i class="fa fa-file-pdf-o text-6xl text-gray-300"></i>
+            </div>
+            <!-- We'll just show an icon since we can't actually preview PDFs directly -->
           </div>
-        </div>
-        
-        <!-- CV Preview -->
-        <div class="relative h-48 bg-gray-100 flex items-center justify-center">
-          <div class="absolute inset-0 flex items-center justify-center">
-            <i class="fa fa-file-pdf-o text-6xl text-gray-300"></i>
-          </div>
-          <img *ngIf="cv.previewUrl" [src]="cv.previewUrl" alt="CV Preview" class="w-full h-full object-cover">
-        </div>
-        
-        <!-- Tags section -->
-        <div class="p-3 border-b border-gray-200">
-          <div class="flex flex-wrap gap-2">
-            <span *ngFor="let tag of cv.tags" class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
-              {{ tag }}
-              <button (click)="removeTag(cv, tag)" class="ml-1 text-gray-500 hover:text-gray-700">
-                <i class="fa fa-times text-xs"></i>
+          
+          <!-- Tags section -->
+          <div class="p-3 border-b border-gray-200">
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let tag of cv.tags" class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+                {{ tag }}
+                <button (click)="removeTag(cv, tag)" class="ml-1 text-gray-500 hover:text-gray-700">
+                  <i class="fa fa-times text-xs"></i>
+                </button>
+              </span>
+              
+              <!-- Add tag button -->
+              <button 
+                *ngIf="!cv.isAddingTag" 
+                (click)="startAddTag(cv)" 
+                class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs hover:bg-gray-200">
+                <i class="fa fa-plus text-xs mr-1"></i>
+                Add Tag
               </button>
-            </span>
+              
+              <!-- Tag dropdown when adding -->
+              <div *ngIf="cv.isAddingTag" class="relative">
+                <select 
+                  [(ngModel)]="cv.newTag" 
+                  (change)="addTag(cv, cv.newTag!)" 
+                  class="form-select block w-full pl-3 pr-10 py-1 text-xs border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md shadow-sm">
+                  <option value="" disabled>Select a tag</option>
+                  <option *ngFor="let tag of availableTags" [value]="tag">{{ tag }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Actions footer -->
+          <div class="p-3 bg-gray-50 flex justify-between items-center">
+            <div class="text-xs text-gray-500">
+              Added {{ formatDate(cv.uploaded_at) }}
+            </div>
             
-            <!-- Add tag button -->
-            <button 
-              *ngIf="!isAddingTag" 
-              (click)="startAddTag(cv)" 
-              class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs hover:bg-gray-200">
-              <i class="fa fa-plus text-xs mr-1"></i>
-              Add Tag
-            </button>
-            
-            <!-- Tag dropdown when adding -->
-            <div *ngIf="isAddingTag" class="relative">
-              <select 
-                [(ngModel)]="newTag" 
-                (change)="addTag(cv, newTag)" 
-                class="form-select block w-full pl-3 pr-10 py-1 text-xs border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md shadow-sm">
-                <option value="" disabled>Select a tag</option>
-                <option *ngFor="let tag of availableTags" [value]="tag">{{ tag }}</option>
-              </select>
+            <div class="flex space-x-2">
+              <!-- Download button -->
+              <button 
+                (click)="downloadCV(cv.id)" 
+                class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                title="Download CV">
+                <i class="fa fa-download"></i>
+              </button>
+              
+              <!-- Set as primary button -->
+              <button 
+                (click)="setPrimaryCV(cv.id)" 
+                [class.text-blue-600]="cv.is_primary"
+                class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                title="Set as primary CV">
+                <i class="fa fa-star"></i>
+              </button>
+              
+              <!-- Delete button -->
+              <button 
+                (click)="removeCV(cv.id)" 
+                class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                title="Delete CV">
+                <i class="fa fa-trash"></i>
+              </button>
             </div>
           </div>
         </div>
-        
-        <!-- Actions footer -->
-        <div class="p-3 bg-gray-50 flex justify-between items-center">
-          <div class="text-xs text-gray-500">
-            Added {{ formatDate(cv.dateUploaded) }}
+      </div>
+      
+      <!-- List View -->
+      <div *ngIf="!isGridView" class="space-y-4" @fadeInOut>
+        <div *ngFor="let cv of cvList" 
+          class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col sm:flex-row" 
+          @slideInOut>
+          
+          <!-- CV Preview (thumbnail) -->
+          <div class="w-full sm:w-24 h-24 bg-gray-100 flex items-center justify-center shrink-0">
+            <div class="flex items-center justify-center">
+              <i class="fa fa-file-pdf-o text-4xl text-gray-300"></i>
+            </div>
           </div>
           
-          <div class="flex space-x-2">
+          <!-- CV Details -->
+          <div class="p-4 flex-grow">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+              <div class="flex items-center mb-2 sm:mb-0">
+                <span class="font-medium text-gray-800 mr-2">{{ cv.file_name }}</span>
+                <div *ngIf="cv.is_primary" class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
+                  <i class="fa fa-star text-blue-800 text-sm mr-1"></i>
+                  Primary
+                </div>
+              </div>
+              
+              <div class="text-sm text-gray-500">
+                Added {{ formatDate(cv.uploaded_at) }}
+              </div>
+            </div>
+            
+            <!-- Tags -->
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span *ngFor="let tag of cv.tags" class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+                {{ tag }}
+                <button (click)="removeTag(cv, tag)" class="ml-1 text-gray-500 hover:text-gray-700">
+                  <i class="fa fa-times text-xs"></i>
+                </button>
+              </span>
+              
+              <!-- Add tag button -->
+              <button 
+                *ngIf="!cv.isAddingTag" 
+                (click)="startAddTag(cv)" 
+                class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs hover:bg-gray-200">
+                <i class="fa fa-plus text-xs mr-1"></i>
+                Add Tag
+              </button>
+              
+              <!-- Tag dropdown when adding -->
+              <div *ngIf="cv.isAddingTag" class="relative">
+                <select 
+                  [(ngModel)]="cv.newTag" 
+                  (change)="addTag(cv, cv.newTag!)" 
+                  class="form-select block w-full pl-3 pr-10 py-1 text-xs border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md shadow-sm">
+                  <option value="" disabled>Select a tag</option>
+                  <option *ngFor="let tag of availableTags" [value]="tag">{{ tag }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div class="px-4 py-3 border-t sm:border-t-0 sm:border-l border-gray-200 flex sm:flex-col justify-between sm:justify-center items-center sm:space-y-3">
             <!-- Download button -->
             <button 
               (click)="downloadCV(cv.id)" 
@@ -135,7 +241,7 @@
             <!-- Set as primary button -->
             <button 
               (click)="setPrimaryCV(cv.id)" 
-              [class.text-blue-600]="cv.isPrimary"
+              [class.text-blue-600]="cv.is_primary"
               class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
               title="Set as primary CV">
               <i class="fa fa-star"></i>
@@ -153,108 +259,16 @@
       </div>
     </div>
     
-    <!-- List View -->
-    <div *ngIf="!isGridView" class="space-y-4" @fadeInOut>
-      <div *ngFor="let cv of cvList" 
-        class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col sm:flex-row" 
-        @slideInOut>
-        
-        <!-- CV Preview (thumbnail) -->
-        <div class="w-full sm:w-24 h-24 bg-gray-100 flex items-center justify-center shrink-0">
-          <div class="flex items-center justify-center">
-            <i class="fa fa-file-pdf-o text-4xl text-gray-300"></i>
-          </div>
-          <img *ngIf="cv.previewUrl" [src]="cv.previewUrl" alt="CV Preview" class="w-full h-full object-cover">
-        </div>
-        
-        <!-- CV Details -->
-        <div class="p-4 flex-grow">
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-            <div class="flex items-center mb-2 sm:mb-0">
-              <span class="font-medium text-gray-800 mr-2">{{ cv.name }}</span>
-              <div *ngIf="cv.isPrimary" class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
-                <i class="fa fa-star text-blue-800 text-sm mr-1"></i>
-                Primary
-              </div>
-            </div>
-            
-            <div class="text-sm text-gray-500">
-              Added {{ formatDate(cv.dateUploaded) }}
-            </div>
-          </div>
-          
-          <!-- Tags -->
-          <div class="mt-3 flex flex-wrap gap-2">
-            <span *ngFor="let tag of cv.tags" class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
-              {{ tag }}
-              <button (click)="removeTag(cv, tag)" class="ml-1 text-gray-500 hover:text-gray-700">
-                <i class="fa fa-times text-xs"></i>
-              </button>
-            </span>
-            
-            <!-- Add tag button -->
-            <button 
-              *ngIf="!isAddingTag" 
-              (click)="startAddTag(cv)" 
-              class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs hover:bg-gray-200">
-              <i class="fa fa-plus text-xs mr-1"></i>
-              Add Tag
-            </button>
-            
-            <!-- Tag dropdown when adding -->
-            <div *ngIf="isAddingTag" class="relative">
-              <select 
-                [(ngModel)]="newTag" 
-                (change)="addTag(cv, newTag)" 
-                class="form-select block w-full pl-3 pr-10 py-1 text-xs border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md shadow-sm">
-                <option value="" disabled>Select a tag</option>
-                <option *ngFor="let tag of availableTags" [value]="tag">{{ tag }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Actions -->
-        <div class="px-4 py-3 border-t sm:border-t-0 sm:border-l border-gray-200 flex sm:flex-col justify-between sm:justify-center items-center sm:space-y-3">
-          <!-- Download button -->
-          <button 
-            (click)="downloadCV(cv.id)" 
-            class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
-            title="Download CV">
-            <i class="fa fa-download"></i>
-          </button>
-          
-          <!-- Set as primary button -->
-          <button 
-            (click)="setPrimaryCV(cv.id)" 
-            [class.text-blue-600]="cv.isPrimary"
-            class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
-            title="Set as primary CV">
-            <i class="fa fa-star"></i>
-          </button>
-          
-          <!-- Delete button -->
-          <button 
-            (click)="removeCV(cv.id)" 
-            class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
-            title="Delete CV">
-            <i class="fa fa-trash"></i>
-          </button>
-        </div>
-      </div>
+    <!-- Empty state -->
+    <div *ngIf="cvList.length === 0 && !isLoading && !hasError" class="text-center p-8 border border-gray-200 rounded-lg bg-gray-50">
+      <i class="fa fa-file-text-o text-5xl text-gray-400 mb-2"></i>
+      <h3 class="text-xl font-medium text-gray-700 mb-2">No CVs uploaded yet</h3>
+      <p class="text-gray-500 mb-4">Upload your CV to get started with the CV manager</p>
+      <button 
+        (click)="triggerFileInput()" 
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        Upload CV
+      </button>
     </div>
-  </div>
-  
-  <!-- Empty state -->
-  <div *ngIf="cvList.length === 0" class="text-center p-8 border border-gray-200 rounded-lg bg-gray-50">
-    <i class="fa fa-file-text-o text-5xl text-gray-400 mb-2"></i>
-    <h3 class="text-xl font-medium text-gray-700 mb-2">No CVs uploaded yet</h3>
-    <p class="text-gray-500 mb-4">Upload your CV to get started with the CV manager</p>
-    <button 
-      (click)="triggerFileInput()" 
-      class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-      Upload CV
-    </button>
-  </div>
-</main>
+  </main>
 </div>

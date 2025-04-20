@@ -1,24 +1,29 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
-
+import { CvService } from '../../../services/cv.service';
+import { finalize } from 'rxjs/operators';
+import { HttpClientModule } from '@angular/common/http';
 
 interface CV {
-  id: string;
-  name: string;
-  file: File;
-  dateUploaded: Date;
+  id: number;
+  file_name: string;
+  file_url: string;
+  is_primary: boolean;
   tags: string[];
-  isPrimary: boolean;
+  uploaded_at: string;
+  // UI-specific properties
+  isAddingTag?: boolean;
+  newTag?: string;
   previewUrl?: string;
 }
 
 @Component({
   selector: 'app-cv-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SidebarComponent, HttpClientModule],
   templateUrl: './cv-manager.component.html',
   styleUrls: ['./cv-manager.component.scss'],
   animations: [
@@ -56,17 +61,42 @@ export class CvManagerComponent implements OnInit {
   
   // CV Data
   cvList: CV[] = [];
+  isLoading = false;
+  hasError = false;
+  errorMessage = '';
   
-  constructor(private fb: FormBuilder) {}
+  constructor(private cvService: CvService) {}
   
   ngOnInit(): void {
-    // Initialize with sample data for testing
-    this.loadMockData();
+    this.loadCVs();
+  }
+  
+  loadCVs(): void {
+    this.isLoading = true;
+    this.hasError = false;
+    
+    this.cvService.getCVs()
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (cvs) => {
+          this.cvList = cvs.map(cv => ({
+            ...cv,
+            isAddingTag: false,
+            newTag: '',
+            // Use file_url as preview URL
+            previewUrl: cv.file_url
+          }));
+        },
+        error: (err) => {
+          console.error('Error loading CVs:', err);
+          this.hasError = true;
+          this.errorMessage = 'Failed to load your CVs. Please try again later.';
+        }
+      });
   }
   
   onToggleSidebar(collapsed: boolean): void {
     this.sidebarCollapsed = collapsed;
-    // You might want to handle additional layout adjustments here
   }
   
   toggleView(): void {
@@ -106,95 +136,152 @@ export class CvManagerComponent implements OnInit {
   }
   
   handleFileUpload(files: FileList): void {
-    Array.from(files).forEach((file) => {
-      // Only accept PDF files
-      if (file.type === 'application/pdf') {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const newCV: CV = {
-            id: this.generateId(),
-            name: file.name,
-            file: file,
-            dateUploaded: new Date(),
-            tags: [],
-            isPrimary: this.cvList.length === 0, // First CV is primary by default
-            previewUrl: reader.result as string
-          };
-          
-          this.cvList.unshift(newCV);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        alert('Please upload PDF files only.');
-      }
-    });
+    // Only accept PDF files
+    const file = Array.from(files).find(file => file.type === 'application/pdf');
     
-    // Reset file input
-    if (this.fileInput) {
-      this.fileInput.nativeElement.value = '';
+    if (!file) {
+      alert('Please upload PDF files only.');
+      return;
     }
+    
+    this.isLoading = true;
+    this.cvService.uploadCV(file)
+      .pipe(finalize(() => {
+        this.isLoading = false;
+        if (this.fileInput) {
+          this.fileInput.nativeElement.value = '';
+        }
+      }))
+      .subscribe({
+        next: (response: any) => {
+          // Refresh the CV list
+          this.loadCVs();
+        },
+        error: (err) => {
+          console.error('Error uploading CV:', err);
+          alert('Failed to upload CV. Please try again later.');
+        }
+      });
   }
   
   triggerFileInput(): void {
     this.fileInput.nativeElement.click();
   }
   
-  removeCV(id: string): void {
-    const index = this.cvList.findIndex(cv => cv.id === id);
-    if (index !== -1) {
-      const wasRemovingPrimary = this.cvList[index].isPrimary;
-      this.cvList.splice(index, 1);
-      
-      // If we removed the primary CV, make the first one primary (if any exist)
-      if (wasRemovingPrimary && this.cvList.length > 0) {
-        this.cvList[0].isPrimary = true;
-      }
+  removeCV(id: number): void {
+    if (confirm('Are you sure you want to delete this CV?')) {
+      this.isLoading = true;
+      this.cvService.deleteCV(id)
+        .pipe(finalize(() => this.isLoading = false))
+        .subscribe({
+          next: () => {
+            // Remove from the list
+            this.cvList = this.cvList.filter(cv => cv.id !== id);
+          },
+          error: (err) => {
+            console.error('Error deleting CV:', err);
+            alert('Failed to delete CV. Please try again later.');
+          }
+        });
     }
   }
   
-  setPrimaryCV(id: string): void {
-    this.cvList.forEach(cv => {
-      cv.isPrimary = cv.id === id;
-    });
+  setPrimaryCV(id: number): void {
+    this.isLoading = true;
+    this.cvService.setPrimaryCV(id)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (updatedCV: any) => {
+          // Update primary status across all CVs
+          this.cvList.forEach(cv => {
+            cv.is_primary = cv.id === id;
+          });
+        },
+        error: (err) => {
+          console.error('Error setting primary CV:', err);
+          alert('Failed to set primary CV. Please try again later.');
+        }
+      });
   }
   
-  downloadCV(id: string): void {
+  downloadCV(id: number): void {
     const cv = this.cvList.find(cv => cv.id === id);
     if (cv) {
-      const link = document.createElement('a');
-      link.href = cv.previewUrl || '';
-      link.download = cv.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      this.cvService.downloadCV(cv.file_url);
     }
   }
   
   startAddTag(cv: CV): void {
-    this.isAddingTag = true;
-    this.newTag = '';
+    // Reset any other CV that might be in tag adding mode
+    this.cvList.forEach(c => c.isAddingTag = false);
+    cv.isAddingTag = true;
+    cv.newTag = '';
   }
   
-  addTag(cv: CV, tag: string): void {
-    if (tag && !cv.tags.includes(tag)) {
-      cv.tags.push(tag);
-    }
-    this.isAddingTag = false;
+ // Only updating the tag-related methods in the component
+// These should replace the existing methods in your component
+
+addTag(cv: CV, tag: string): void {
+  if (!tag) {
+    cv.isAddingTag = false;
+    return;
   }
   
-  removeTag(cv: CV, tag: string): void {
-    const index = cv.tags.indexOf(tag);
-    if (index !== -1) {
-      cv.tags.splice(index, 1);
-    }
+  if (!cv.tags) {
+    cv.tags = [];
   }
   
-  // Utilities
-  generateId(): string {
-    return Math.random().toString(36).substr(2, 9);
+  if (tag && !cv.tags.includes(tag)) {
+    this.isLoading = true;
+    
+    this.cvService['addTag'](cv.id, tag)
+      .pipe(finalize(() => {
+      this.isLoading = false;
+      cv.isAddingTag = false;
+      }))
+      .subscribe({
+      next: (updatedCV: CV) => {
+        // Update the CV with server response
+        const index: number = this.cvList.findIndex((c: CV) => c.id === cv.id);
+        if (index !== -1) {
+        this.cvList[index].tags = updatedCV.tags;
+        }
+      },
+      error: (err: any) => {
+        console.error('Error adding tag:', err);
+        alert('Failed to add tag. Please try again later.');
+      }
+      });
+  } else {
+    cv.isAddingTag = false;
   }
+}
+
+removeTag(cv: CV, tag: string): void {
+  const index = cv.tags?.indexOf(tag);
+  if (index !== undefined && index !== -1) {
+    this.isLoading = true;
+    
+    this.cvService['removeTag'](cv.id, tag)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+      next: (updatedCV: CV) => {
+        // Update the CV with server response
+        const index: number = this.cvList.findIndex((c: CV) => c.id === cv.id);
+        if (index !== -1) {
+        this.cvList[index].tags = updatedCV.tags;
+        }
+      },
+      error: (err: any) => {
+        console.error('Error removing tag:', err);
+        alert('Failed to remove tag. Please try again later.');
+      }
+      });
+  }
+}
   
-  formatDate(date: Date): string {
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -202,37 +289,9 @@ export class CvManagerComponent implements OnInit {
     });
   }
   
-  // Mock data for testing
-  private loadMockData(): void {
-    const mockCV1: CV = {
-      id: this.generateId(),
-      name: 'John_Doe_Resume_2025.pdf',
-      file: new File([], 'John_Doe_Resume_2025.pdf', { type: 'application/pdf' }),
-      dateUploaded: new Date(),
-      tags: ['Tech', 'Remote'],
-      isPrimary: true,
-      previewUrl: 'assets/cv.jpg'
-    };
-    
-    const mockCV2: CV = {
-      id: this.generateId(),
-      name: 'Software_Developer_CV.pdf',
-      file: new File([], 'Software_Developer_CV.pdf', { type: 'application/pdf' }),
-      dateUploaded: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      tags: ['Tech', 'Senior'],
-      isPrimary: false,
-      previewUrl: 'assets/cv2.jpg'
-    };
-    const mockCV3: CV = {
-      id: this.generateId(),
-      name: 'Marketing_Expert_CV.pdf',
-      file: new File([], 'Marketing_Expert_CV.pdf', { type: 'application/pdf' }),
-      dateUploaded: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
-      tags: ['Marketing'],
-      isPrimary: false,
-      previewUrl: 'assets/cv3.jpg'
-    };
-    
-    this.cvList.push(mockCV1, mockCV2, mockCV3);
+  getFileName(path: string): string {
+    // Extract just the file name from the full path/URL
+    const parts = path.split('/');
+    return parts[parts.length - 1];
   }
 }

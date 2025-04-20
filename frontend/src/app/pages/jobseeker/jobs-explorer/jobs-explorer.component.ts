@@ -3,13 +3,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
-
+import { JobService, Job as ServiceJob } from '../../../services/job.service';
+import { AuthService } from '../../../services/auth.service';
+import { finalize } from 'rxjs/operators';
 
 interface Job {
   id: number;
   title: string;
   company: string;
-  companyLogo: string;
+  companyLogo?: string;
   jobType: string;
   locationType: string;
   salaryRange: string;
@@ -21,6 +23,8 @@ interface Job {
   responsibilities?: string[];
   requirements?: string[];
   benefits?: string[];
+  location?: string;
+  applicationCount?: number;
 }
 
 interface FilterOptions {
@@ -43,6 +47,7 @@ export class JobsExplorerComponent implements OnInit {
   currentTab = 'recommended';
   selectedJob: Job | null = null;
   loading = false;
+  userSkills: string[] = [];
   
   // Filter states
   activeFilters: {[key: string]: string} = {};
@@ -65,228 +70,208 @@ export class JobsExplorerComponent implements OnInit {
   
   // Pagination
   currentPage = 1;
-  totalPages = 8;
+  totalPages = 1;
   jobsPerPage = 6;
+  totalJobs = 0;
   
-  // Mock data for jobs
-  allJobs: Job[] = [
-    {
-      id: 1,
-      title: 'Senior UX Designer',
-      company: 'Google Inc.',
-      companyLogo: 'assets/images/company-logos/google.png',
-      jobType: 'Full-time',
-      locationType: 'Remote',
-      salaryRange: '$120k-165k',
-      postedDate: 'Posted 2 days ago',
-      matchScore: 92,
-      isSaved: false,
-      isApplied: false,
-      description: 'We are looking for a Senior UX Designer to join our team and help create exceptional user experiences for our products. You will work closely with product managers, engineers, and other designers to conceptualize, prototype, and implement user interfaces.',
-      responsibilities: [
-        'Create user-centered designs by understanding business requirements and user feedback',
-        'Create user flows, wireframes, prototypes and mockups',
-        'Translate requirements into style guides, design systems, design patterns and attractive user interfaces',
-        'Design UI elements such as input controls, navigational components and informational components',
-        'Collaborate with other team members and stakeholders'
-      ],
-      requirements: [
-        '5+ years of UX design experience',
-        'Strong portfolio demonstrating UX design capabilities',
-        'Proficiency in design tools such as Figma, Sketch, Adobe XD',
-        'Experience with user testing and iterative design',
-        'Excellent communication and collaboration skills'
-      ],
-      benefits: [
-        'Competitive salary and equity',
-        'Health, dental, and vision insurance',
-        'Unlimited PTO',
-        'Remote work options',
-        'Professional development budget'
-      ]
-    },
-    {
-      id: 2,
-      title: 'Frontend Developer',
-      company: 'Microsoft',
-      companyLogo: 'assets/images/company-logos/microsoft.png',
-      jobType: 'Full-time',
-      locationType: 'Hybrid',
-      salaryRange: '$90k-120k',
-      postedDate: 'Posted 3 days ago',
-      matchScore: 88,
-      isSaved: false,
-      isApplied: false,
-      description: 'Microsoft is seeking a talented Frontend Developer to join our team. In this role, you will be responsible for building and maintaining web applications using modern JavaScript frameworks.'
-    },
-    {
-      id: 3,
-      title: 'Product Manager',
-      company: 'Apple Inc.',
-      companyLogo: 'assets/images/company-logos/apple.png',
-      jobType: 'Full-time',
-      locationType: 'Onsite',
-      salaryRange: '$140k-175k',
-      postedDate: 'Posted 1 week ago',
-      matchScore: 85,
-      isSaved: false,
-      isApplied: false,
-      description: 'Apple is looking for a Product Manager to drive product strategy and execution. You will work with cross-functional teams to define, build, and launch innovative products.'
-    },
-    {
-      id: 4,
-      title: 'Data Scientist',
-      company: 'Netflix',
-      companyLogo: 'assets/images/company-logos/netflix.png',
-      jobType: 'Full-time',
-      locationType: 'Remote',
-      salaryRange: '$130k-160k',
-      postedDate: 'Posted 3 days ago',
-      matchScore: 80,
-      isSaved: false,
-      isApplied: false,
-      description: 'Netflix is seeking a Data Scientist to help drive business decisions through data analysis and modeling. You will work with large datasets to extract insights and build predictive models.'
-    },
-    {
-      id: 5,
-      title: 'DevOps Engineer',
-      company: 'Meta',
-      companyLogo: 'assets/images/company-logos/meta.png',
-      jobType: 'Full-time',
-      locationType: 'Hybrid',
-      salaryRange: '$120k-170k',
-      postedDate: 'Posted 1 day ago',
-      matchScore: 76,
-      isSaved: false,
-      isApplied: false,
-      description: 'Meta is looking for a DevOps Engineer to build and maintain infrastructure, deployment, and operational processes. You will work with development teams to implement CI/CD pipelines and ensure system reliability.'
-    },
-    {
-      id: 6,
-      title: 'UI Designer',
-      company: 'Airbnb',
-      companyLogo: 'assets/images/company-logos/airbnb.png',
-      jobType: 'Contract',
-      locationType: 'Remote',
-      salaryRange: '$100k-125k',
-      postedDate: 'Posted 4 days ago',
-      matchScore: 72,
-      isSaved: false,
-      isApplied: false,
-      description: 'Airbnb is seeking a UI Designer to create visually appealing and functional user interfaces. You will collaborate with UX designers and developers to implement cohesive design systems.'
-    },
-    {
-      id: 7,
-      title: 'Backend Engineer',
-      company: 'Amazon',
-      companyLogo: 'assets/images/company-logos/amazon.png',
-      jobType: 'Full-time',
-      locationType: 'Onsite',
-      salaryRange: '$130k-180k',
-      postedDate: 'Posted 5 days ago',
-      matchScore: 70,
-      isSaved: false,
-      isApplied: false,
-      description: 'Amazon is looking for a Backend Engineer to design and implement scalable and reliable services. You will work with large-scale distributed systems and contribute to architecture decisions.'
-    },
-    {
-      id: 8,
-      title: 'Machine Learning Engineer',
-      company: 'Tesla',
-      companyLogo: 'assets/images/company-logos/tesla.png',
-      jobType: 'Full-time',
-      locationType: 'Hybrid',
-      salaryRange: '$140k-190k',
-      postedDate: 'Posted 1 week ago',
-      matchScore: 68,
-      isSaved: false,
-      isApplied: false,
-      description: 'Tesla is looking for a Machine Learning Engineer to develop and deploy ML models for autonomous driving systems. You will work with massive datasets and implement state-of-the-art algorithms.'
-    },
-    {
-      id: 9,
-      title: 'Marketing Specialist',
-      company: 'Spotify',
-      companyLogo: 'assets/images/company-logos/spotify.png',
-      jobType: 'Full-time',
-      locationType: 'Remote',
-      salaryRange: '$80k-110k',
-      postedDate: 'Posted 2 days ago',
-      matchScore: 65,
-      isSaved: false,
-      isApplied: false,
-      description: 'Spotify is seeking a Marketing Specialist to develop and execute marketing campaigns. You will analyze market trends and help drive user acquisition and retention strategies.'
-    },
-    {
-      id: 10,
-      title: 'Project Manager',
-      company: 'Slack',
-      companyLogo: 'assets/images/company-logos/slack.png',
-      jobType: 'Full-time',
-      locationType: 'Hybrid',
-      salaryRange: '$90k-130k',
-      postedDate: 'Posted 3 days ago',
-      matchScore: 63,
-      isSaved: false,
-      isApplied: false,
-      description: 'Slack is looking for a Project Manager to lead cross-functional teams and deliver projects on time and within budget. You will define project scope, goals, and deliverables.'
-    },
-    {
-      id: 11,
-      title: 'Cloud Architect',
-      company: 'IBM',
-      companyLogo: 'assets/images/company-logos/ibm.png',
-      jobType: 'Full-time',
-      locationType: 'Remote',
-      salaryRange: '$150k-200k',
-      postedDate: 'Posted 6 days ago',
-      matchScore: 60,
-      isSaved: false,
-      isApplied: false,
-      description: 'IBM is seeking a Cloud Architect to design and implement cloud-based solutions. You will provide technical guidance on cloud architecture and help migrate applications to the cloud.'
-    },
-    {
-      id: 12,
-      title: 'Mobile Developer',
-      company: 'Uber',
-      companyLogo: 'assets/images/company-logos/uber.png',
-      jobType: 'Full-time',
-      locationType: 'Hybrid',
-      salaryRange: '$100k-140k',
-      postedDate: 'Posted 4 days ago',
-      matchScore: 58,
-      isSaved: false,
-      isApplied: false,
-      description: 'Uber is looking for a Mobile Developer to build and maintain mobile applications. You will work with product and design teams to create intuitive and performant mobile experiences.'
-    }
-  ];
-
+  // Jobs data
+  allJobs: Job[] = [];
   matchedJobs: Job[] = [];
   savedJobs: Job[] = [];
   appliedJobs: Job[] = [];
   filteredJobs: Job[] = [];
   displayedJobs: Job[] = [];
 
-  constructor() {}
+  constructor(
+    private jobService: JobService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.matchedJobs = [...this.allJobs];
-    this.filteredJobs = [...this.matchedJobs];
-    this.updateDisplayedJobs();
-    
-    // Simulate initial loading
     this.loading = true;
-    setTimeout(() => {
-      this.loading = false;
-    }, 800);
+    this.loadJobMatches();
+  }
+
+  loadJobMatches(): void {
+    this.jobService.getJobMatches()
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          this.userSkills = response.userSkills || [];
+          this.allJobs = this.transformJobs(response.matches);
+          this.matchedJobs = [...this.allJobs];
+          this.filteredJobs = [...this.matchedJobs];
+          this.totalJobs = response.totalMatches || this.allJobs.length;
+          this.totalPages = Math.ceil(this.totalJobs / this.jobsPerPage);
+          
+          // Load saved and applied jobs
+          this.loadSavedJobs();
+          this.loadAppliedJobs();
+          
+          this.updateDisplayedJobs();
+        },
+        error: (error) => {
+          console.error('Error loading job matches:', error);
+          this.allJobs = [];
+          this.matchedJobs = [];
+          this.filteredJobs = [];
+          this.updateDisplayedJobs();
+        }
+      });
+  }
+
+  loadAllJobs(): void {
+    this.loading = true;
+    this.jobService.getJobs()
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          const jobs = this.transformJobs(response.jobs);
+          this.allJobs = jobs;
+          this.matchedJobs = [...jobs];
+          this.filteredJobs = [...this.matchedJobs];
+          this.totalJobs = response.pagination.total || this.allJobs.length;
+          this.totalPages = Math.ceil(this.totalJobs / this.jobsPerPage);
+          this.updateDisplayedJobs();
+        },
+        error: (error) => {
+          console.error('Error loading all jobs:', error);
+          this.allJobs = [];
+          this.matchedJobs = [];
+          this.filteredJobs = [];
+          this.updateDisplayedJobs();
+        }
+      });
+  }
+
+  loadSavedJobs(): void {
+    // In a real app, you would fetch saved jobs from API
+    // For now, we'll just mark some jobs as saved based on localStorage
+    const savedJobIds = this.getSavedJobIds();
+    this.allJobs.forEach(job => {
+      if (savedJobIds.includes(job.id)) {
+        job.isSaved = true;
+      }
+    });
+    
+    this.savedJobs = this.allJobs.filter(job => job.isSaved);
+  }
+
+  loadAppliedJobs(): void {
+    // In a real app, you would fetch applied jobs from API
+    // For now, we'll just mark some jobs as applied based on localStorage
+    const appliedJobIds = this.getAppliedJobIds();
+    this.allJobs.forEach(job => {
+      if (appliedJobIds.includes(job.id)) {
+        job.isApplied = true;
+      }
+    });
+    
+    this.appliedJobs = this.allJobs.filter(job => job.isApplied);
+  }
+
+  getSavedJobIds(): number[] {
+    const savedJobs = localStorage.getItem('savedJobs');
+    return savedJobs ? JSON.parse(savedJobs) : [];
+  }
+
+  getAppliedJobIds(): number[] {
+    const appliedJobs = localStorage.getItem('appliedJobs');
+    return appliedJobs ? JSON.parse(appliedJobs) : [];
+  }
+
+  transformJobs(serviceJobs: ServiceJob[]): Job[] {
+    return serviceJobs.map(job => {
+      // Calculate match score based on user skills and job skills
+      const matchScore = this.calculateMatchScore(job);
+      
+      // Parse benefits and requirements into arrays
+      const requirements = job.requirements ? 
+        job.requirements.split('\n').filter(line => line.trim().length > 0) : [];
+      
+      const benefits = job.benefits ? 
+        job.benefits.split('\n').filter(line => line.trim().length > 0) : [];
+        
+      // Create responsibilities from description if not available
+      const responsibilities = job.description ? 
+        job.description.split('\n').filter(line => line.trim().length > 0).slice(0, 5) : [];
+        
+      return {
+        id: job.id,
+        title: job.title,
+        company: job.company || 'Company Name',
+        companyLogo: undefined, // You can set default logo or map from company name
+        jobType: job.type || 'Full-time',
+        locationType: job.workMode || 'On-site',
+        salaryRange: job.salary || 'Competitive',
+        postedDate: `Posted ${this.getDaysAgo(job.postDate)} ago`,
+        matchScore: matchScore,
+        isSaved: false, // Will be updated in loadSavedJobs
+        isApplied: false, // Will be updated in loadAppliedJobs
+        description: job.description,
+        responsibilities: responsibilities,
+        requirements: requirements,
+        benefits: benefits,
+        location: job.location,
+        applicationCount: job.applications || 0
+      };
+    });
+  }
+
+  calculateMatchScore(job: ServiceJob): number {
+    if (!job.skills || !this.userSkills || this.userSkills.length === 0) {
+      return 50; // Default score if we can't calculate
+    }
+    
+    const jobSkills = Array.isArray(job.skills) ? 
+      job.skills.map(skill => typeof skill === 'string' ? skill.toLowerCase() : skill.toString().toLowerCase()) : 
+      [];
+    
+    const userSkillsLower = this.userSkills.map(skill => skill.toLowerCase());
+    
+    // Count matching skills
+    let matches = 0;
+    for (const skill of userSkillsLower) {
+      if (jobSkills.some(jobSkill => jobSkill.includes(skill) || skill.includes(jobSkill))) {
+        matches++;
+      }
+    }
+    
+    // Calculate percentage but ensure it's at least 30%
+    const baseScore = 30;
+    const maxAdditionalScore = 70;
+    
+    if (jobSkills.length === 0) return baseScore;
+    
+    const matchPercentage = Math.min(matches / jobSkills.length, 1);
+    return Math.round(baseScore + (matchPercentage * maxAdditionalScore));
+  }
+
+  getDaysAgo(dateString: string): string {
+    if (!dateString) return '0 days';
+    
+    const postDate = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - postDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return '1 day';
+    if (diffDays < 30) return `${diffDays} days`;
+    
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths === 1) return '1 month';
+    return `${diffMonths} months`;
   }
 
   onToggleSidebar(collapsed: boolean): void {
     this.sidebarCollapsed = collapsed;
   }
+  
   getObjectKeys(obj: any): string[] {
     return Object.keys(obj);
   }
+
   onSearchChange(): void {
     this.loading = true;
     
@@ -340,7 +325,7 @@ export class JobsExplorerComponent implements OnInit {
       this.currentPage = 1;
       this.updateDisplayedJobs();
       this.loading = false;
-    }, 400);  // Simulate network delay
+    }, 400);
   }
 
   getJobsBasedOnFilters(): Job[] {
@@ -378,7 +363,6 @@ export class JobsExplorerComponent implements OnInit {
           this.filteredJobs.sort((a, b) => b.matchScore - a.matchScore);
           break;
         case 'Date Posted':
-          // This is simplified - in a real app, you'd parse the date strings
           this.filteredJobs.sort((a, b) => {
             const aDays = parseInt(a.postedDate.match(/\d+/)?.[0] || '0');
             const bDays = parseInt(b.postedDate.match(/\d+/)?.[0] || '0');
@@ -387,15 +371,15 @@ export class JobsExplorerComponent implements OnInit {
           break;
         case 'Salary: High to Low':
           this.filteredJobs.sort((a, b) => {
-            const aMax = parseInt(a.salaryRange.match(/\d+k/g)?.[1].replace('k', '000') || '0');
-            const bMax = parseInt(b.salaryRange.match(/\d+k/g)?.[1].replace('k', '000') || '0');
+            const aMax = this.extractMaxSalary(a.salaryRange);
+            const bMax = this.extractMaxSalary(b.salaryRange);
             return bMax - aMax;
           });
           break;
         case 'Salary: Low to High':
           this.filteredJobs.sort((a, b) => {
-            const aMin = parseInt(a.salaryRange.match(/\d+k/g)?.[0].replace('k', '000') || '0');
-            const bMin = parseInt(b.salaryRange.match(/\d+k/g)?.[0].replace('k', '000') || '0');
+            const aMin = this.extractMinSalary(a.salaryRange);
+            const bMin = this.extractMinSalary(b.salaryRange);
             return aMin - bMin;
           });
           break;
@@ -403,13 +387,44 @@ export class JobsExplorerComponent implements OnInit {
       
       this.updateDisplayedJobs();
       this.loading = false;
-    }, 400);  // Simulate network delay
+    }, 400);
+  }
+
+  extractMinSalary(salaryRange: string): number {
+    const matches = salaryRange.match(/\$?(\d+)k?/i);
+    if (matches && matches[1]) {
+      return parseInt(matches[1]) * (salaryRange.includes('k') ? 1000 : 1);
+    }
+    return 0;
+  }
+
+  extractMaxSalary(salaryRange: string): number {
+    const matches = salaryRange.match(/\$?(\d+)k?\s*-\s*\$?(\d+)k?/i);
+    if (matches && matches[2]) {
+      return parseInt(matches[2]) * (salaryRange.includes('k') ? 1000 : 1);
+    }
+    return this.extractMinSalary(salaryRange);
   }
 
   toggleSaveJob(job: Job, event: Event): void {
     event.stopPropagation();
     job.isSaved = !job.isSaved;
     
+    // Update localStorage
+    const savedJobIds = this.getSavedJobIds();
+    if (job.isSaved) {
+      if (!savedJobIds.includes(job.id)) {
+        savedJobIds.push(job.id);
+      }
+    } else {
+      const index = savedJobIds.indexOf(job.id);
+      if (index !== -1) {
+        savedJobIds.splice(index, 1);
+      }
+    }
+    localStorage.setItem('savedJobs', JSON.stringify(savedJobIds));
+    
+    // Update saved jobs list
     if (job.isSaved) {
       if (!this.savedJobs.some(j => j.id === job.id)) {
         this.savedJobs.push(job);
@@ -426,35 +441,65 @@ export class JobsExplorerComponent implements OnInit {
   }
 
   applyForJob(job: Job, event: Event): void {
-    event.stopPropagation();
-    job.isApplied = true;
-    
-    if (!this.appliedJobs.some(j => j.id === job.id)) {
-      this.appliedJobs.push(job);
+    if (job.isApplied) {
+      return; // Already applied
     }
     
-    // Show a success message (in a real app, this would be a proper modal or toast)
+    event.stopPropagation();
+    
+    // Show confirmation dialog
     const confirmApply = confirm(`Apply for ${job.title} at ${job.company}? This will submit your profile to the employer.`);
     
     if (confirmApply) {
       // Simulate API call with loading state
       this.loading = true;
-      setTimeout(() => {
-        this.loading = false;
-        alert(`Successfully applied for ${job.title} at ${job.company}!`);
+      
+      // Get user profile data from auth service
+      this.authService.getCurrentUserProfile().subscribe(userProfile => {
+        // Create application payload with job ID and user profile
+        const applicationData = {
+          jobId: job.id,
+          candidateProfile: userProfile,
+          appliedDate: new Date().toISOString()
+        };
         
-        // If we're on the applied tab, update the display
-        if (this.currentTab === 'applied') {
-          this.filteredJobs = [...this.appliedJobs];
-          this.updateDisplayedJobs();
-        }
-      }, 1000);
-    } else {
-      job.isApplied = false;
-      this.appliedJobs = this.appliedJobs.filter(j => j.id !== job.id);
+        // Send to backend
+        this.jobService.applyForJob(job.id)
+          .pipe(finalize(() => this.loading = false))
+          .subscribe({
+            next: (response) => {
+              // Mark as applied
+              job.isApplied = true;
+              job.applicationCount = (job.applicationCount || 0) + 1;
+              
+              // Update localStorage
+              const appliedJobIds = this.getAppliedJobIds();
+              if (!appliedJobIds.includes(job.id)) {
+                appliedJobIds.push(job.id);
+                localStorage.setItem('appliedJobs', JSON.stringify(appliedJobIds));
+              }
+              
+              // Update applied jobs list
+              if (!this.appliedJobs.some(j => j.id === job.id)) {
+                this.appliedJobs.push(job);
+              }
+              
+              alert(`Successfully applied for ${job.title} at ${job.company}!`);
+              
+              // If we're on the applied tab, update the display
+              if (this.currentTab === 'applied') {
+                this.filteredJobs = [...this.appliedJobs];
+                this.updateDisplayedJobs();
+              }
+            },
+            error: (error) => {
+              console.error('Error applying for job:', error);
+              alert('An error occurred while applying for the job. Please try again.');
+            }
+          });
+      });
     }
   }
-
   viewJobDetails(job: Job): void {
     this.selectedJob = job;
   }
