@@ -1,9 +1,18 @@
 import { Request, Response } from 'express';
-import { ID, Storage } from 'appwrite';
+import { ID } from 'appwrite';
 import { storage } from '../config/appwrite';
 import pool from '../config/db.config';
+import { Readable } from 'stream';
 
-const CV_BUCKET_ID = process.env.APPWRITE_BUCKET_ID || 'cv_storage';
+const CV_BUCKET_ID = process.env.APPWRITE_BUCKET_ID || '68052646000a993ccf3f';
+
+// Helper function to convert Buffer to Stream
+function bufferToStream(buffer: Buffer): Readable {
+  const stream = new Readable();
+  stream.push(buffer);
+  stream.push(null);
+  return stream;
+}
 
 export const uploadCV = async (req: Request, res: Response) => {
   try {
@@ -18,11 +27,13 @@ export const uploadCV = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
     
-    // Upload to Appwrite
+    // Upload to Appwrite using a stream from buffer
+    const fileId = ID.unique();
     const appwriteFile = await storage.createFile(
       CV_BUCKET_ID,
-      ID.unique(),
-      new File([file.buffer], file.originalname, { type: file.mimetype })
+      fileId,
+      new File([file.buffer], file.originalname, { type: file.mimetype }),
+      [file.originalname]
     );
     
     // Begin transaction
@@ -290,7 +301,7 @@ export const removeTag = async (req: Request, res: Response) => {
       const currentTags = cv.tags || [];
       
       // Remove the tag if it exists
-    const updatedTags: string[] = currentTags.filter((t: string) => t !== tag);
+      const updatedTags: string[] = currentTags.filter((t: string) => t !== tag);
       
       // Update CV with new tags array
       const result = await client.query(
