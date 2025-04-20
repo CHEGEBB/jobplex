@@ -15,7 +15,7 @@ interface CV {
 })
 export class CvService {
   [x: string]: any;
-  private apiUrl = '/api/cvs';
+  private apiUrl = 'http://18.208.134.30/api/cvs';
 
   constructor(private http: HttpClient) { }
 
