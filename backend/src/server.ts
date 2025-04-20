@@ -11,17 +11,14 @@ import userRoutes from './routes/user.routes';
 import jobRoutes from './routes/job.routes';
 import skillRoutes from './routes/skill.routes';
 import portfolioRoutes from './routes/portfolio.routes';
-
-// Import the setupSchema function
-import { setupSchema } from './controllers/portfolio.controller';
-import pool from './config/db.config'; // Import the pool for testing connection
+import pool from './config/db.config';
 
 // Load environment variables
 dotenv.config();
 
 // Create Express app
 const app = express();
-const PORT= process.env.PORT || 80;
+const PORT = process.env.PORT || 80;
 
 // Middleware
 app.use(cors());
@@ -36,6 +33,27 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Add graceful error handling for database connection issues
+pool.on('error', (err) => {
+  console.error('Unexpected database error:', err);
+  // Don't crash the server on connection errors after startup
+});
+
+// Test database connection on startup, but don't block server startup
+const testDatabaseConnection = async () => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT NOW()');
+    console.log('Database connected successfully:', result.rows[0]);
+    client.release();
+    return true;
+  } catch (err) {
+    console.error('Database connection test failed:', err);
+    console.error('The API will start anyway, but database operations will fail until connection is restored');
+    return false;
+  }
+};
+
 // Routes
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to JobPlex API!' });
@@ -48,36 +66,46 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', time: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  try {
+    // Quick db connection check
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+    
+    res.status(200).json({ 
+      status: 'ok', 
+      time: new Date().toISOString(),
+      database: 'connected',
+      environment: process.env.NODE_ENV
+    });
+  } catch (err) {
+    res.status(200).json({ 
+      status: 'degraded', 
+      time: new Date().toISOString(),
+      database: 'disconnected',
+      environment: process.env.NODE_ENV,
+      error: err instanceof Error ? err.message : 'Unknown error'
+    });
+  }
 });
 
 // Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server and initialize database
-const startServer = async () => {
-  try {
-    // First test the database connection
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    console.log('Database connected successfully:', result.rows[0]);
-    client.release();
-    
-    // Then setup schema
-    await setupSchema();
-    
-    // Finally start the server
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1); // Exit if we can't connect to the database
-  }
-};
-
-startServer();
+// Start server without waiting for database
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  
+  // Test database connection after server starts
+  testDatabaseConnection().then(connected => {
+    if (connected) {
+      console.log('Server is fully operational with database connection');
+    } else {
+      console.log('Server started but database connection failed - check your RDS configuration');
+    }
+  });
+});
 
 export default app;

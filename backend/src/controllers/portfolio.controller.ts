@@ -10,56 +10,6 @@ import {
   CreateCertificateRequest 
 } from '../types/portfolio.types';
 
-// PostgreSQL setup for schema
-export const setupSchema = async () => {
-  try {
-    console.log('Setting up portfolio schema with connection:');
-    console.log(`Host: ${process.env.DB_HOST}`);
-    console.log(`Database: ${process.env.DB_NAME}`);
-    
-    // Create projects table if it doesn't exist
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS projects (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        description TEXT NOT NULL,
-        skills TEXT[] NOT NULL,
-        github VARCHAR(255),
-        link VARCHAR(255),
-        image VARCHAR(255),
-        featured BOOLEAN DEFAULT false,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Create certificates table if it doesn't exist
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS certificates (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        issuer VARCHAR(255) NOT NULL,
-        date VARCHAR(50) NOT NULL,
-        expiry VARCHAR(50),
-        credential_id VARCHAR(255),
-        link VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    console.log('Portfolio schema setup completed');
-  } catch (error) {
-    console.error('Error setting up portfolio schema:', error);
-    throw error; // Rethrow so the server can handle it
-  }
-};
-
-// IMPORTANT: Don't call setupSchema() here immediately
-// Instead, we'll call it from server.ts after the server starts
-
 // SKILLS CONTROLLERS
 export const getMySkills = async (req: Request, res: Response) => {
   try {
