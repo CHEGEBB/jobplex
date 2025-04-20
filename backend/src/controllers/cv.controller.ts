@@ -25,7 +25,6 @@ export const uploadCV = async (req: Request, res: Response) => {
   try {
     const user = req.user;
     const file = req.file;
-    let tempFilePath: string | null = null;
     
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
@@ -36,20 +35,10 @@ export const uploadCV = async (req: Request, res: Response) => {
     }
     
     try {
-      // Save buffer to temporary file
-      tempFilePath = await saveBufferToTempFile(file.buffer, file.originalname);
-      
       // Create a unique file ID
       const fileId = ID.unique();
       
-      // Upload the file to Appwrite using a readable stream
-      const fileBuffer = fs.readFileSync(tempFilePath);
-      const appwriteFile = await storage.createFile(
-        CV_BUCKET_ID,
-        fileId,
-        new File([fileBuffer], file.originalname)
-      );
-      
+      // Skip file upload to Appwrite and just store metadata in PostgreSQL
       // Begin transaction
       const client = await pool.connect();
       
@@ -64,16 +53,18 @@ export const uploadCV = async (req: Request, res: Response) => {
         
         const isFirstCV = parseInt(countResult.rows[0].count) === 0;
         
+        // Store file in base64 format in the database
+        const base64File = file.buffer.toString('base64');
+        
         // Store metadata in PostgreSQL
         const result = await client.query(
           `INSERT INTO cvs
-            (user_id, appwrite_file_id, file_url, file_name, is_primary, tags)
-           VALUES ($1, $2, $3, $4, $5, $6)
+            (user_id, file_content, file_name, is_primary, tags)
+           VALUES ($1, $2, $3, $4, $5)
            RETURNING *`,
           [
-            user.id, 
-            appwriteFile.$id, 
-            `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${CV_BUCKET_ID}/files/${appwriteFile.$id}/view`, 
+            user.id,
+            base64File,
             file.originalname,
             isFirstCV, // Set as primary if first CV
             []  // Empty tags array initially
@@ -88,13 +79,8 @@ export const uploadCV = async (req: Request, res: Response) => {
       } finally {
         client.release();
       }
-    } finally {
-      // Clean up temp file if it was created
-      if (tempFilePath) {
-        fs.unlink(tempFilePath, (err) => {
-          if (err) console.error('Error deleting temp file:', err);
-        });
-      }
+    } catch (error) {
+      throw error;
     }
   } catch (error) {
     console.error('CV upload error:', error);
@@ -111,7 +97,7 @@ export const getUserCVs = async (req: Request, res: Response) => {
     }
     
     const result = await pool.query(
-      'SELECT * FROM cvs WHERE user_id = $1 ORDER BY uploaded_at DESC',
+      'SELECT id, user_id, file_name, is_primary, tags, uploaded_at, updated_at FROM cvs WHERE user_id = $1 ORDER BY uploaded_at DESC',
       [user.id]
     );
     
@@ -196,16 +182,11 @@ export const deleteCV = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'CV not found' });
       }
       
-      const cv = cvResult.rows[0];
-      
-      // Delete from Appwrite
-      await storage.deleteFile(CV_BUCKET_ID, cv.appwrite_file_id);
-      
       // Delete from database
       await client.query('DELETE FROM cvs WHERE id = $1', [cvId]);
       
       // If the deleted CV was primary, set another CV as primary if any exist
-      if (cv.is_primary) {
+      if (cvResult.rows[0].is_primary) {
         const remainingCVsResult = await client.query(
           'SELECT id FROM cvs WHERE user_id = $1 ORDER BY uploaded_at DESC LIMIT 1',
           [user.id]
