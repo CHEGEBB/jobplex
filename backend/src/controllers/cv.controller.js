@@ -1,15 +1,14 @@
-import { Request, Response } from 'express';
-import { ID } from 'appwrite';
-import { storage } from '../config/appwrite';
-import pool from '../config/db.config';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+const { ID } = require('appwrite');
+const { storage } = require('../config/appwrite');
+const pool = require('../config/db.config');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 const CV_BUCKET_ID = process.env.APPWRITE_BUCKET_ID || '68052646000a993ccf3f';
 
 // Helper function to save buffer to temporary file
-async function saveBufferToTempFile(buffer: Buffer, originalName: string): Promise<string> {
+async function saveBufferToTempFile(buffer, originalName) {
   const tempDir = os.tmpdir();
   const tempFilePath = path.join(tempDir, `upload-${Date.now()}-${originalName}`);
   
@@ -21,11 +20,11 @@ async function saveBufferToTempFile(buffer: Buffer, originalName: string): Promi
   });
 }
 
-export const uploadCV = async (req: Request, res: Response) => {
+exports.uploadCV = async (req, res) => {
   try {
     const user = req.user;
     const file = req.file;
-    let tempFilePath: string | null = null;
+    let tempFilePath = null;
     
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
@@ -42,15 +41,11 @@ export const uploadCV = async (req: Request, res: Response) => {
       // Create a unique file ID
       const fileId = ID.unique();
       
-      // Use Copilot's solution: Create a File object from the file content
-      const fileContent = fs.readFileSync(tempFilePath);
-      const fileObject = new File([fileContent], file.originalname, { type: file.mimetype });
-      
-      // Upload to Appwrite
+      // Upload the file to Appwrite directly from the path
       const appwriteFile = await storage.createFile(
         CV_BUCKET_ID,
         fileId,
-        fileObject
+        tempFilePath
       );
       
       // Begin transaction
@@ -101,11 +96,11 @@ export const uploadCV = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error('CV upload error:', error);
-    res.status(500).json({ message: 'CV upload failed', error: (error as Error).message });
+    res.status(500).json({ message: 'CV upload failed', error: error.message });
   }
 };
 
-export const getUserCVs = async (req: Request, res: Response) => {
+exports.getUserCVs = async (req, res) => {
   try {
     const user = req.user;
     
@@ -125,7 +120,7 @@ export const getUserCVs = async (req: Request, res: Response) => {
   }
 };
 
-export const setPrimaryCV = async (req: Request, res: Response) => {
+exports.setPrimaryCV = async (req, res) => {
   try {
     const { cvId } = req.params;
     const user = req.user;
@@ -175,7 +170,7 @@ export const setPrimaryCV = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteCV = async (req: Request, res: Response) => {
+exports.deleteCV = async (req, res) => {
   try {
     const { cvId } = req.params;
     const user = req.user;
@@ -214,7 +209,7 @@ export const deleteCV = async (req: Request, res: Response) => {
           [user.id]
         );
         
-        if ((remainingCVsResult.rowCount ?? 0) > 0) {
+        if (remainingCVsResult.rowCount > 0) {
           await client.query(
             'UPDATE cvs SET is_primary = TRUE WHERE id = $1',
             [remainingCVsResult.rows[0].id]
@@ -237,7 +232,7 @@ export const deleteCV = async (req: Request, res: Response) => {
 };
 
 // Tag-related functions
-export const addTag = async (req: Request, res: Response) => {
+exports.addTag = async (req, res) => {
   try {
     const { cvId } = req.params;
     const { tag } = req.body;
@@ -298,7 +293,7 @@ export const addTag = async (req: Request, res: Response) => {
   }
 };
 
-export const removeTag = async (req: Request, res: Response) => {
+exports.removeTag = async (req, res) => {
   try {
     const { cvId, tag } = req.params;
     const user = req.user;
@@ -326,7 +321,7 @@ export const removeTag = async (req: Request, res: Response) => {
       const currentTags = cv.tags || [];
       
       // Remove the tag if it exists
-      const updatedTags: string[] = currentTags.filter((t: string) => t !== tag);
+      const updatedTags = currentTags.filter(t => t !== tag);
       
       // Update CV with new tags array
       const result = await client.query(
