@@ -1,303 +1,335 @@
 <div class="auth-container">
-    <!-- Left side: Image Section -->
-    <div class="image-container">
-      <div class="slideshow">
-        <div *ngFor="let slide of slides; let i = index" 
-             [ngClass]="{'slide': true, 'active': currentSlide === i}"
-             [ngStyle]="{'background-image': 'url(' + slide.image + ')'}">
-          <div class="overlay" [ngClass]="getRoleClass()"></div>
-          <div class="slide-content">
-            <h2 class="slide-title">{{slide.title}}</h2>
-            <p class="slide-description">{{slide.description}}</p>
-          </div>
+  <!-- Left side: Image Section -->
+  <div class="image-container">
+    <div class="slideshow">
+      <div *ngFor="let slide of slides; let i = index" 
+           [ngClass]="{'slide': true, 'active': currentSlide === i}"
+           [ngStyle]="{'background-image': 'url(' + slide.image + ')'}">
+        <div class="overlay" [ngClass]="getRoleClass()"></div>
+        <div class="slide-content">
+          <h2 class="slide-title">{{slide.title}}</h2>
+          <p class="slide-description">{{slide.description}}</p>
         </div>
-      </div>
-  
-      <!-- Toggle Buttons on Image Overlay -->
-      <div class="image-toggle-buttons">
-        <button 
-          [ngClass]="{'image-role-btn': true, 'image-active-role': selectedRole === 'jobseeker'}" 
-          (click)="changeRole('jobseeker')">
-          Job Seeker
-        </button>
-        <button 
-          [ngClass]="{'image-role-btn': true, 'image-active-role': selectedRole === 'employer'}" 
-          (click)="changeRole('employer')">
-          Employer
-        </button>
-        <button 
-          [ngClass]="{'image-role-btn': true, 'image-active-role': selectedRole === 'admin'}" 
-          (click)="changeRole('admin')">
-          Admin
-        </button>
       </div>
     </div>
-  
-    <!-- Right side: Form Section -->
-    <div class="form-container">
-      <!-- Logo and Header -->
-      <div class="form-header">
-        <div class="logo-container">
-          <img src="assets/logo.png" alt="Jobplex Logo" class="logo md:ml-16">
-        </div>
-        <h1 class="welcome-text">Welcome to Jobplex</h1>
-        <p class="role-text">{{getRoleText()}}</p>
-      </div>
-  
-      <!-- Role Toggle Section -->
-      <div class="role-selector">
-        <button 
-          [ngClass]="{'active-role': selectedRole === 'jobseeker'}" 
-          (click)="changeRole('jobseeker')"
-          class="role-btn jobseeker-btn">
-          <i class="fas fa-user-tie"></i>
-          Job Seeker
-        </button>
-        <button 
-          [ngClass]="{'active-role': selectedRole === 'employer'}" 
-          (click)="changeRole('employer')"
-          class="role-btn employer-btn">
-          <i class="fas fa-building"></i>
-          Employer
-        </button>
-        <button 
-          [ngClass]="{'active-role': selectedRole === 'admin'}" 
-          (click)="changeRole('admin')"
-          class="role-btn admin-btn">
-          <i class="fas fa-user-shield"></i>
-          Admin
-        </button>
-      </div>
-  
-      <!-- Auth Form Tabs -->
-      <div class="form-tabs">
-        <button 
-          [ngClass]="{'active-tab': authMode === 'login'}" 
-          (click)="setAuthMode('login')"
-          class="tab-btn">
-          Login
-        </button>
-        <button 
-          [ngClass]="{'active-tab': authMode === 'signup'}" 
-          (click)="setAuthMode('signup')"
-          class="tab-btn">
-          Sign Up
-        </button>
-      </div>
-  
-      <!-- Login Form -->
-      <form *ngIf="authMode === 'login'" [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form">
-        <div class="form-group">
-          <label for="loginEmail">Email</label>
-          <div class="input-container">
-            <i class="fas fa-envelope input-icon"></i>
-            <input 
-              type="email" 
-              id="loginEmail" 
-              formControlName="email" 
-              placeholder="Enter your email"
-              class="form-input">
-          </div>
-          <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-message">
-            <span *ngIf="loginForm.get('email')?.errors?.['required']">Email is required</span>
-            <span *ngIf="loginForm.get('email')?.errors?.['email']">Please enter a valid email</span>
-          </div>
-        </div>
-  
-        <div class="form-group">
-          <label for="loginPassword">Password</label>
-          <div class="input-container">
-            <i class="fas fa-lock input-icon"></i>
-            <input 
-              [type]="showPassword ? 'text' : 'password'" 
-              id="loginPassword" 
-              formControlName="password" 
-              placeholder="Enter your password"
-              class="form-input">
-            <i 
-              [class]="showPassword ? 'fas fa-eye-slash toggle-password' : 'fas fa-eye toggle-password'"
-              (click)="togglePasswordVisibility()"></i>
-          </div>
-          <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-message">
-            <span *ngIf="loginForm.get('password')?.errors?.['required']">Password is required</span>
-          </div>
-        </div>
-  
-        <div class="form-options">
-          <div class="remember-me">
-            <input type="checkbox" id="rememberMe" formControlName="rememberMe">
-            <label for="rememberMe">Remember me</label>
-          </div>
-          <a href="#" class="forgot-password" (click)="goToForgotPassword($event)">Forgot Password?</a>
-        </div>
-  
-        <button type="submit" [disabled]="loginForm.invalid" class="submit-btn">
-          <span *ngIf="!isLoading">Login</span>
-          <div *ngIf="isLoading" class="spinner"></div>
-        </button>
-  
-        <div class="separator">
-          <span>OR</span>
-        </div>
-  
-        <div class="social-buttons">
-          <button type="button" class="social-btn google-btn" (click)="loginWithGoogle()">
-            <i class="fab fa-google"></i>
-            <span>Login with Google</span>
-          </button>
-          <button type="button" class="social-btn linkedin-btn" (click)="loginWithLinkedIn()">
-            <i class="fab fa-linkedin"></i>
-            <span>Login with LinkedIn</span>
-          </button>
-        </div>
-      </form>
-  
-      <!-- Signup Form -->
-      <form *ngIf="authMode === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSignup()" class="auth-form">
-        <div class="form-row">
-          <div class="form-group half-width">
-            <label for="firstName">First Name</label>
-            <div class="input-container">
-              <i class="fas fa-user input-icon"></i>
-              <input 
-                type="text" 
-                id="firstName" 
-                formControlName="firstName" 
-                placeholder="First name"
-                class="form-input">
-            </div>
-            <div *ngIf="signupForm.get('firstName')?.invalid && signupForm.get('firstName')?.touched" class="error-message">
-              <span *ngIf="signupForm.get('firstName')?.errors?.['required']">First name is required</span>
-            </div>
-          </div>
-  
-          <div class="form-group half-width">
-            <label for="lastName">Last Name</label>
-            <div class="input-container">
-              <i class="fas fa-user input-icon"></i>
-              <input 
-                type="text" 
-                id="lastName" 
-                formControlName="lastName" 
-                placeholder="Last name"
-                class="form-input">
-            </div>
-            <div *ngIf="signupForm.get('lastName')?.invalid && signupForm.get('lastName')?.touched" class="error-message">
-              <span *ngIf="signupForm.get('lastName')?.errors?.['required']">Last name is required</span>
-            </div>
-          </div>
-        </div>
-  
-        <div class="form-group">
-          <label for="signupEmail">Email</label>
-          <div class="input-container">
-            <i class="fas fa-envelope input-icon"></i>
-            <input 
-              type="email" 
-              id="signupEmail" 
-              formControlName="email" 
-              placeholder="Enter your email"
-              class="form-input">
-          </div>
-          <div *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched" class="error-message">
-            <span *ngIf="signupForm.get('email')?.errors?.['required']">Email is required</span>
-            <span *ngIf="signupForm.get('email')?.errors?.['email']">Please enter a valid email</span>
-          </div>
-        </div>
-  
-        <div class="form-group">
-          <label for="signupPassword">Password</label>
-          <div class="input-container">
-            <i class="fas fa-lock input-icon"></i>
-            <input 
-              [type]="showPassword ? 'text' : 'password'" 
-              id="signupPassword" 
-              formControlName="password" 
-              placeholder="Enter your password"
-              class="form-input">
-            <i 
-              [class]="showPassword ? 'fas fa-eye-slash toggle-password' : 'fas fa-eye toggle-password'"
-              (click)="togglePasswordVisibility()"></i>
-          </div>
-          <div *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched" class="error-message">
-            <span *ngIf="signupForm.get('password')?.errors?.['required']">Password is required</span>
-            <span *ngIf="signupForm.get('password')?.errors?.['minlength']">Password must be at least 8 characters</span>
-          </div>
-          <div *ngIf="signupForm.get('password')?.value" class="password-strength">
-            <div 
-              class="strength-bar" 
-              [ngClass]="{
-                'weak': passwordStrength === 'weak',
-                'medium': passwordStrength === 'medium',
-                'strong': passwordStrength === 'strong'
-              }">
-            </div>
-            <span class="strength-text">{{passwordStrength}} password</span>
-          </div>
-        </div>
-  
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <div class="input-container">
-            <i class="fas fa-lock input-icon"></i>
-            <input 
-              [type]="showPassword ? 'text' : 'password'" 
-              id="confirmPassword" 
-              formControlName="confirmPassword" 
-              placeholder="Confirm your password"
-              class="form-input">
-          </div>
-          <div *ngIf="signupForm.get('confirmPassword')?.invalid && signupForm.get('confirmPassword')?.touched" class="error-message">
-            <span *ngIf="signupForm.get('confirmPassword')?.errors?.['required']">Please confirm your password</span>
-            <span *ngIf="signupForm.get('confirmPassword')?.errors?.['passwordMismatch']">Passwords do not match</span>
-          </div>
-        </div>
-  
-        <div *ngIf="selectedRole === 'employer'" class="form-group">
-          <label for="companyName">Company Name</label>
-          <div class="input-container">
-            <i class="fas fa-building input-icon"></i>
-            <input 
-              type="text" 
-              id="companyName" 
-              formControlName="companyName" 
-              placeholder="Enter your company name"
-              class="form-input">
-          </div>
-          <div *ngIf="signupForm.get('companyName')?.invalid && signupForm.get('companyName')?.touched" class="error-message">
-            <span *ngIf="signupForm.get('companyName')?.errors?.['required']">Company name is required</span>
-          </div>
-        </div>
-  
-        <div class="form-group terms-container">
-          <div class="checkbox-container">
-            <input type="checkbox" id="termsAgreement" formControlName="termsAgreement">
-            <label for="termsAgreement">I agree to the <a href="#" class="link">Terms & Conditions</a> and <a href="#" class="link">Privacy Policy</a></label>
-          </div>
-          <div *ngIf="signupForm.get('termsAgreement')?.invalid && signupForm.get('termsAgreement')?.touched" class="error-message">
-            <span *ngIf="signupForm.get('termsAgreement')?.errors?.['required']">You must agree to the terms</span>
-          </div>
-        </div>
-  
-        <button type="submit" [disabled]="signupForm.invalid" class="submit-btn">
-          <span *ngIf="!isLoading">Create Account</span>
-          <div *ngIf="isLoading" class="spinner"></div>
-        </button>
-  
-        <div class="separator">
-          <span>OR</span>
-        </div>
-  
-        <div class="social-buttons">
-          <button type="button" class="social-btn google-btn" (click)="signupWithGoogle()">
-            <i class="fab fa-google"></i>
-            <span>Sign up with Google</span>
-          </button>
-          <button type="button" class="social-btn linkedin-btn" (click)="signupWithLinkedIn()">
-            <i class="fab fa-linkedin"></i>
-            <span>Sign up with LinkedIn</span>
-          </button>
-        </div>
-      </form>
+
+    <!-- Toggle Buttons on Image Overlay -->
+    <div class="image-toggle-buttons">
+      <button 
+        [ngClass]="{'image-role-btn': true, 'image-active-role': selectedRole === 'jobseeker'}" 
+        (click)="changeRole('jobseeker')">
+        Job Seeker
+      </button>
+      <button 
+        [ngClass]="{'image-role-btn': true, 'image-active-role': selectedRole === 'employer'}" 
+        (click)="changeRole('employer')">
+        Employer
+      </button>
+      <button 
+        [ngClass]="{'image-role-btn': true, 'image-active-role': selectedRole === 'admin'}" 
+        (click)="changeRole('admin')">
+        Admin
+      </button>
     </div>
   </div>
+
+  <!-- Right side: Form Section -->
+  <div class="form-container">
+    <!-- Logo and Header -->
+    <div class="form-header">
+      <div class="logo-container">
+        <img src="assets/logo.png" alt="Jobplex Logo" class="logo md:ml-16">
+      </div>
+      <h1 class="welcome-text">Welcome to Jobplex</h1>
+      <p class="role-text">{{getRoleText()}}</p>
+    </div>
+
+    <!-- Role Toggle Section -->
+    <div class="role-selector">
+      <button 
+        [ngClass]="{'active-role': selectedRole === 'jobseeker'}" 
+        (click)="changeRole('jobseeker')"
+        class="role-btn jobseeker-btn">
+        <i class="fas fa-user-tie"></i>
+        Job Seeker
+      </button>
+      <button 
+        [ngClass]="{'active-role': selectedRole === 'employer'}" 
+        (click)="changeRole('employer')"
+        class="role-btn employer-btn">
+        <i class="fas fa-building"></i>
+        Employer
+      </button>
+      <button 
+        [ngClass]="{'active-role': selectedRole === 'admin'}" 
+        (click)="changeRole('admin')"
+        class="role-btn admin-btn">
+        <i class="fas fa-user-shield"></i>
+        Admin
+      </button>
+    </div>
+
+    <!-- Auth Form Tabs -->
+    <div class="form-tabs">
+      <button 
+        [ngClass]="{'active-tab': authMode === 'login'}" 
+        (click)="setAuthMode('login')"
+        class="tab-btn">
+        Login
+      </button>
+      <button 
+        [ngClass]="{'active-tab': authMode === 'signup'}" 
+        (click)="setAuthMode('signup')"
+        class="tab-btn">
+        Sign Up
+      </button>
+    </div>
+
+    <!-- Success and Error Messages -->
+    <div class="px-4 w-full">
+      <!-- Success message with Tailwind -->
+      <div *ngIf="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ successMessage }}</span>
+        <button class="absolute top-0 bottom-0 right-0 px-4 py-3" (click)="clearMessages()">
+          <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <title>Close</title>
+            <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Error message with Tailwind -->
+      <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ errorMessage }}</span>
+        <button class="absolute top-0 bottom-0 right-0 px-4 py-3" (click)="clearMessages()">
+          <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <title>Close</title>
+            <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Login Form -->
+    <form *ngIf="authMode === 'login'" [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <div class="input-container">
+          <i class="fas fa-envelope input-icon"></i>
+          <input 
+            type="email" 
+            id="loginEmail" 
+            formControlName="email" 
+            placeholder="Enter your email"
+            class="form-input">
+        </div>
+        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="text-red-500 text-sm mt-1">
+          <span *ngIf="loginForm.get('email')?.errors?.['required']">Email is required</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['email']">Please enter a valid email</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <div class="input-container">
+          <i class="fas fa-lock input-icon"></i>
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            id="loginPassword" 
+            formControlName="password" 
+            placeholder="Enter your password"
+            class="form-input">
+          <i 
+            [class]="showPassword ? 'fas fa-eye-slash toggle-password' : 'fas fa-eye toggle-password'"
+            (click)="togglePasswordVisibility()"></i>
+        </div>
+        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-red-500 text-sm mt-1">
+          <span *ngIf="loginForm.get('password')?.errors?.['required']">Password is required</span>
+        </div>
+      </div>
+
+      <div class="form-options">
+        <div class="remember-me">
+          <input type="checkbox" id="rememberMe" formControlName="rememberMe">
+          <label for="rememberMe">Remember me</label>
+        </div>
+        <a href="#" class="forgot-password" (click)="goToForgotPassword($event)">Forgot Password?</a>
+      </div>
+
+      <button type="submit" [disabled]="loginForm.invalid" class="submit-btn flex justify-center items-center">
+        <span *ngIf="!isLoading">Login</span>
+        <svg *ngIf="isLoading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </button>
+
+      <div class="separator">
+        <span>OR</span>
+      </div>
+
+      <div class="social-buttons">
+        <button type="button" class="social-btn google-btn" (click)="loginWithGoogle()">
+          <i class="fab fa-google"></i>
+          <span>Login with Google</span>
+        </button>
+        <button type="button" class="social-btn linkedin-btn" (click)="loginWithLinkedIn()">
+          <i class="fab fa-linkedin"></i>
+          <span>Login with LinkedIn</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Signup Form - Simplified -->
+    <form *ngIf="authMode === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSignup()" class="auth-form">
+      <div class="form-row">
+        <div class="form-group half-width">
+          <label for="firstName">First Name</label>
+          <div class="input-container">
+            <i class="fas fa-user input-icon"></i>
+            <input 
+              type="text" 
+              id="firstName" 
+              formControlName="firstName" 
+              placeholder="First name"
+              class="form-input">
+          </div>
+          <div *ngIf="signupForm.get('firstName')?.invalid && signupForm.get('firstName')?.touched" class="text-red-500 text-sm mt-1">
+            <span *ngIf="signupForm.get('firstName')?.errors?.['required']">First name is required</span>
+          </div>
+        </div>
+
+        <div class="form-group half-width">
+          <label for="lastName">Last Name</label>
+          <div class="input-container">
+            <i class="fas fa-user input-icon"></i>
+            <input 
+              type="text" 
+              id="lastName" 
+              formControlName="lastName" 
+              placeholder="Last name"
+              class="form-input">
+          </div>
+          <div *ngIf="signupForm.get('lastName')?.invalid && signupForm.get('lastName')?.touched" class="text-red-500 text-sm mt-1">
+            <span *ngIf="signupForm.get('lastName')?.errors?.['required']">Last name is required</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="signupEmail">Email</label>
+        <div class="input-container">
+          <i class="fas fa-envelope input-icon"></i>
+          <input 
+            type="email" 
+            id="signupEmail" 
+            formControlName="email" 
+            placeholder="Enter your email"
+            class="form-input">
+        </div>
+        <div *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched" class="text-red-500 text-sm mt-1">
+          <span *ngIf="signupForm.get('email')?.errors?.['required']">Email is required</span>
+          <span *ngIf="signupForm.get('email')?.errors?.['email']">Please enter a valid email</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="signupPassword">Password</label>
+        <div class="input-container">
+          <i class="fas fa-lock input-icon"></i>
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            id="signupPassword" 
+            formControlName="password" 
+            placeholder="Enter your password"
+            class="form-input">
+          <i 
+            [class]="showPassword ? 'fas fa-eye-slash toggle-password' : 'fas fa-eye toggle-password'"
+            (click)="togglePasswordVisibility()"></i>
+        </div>
+        <div *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched" class="text-red-500 text-sm mt-1">
+          <span *ngIf="signupForm.get('password')?.errors?.['required']">Password is required</span>
+          <span *ngIf="signupForm.get('password')?.errors?.['minlength']">Password must be at least 8 characters</span>
+        </div>
+        <div *ngIf="signupForm.get('password')?.value" class="password-strength mt-1">
+          <div 
+            class="strength-bar" 
+            [ngClass]="{
+              'weak': passwordStrength === 'weak',
+              'medium': passwordStrength === 'medium',
+              'strong': passwordStrength === 'strong'
+            }">
+          </div>
+          <span class="strength-text">{{passwordStrength}} password</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="input-container">
+          <i class="fas fa-lock input-icon"></i>
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            id="confirmPassword" 
+            formControlName="confirmPassword" 
+            placeholder="Confirm your password"
+            class="form-input">
+        </div>
+        <div *ngIf="signupForm.get('confirmPassword')?.invalid && signupForm.get('confirmPassword')?.touched" class="text-red-500 text-sm mt-1">
+          <span *ngIf="signupForm.get('confirmPassword')?.errors?.['required']">Please confirm your password</span>
+          <span *ngIf="signupForm.get('confirmPassword')?.errors?.['passwordMismatch']">Passwords do not match</span>
+        </div>
+      </div>
+
+      <!-- Only show company name for employer role -->
+      <div *ngIf="selectedRole === 'employer'" class="form-group">
+        <label for="companyName">Company Name</label>
+        <div class="input-container">
+          <i class="fas fa-building input-icon"></i>
+          <input 
+            type="text" 
+            id="companyName" 
+            formControlName="companyName" 
+            placeholder="Enter your company name"
+            class="form-input">
+        </div>
+        <div *ngIf="signupForm.get('companyName')?.invalid && signupForm.get('companyName')?.touched" class="text-red-500 text-sm mt-1">
+          <span *ngIf="signupForm.get('companyName')?.errors?.['required']">Company name is required</span>
+        </div>
+      </div>
+
+      <div class="form-group terms-container">
+        <div class="checkbox-container">
+          <input type="checkbox" id="termsAgreement" formControlName="termsAgreement">
+          <label for="termsAgreement">I agree to the <a href="#" class="link">Terms & Conditions</a> and <a href="#" class="link">Privacy Policy</a></label>
+        </div>
+        <div *ngIf="signupForm.get('termsAgreement')?.invalid && signupForm.get('termsAgreement')?.touched" class="text-red-500 text-sm mt-1">
+          <span *ngIf="signupForm.get('termsAgreement')?.errors?.['required']">You must agree to the terms</span>
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="signupForm.invalid" class="submit-btn flex justify-center items-center">
+        <span *ngIf="!isLoading">Create Account</span>
+        <svg *ngIf="isLoading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </button>
+
+      <div class="separator">
+        <span>OR</span>
+      </div>
+
+      <div class="social-buttons">
+        <button type="button" class="social-btn google-btn" (click)="signupWithGoogle()">
+          <i class="fab fa-google"></i>
+          <span>Sign up with Google</span>
+        </button>
+        <button type="button" class="social-btn linkedin-btn" (click)="signupWithLinkedIn()">
+          <i class="fab fa-linkedin"></i>
+          <span>Sign up with LinkedIn</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

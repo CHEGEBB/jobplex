@@ -1,7 +1,8 @@
 // src/app/services/auth.service.ts
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, throwError, of } from 'rxjs';
+import { tap, catchError, retry } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from '../environments/environment';
 
@@ -77,16 +78,37 @@ export class AuthService {
 
   // Core authentication methods
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, userData)
+    console.log('Registration service called with data:', userData);
+    
+    // Set headers to ensure proper content type
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, userData, { headers })
       .pipe(
-        tap(response => this.handleAuthentication(response))
+        tap(response => {
+          console.log('Registration successful:', response);
+          // We'll handle authentication in the component to better control the flow
+        }),
+        catchError(this.handleError)
       );
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, credentials)
+    console.log('Login service called with:', credentials);
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, credentials, { headers })
       .pipe(
-        tap(response => this.handleAuthentication(response))
+        tap(response => {
+          console.log('Login successful:', response);
+          this.handleAuthentication(response);
+        }),
+        catchError(this.handleError)
       );
   }
 
@@ -114,6 +136,36 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return this.isAuthenticatedSubject.value;
+  }
+
+  // Error handling
+  private handleError(error: HttpErrorResponse) {
+    console.error('API Error:', error);
+    
+    let errorMessage = 'An error occurred';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Error: ${error.error.message}`;
+      console.error('Client error:', errorMessage);
+    } else {
+      // Server-side error
+      console.error(
+        `Backend returned code ${error.status}, ` +
+        `body was: ${JSON.stringify(error.error)}`
+      );
+      
+      if (error.status === 0) {
+        errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+      } else if (error.error && error.error.message) {
+        errorMessage = error.error.message;
+      } else {
+        errorMessage = `Server error: ${error.status}`;
+      }
+    }
+    
+    // Return an observable with a user-facing error message
+    return throwError(() => error);
   }
 
   // Private helper methods
@@ -151,16 +203,25 @@ export class AuthService {
       tap(isValid => {
         if (!isValid) this.logout();
         this.isAuthenticatedSubject.next(isValid);
+      }),
+      catchError(error => {
+        this.logout();
+        return of(false);
       })
     );
   }
 
   updateUserProfile(updates: Partial<User>): Observable<User> {
-    return this.http.put<User>(`${this.API_URL}/users/me`, updates).pipe(
+    return this.http.put<User>(`${this.API_URL}/users/me`, updates, {
+      headers: {
+        Authorization: `Bearer ${this.getToken()}`
+      }
+    }).pipe(
       tap(updatedUser => {
         localStorage.setItem(this.USER_KEY, JSON.stringify(updatedUser));
         this.currentUserSubject.next(updatedUser);
-      })
+      }),
+      catchError(this.handleError)
     );
   }
 
@@ -169,6 +230,8 @@ export class AuthService {
     return this.http.post<{ message: string }>(
       `${this.API_URL}/auth/forgot-password`, 
       { email }
+    ).pipe(
+      catchError(this.handleError)
     );
   }
 
@@ -176,21 +239,44 @@ export class AuthService {
     return this.http.post<{ message: string }>(
       `${this.API_URL}/auth/reset-password`,
       { token, password: newPassword }
+    ).pipe(
+      catchError(this.handleError)
     );
   }
 
   // Social login methods
   loginWithGoogle(role: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/google`, { role })
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/google/login`, { role })
       .pipe(
-        tap(response => this.handleAuthentication(response))
+        tap(response => this.handleAuthentication(response)),
+        catchError(this.handleError)
       );
   }
 
   loginWithLinkedIn(role: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/linkedin`, { role })
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/linkedin/login`, { role })
       .pipe(
-        tap(response => this.handleAuthentication(response))
+        tap(response => this.handleAuthentication(response)),
+        catchError(this.handleError)
+      );
+  }
+
+  // Social signup methods
+  signupWithGoogle(role: string, additionalInfo: any = {}): Observable<AuthResponse> {
+    const payload = { role, ...additionalInfo };
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/google/signup`, payload)
+      .pipe(
+        tap(response => this.handleAuthentication(response)),
+        catchError(this.handleError)
+      );
+  }
+
+  signupWithLinkedIn(role: string, additionalInfo: any = {}): Observable<AuthResponse> {
+    const payload = { role, ...additionalInfo };
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/linkedin/signup`, payload)
+      .pipe(
+        tap(response => this.handleAuthentication(response)),
+        catchError(this.handleError)
       );
   }
 }

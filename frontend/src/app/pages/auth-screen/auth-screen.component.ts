@@ -2,8 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subscription, interval } from 'rxjs';
-import { AuthService } from '../../services/auth.service';
+import { Subscription, interval, finalize, of } from 'rxjs';
+import { catchError, switchMap, tap } from 'rxjs/operators';
+import { AuthService, AuthResponse, RegisterRequest } from '../../services/auth.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-auth-screen',
@@ -69,7 +71,12 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
   currentSlide = 0;
   private slideSubscription: Subscription | null = null;
   
-  roleContent = {
+  roleContent: {
+    [key: string]: {
+      slides: number[],
+      welcomeText: string
+    }
+  } = {
     jobseeker: {
       slides: [0, 1, 2],
       welcomeText: 'Your skills. Your future. One platform.'
@@ -224,80 +231,245 @@ export class AuthScreenComponent implements OnInit, OnDestroy {
       role: this.selectedRole
     };
     
-    this.authService.login(credentials).subscribe({
-      next: () => this.isLoading = false,
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
-      }
-    });
+    this.authService.login(credentials)
+      .pipe(
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (response: AuthResponse) => {
+          this.successMessage = 'Login successful! Redirecting to dashboard...';
+          setTimeout(() => {
+            this.router.navigate([`/${this.selectedRole}/dashboard`]);
+          }, 1500);
+        },
+        error: (error: any) => {
+          console.error('Login error:', error);
+          this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
+        }
+      });
   }
 
   onSignup(): void {
-    if (this.signupForm.invalid) return;
+    if (this.signupForm.invalid) {
+      // Mark fields as touched to show validation errors
+      Object.keys(this.signupForm.controls).forEach(field => {
+        const control = this.signupForm.get(field);
+        control?.markAsTouched({ onlySelf: true });
+      });
+      return;
+    }
     
     this.clearMessages();
     this.isLoading = true;
     
-    const signupData = {
+    // Create the registration data object with proper typing
+    const signupData: RegisterRequest = {
       firstName: this.signupForm.value.firstName,
       lastName: this.signupForm.value.lastName,
       email: this.signupForm.value.email,
       password: this.signupForm.value.password,
-      role: this.selectedRole,
-      companyName: this.selectedRole === 'employer' ? 
-        this.signupForm.value.companyName : undefined
+      role: this.selectedRole
     };
     
-    this.authService.register(signupData).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.successMessage = 'Registration successful! Please login with your credentials.';
-        this.authMode = 'login';
-        this.loginForm.patchValue({
-          email: signupData.email,
-          password: ''
-        });
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
-      }
-    });
+    // Only add companyName if it's an employer
+    if (this.selectedRole === 'employer' && this.signupForm.value.companyName) {
+      signupData.companyName = this.signupForm.value.companyName;
+    }
+
+    // Debug log to check what's being sent
+    console.log('Sending registration data:', JSON.stringify(signupData));
+    
+    // Using error handling and auto-login after registration
+    this.authService.register(signupData)
+      .pipe(
+        tap(response => {
+          console.log('Registration response:', response);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Registration error details:', error);
+          
+          // Check if we have a response body with more details
+          if (error.error && typeof error.error === 'object') {
+            console.error('Server error response:', error.error);
+          }
+          
+          // Check if it's a 500 server error
+          if (error.status === 500) {
+            this.errorMessage = 'Registration failed due to a server error. Please try again later.';
+          } else if (error.status === 400) {
+            // Handle validation errors
+            this.errorMessage = error.error?.message || 'Invalid registration data. Please check your entries.';
+          } else if (error.status === 409) {
+            // Handle conflicts (e.g., email already exists)
+            this.errorMessage = 'An account with this email already exists.';
+          } else {
+            this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+          }
+          
+          this.isLoading = false;
+          return of(null); // Return observable to continue the chain
+        }),
+        switchMap(response => {
+          if (!response) return of(null); // If error occurred, don't proceed
+          
+          this.successMessage = 'Registration successful! Logging you in...';
+          
+          // Auto-login after registration - try direct login instead if registration worked
+          return this.performLoginAfterRegistration(signupData.email, signupData.password);
+        }),
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (response: AuthResponse | null) => {
+          if (response) {
+            // If login was successful after registration
+            setTimeout(() => {
+              this.router.navigate([`/${this.selectedRole}/dashboard`]);
+            }, 1500);
+          }
+        },
+        error: (error: any) => {
+          console.error('Auto-login error:', error);
+          // If auto-login fails, we still show registration success but prompt for manual login
+          this.successMessage = 'Registration successful! Please login with your credentials.';
+          this.authMode = 'login';
+          this.loginForm.patchValue({
+            email: signupData.email,
+            password: ''
+          });
+        }
+      });
+  }
+
+  // Separate method for login after registration to help with debugging
+  private performLoginAfterRegistration(email: string, password: string) {
+    console.log('Attempting auto-login after registration');
+    
+    const loginData = {
+      email: email,
+      password: password,
+      role: this.selectedRole
+    };
+    
+    return this.authService.login(loginData).pipe(
+      tap(response => {
+        console.log('Auto-login response:', response);
+      }),
+      catchError(error => {
+        console.error('Auto-login error details:', error);
+        throw error; // Rethrow to be caught by the outer subscription
+      })
+    );
   }
 
   loginWithGoogle(): void {
     this.clearMessages();
     this.isLoading = true;
     
-    this.authService.loginWithGoogle(this.selectedRole).subscribe({
-      next: () => this.isLoading = false,
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Google login failed. Please try again.';
-      }
-    });
+    this.authService.loginWithGoogle(this.selectedRole)
+      .pipe(
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (response: AuthResponse) => {
+          this.successMessage = 'Google login successful! Redirecting...';
+          setTimeout(() => {
+            this.router.navigate([`/${this.selectedRole}/dashboard`]);
+          }, 1500);
+        },
+        error: (error: any) => {
+          console.error('Google login error:', error);
+          this.errorMessage = error.error?.message || 'Google login failed. Please try again.';
+        }
+      });
   }
 
   loginWithLinkedIn(): void {
     this.clearMessages();
     this.isLoading = true;
     
-    this.authService.loginWithLinkedIn(this.selectedRole).subscribe({
-      next: () => this.isLoading = false,
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'LinkedIn login failed. Please try again.';
-      }
-    });
+    this.authService.loginWithLinkedIn(this.selectedRole)
+      .pipe(
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (response: AuthResponse) => {
+          this.successMessage = 'LinkedIn login successful! Redirecting...';
+          setTimeout(() => {
+            this.router.navigate([`/${this.selectedRole}/dashboard`]);
+          }, 1500);
+        },
+        error: (error: any) => {
+          console.error('LinkedIn login error:', error);
+          this.errorMessage = error.error?.message || 'LinkedIn login failed. Please try again.';
+        }
+      });
   }
 
   signupWithGoogle(): void {
-    this.loginWithGoogle();
+    this.clearMessages();
+    this.isLoading = true;
+    
+    // For employer role, we need company name
+    if (this.selectedRole === 'employer' && !this.signupForm.value.companyName) {
+      this.errorMessage = 'Please enter your company name before signing up with Google.';
+      this.isLoading = false;
+      return;
+    }
+    
+    // For social signup, we're going to pass any additional info needed
+    const additionalInfo: { companyName?: string } = this.selectedRole === 'employer' ? 
+      { companyName: this.signupForm.value.companyName } : {};
+    
+    this.authService.signupWithGoogle(this.selectedRole, additionalInfo)
+      .pipe(
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (response: AuthResponse) => {
+          this.successMessage = 'Google signup successful! Redirecting...';
+          setTimeout(() => {
+            this.router.navigate([`/${this.selectedRole}/dashboard`]);
+          }, 1500);
+        },
+        error: (error: any) => {
+          console.error('Google signup error:', error);
+          this.errorMessage = error.error?.message || 'Google signup failed. Please try again.';
+        }
+      });
   }
 
   signupWithLinkedIn(): void {
-    this.loginWithLinkedIn();
+    this.clearMessages();
+    this.isLoading = true;
+    
+    // For employer role, we need company name
+    if (this.selectedRole === 'employer' && !this.signupForm.value.companyName) {
+      this.errorMessage = 'Please enter your company name before signing up with LinkedIn.';
+      this.isLoading = false;
+      return;
+    }
+    
+    // For social signup, we're going to pass any additional info needed
+    const additionalInfo: { companyName?: string } = this.selectedRole === 'employer' ? 
+      { companyName: this.signupForm.value.companyName } : {};
+    
+    this.authService.signupWithLinkedIn(this.selectedRole, additionalInfo)
+      .pipe(
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (response: AuthResponse) => {
+          this.successMessage = 'LinkedIn signup successful! Redirecting...';
+          setTimeout(() => {
+            this.router.navigate([`/${this.selectedRole}/dashboard`]);
+          }, 1500);
+        },
+        error: (error: any) => {
+          console.error('LinkedIn signup error:', error);
+          this.errorMessage = error.error?.message || 'LinkedIn signup failed. Please try again.';
+        }
+      });
   }
 
   goToForgotPassword(event: Event): void {

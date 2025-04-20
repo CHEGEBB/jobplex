@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SidebarEmployerComponent } from '../../../components/sidebar-employer/sidebar-employer.component';
@@ -15,6 +15,7 @@ import { User } from '../../../interfaces/auth.interface';
 export class EmployerDashboardComponent implements OnInit {
   employerName: string = '';
   profileCompletion: number = 75;
+  showProfileMenu = false;
   Number = Number; // Make Number available in the template
   currentUser: User | null = null;
   profileInitials: string = '';
@@ -99,6 +100,21 @@ export class EmployerDashboardComponent implements OnInit {
   // Helper method to get initials from name
   getInitials(firstName: string, lastName: string): string {
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    // Close the menu when clicking outside of it
+    if (this.showProfileMenu && !(event.target as HTMLElement).closest('.profile-dropdown')) {
+      this.showProfileMenu = false;
+    }
+  }
+
+  toggleProfileMenu(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showProfileMenu = !this.showProfileMenu;
   }
 
   // Methods for handling actions
