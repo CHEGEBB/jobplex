@@ -17,7 +17,7 @@ services:
       DB_PASSWORD: philgabby2003
       DB_NAME: jobplex
       DB_SSL: "false"  # Add this to explicitly disable SSL requirement
-      JWT_SECRET: your-secret-key-change-in-production
+      JWT_SECRET: 41545535de1f84fe852573487c4b065cb241e0573974f5d6feb65294a65a3e9521f346346c443fe2d89b6fea5bc295a6c361ecf4b1c56765f0e233aa54f38b4118cf8fbde8e1e45a3ecf1cc259f3c91dba5f202b7e070d740379c14db01ee932d52d5a7ec881cf4954ce4ef211242f314757d70d68ae45c7a88dfce8e0a2b1c0cb744e788f3b145a875ecf53f4bb89f4e27d8226b2b039332ef8cbc769cdef9e16051da81a9c33efa40ad1ab1ad072559513a00a771ccf72e4aaf46f754cbcf1907514dd4bbce05a28d18863239043300090662e13edaf6f8dca94f8a98553224b1e35e8a91962fc6d806bdb84910e5ae73b7ef31f4c2ca87af491b1befd46e2
       JWT_EXPIRES_IN: 1d
     volumes:
       - ./backend/src:/usr/src/app/src
