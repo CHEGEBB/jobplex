@@ -1,27 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { SidebarEmployerComponent } from '../../../components/sidebar-employer/sidebar-employer.component';
-
-interface Job {
-  id: number;
-  title: string;
-  company: string;
-  location: string;
-  salary: string;
-  type: string;
-  status: 'active' | 'draft' | 'closed' | 'archived';
-  skills: string[];
-  description: string;
-  postDate: string;
-  views: number;
-  applications: number;
-  matches: number;
-  department?: string;
-  workMode?: string;
-  experienceLevel?: string;
-}
+import { JobService, Job, JobStats } from '../../../services/job.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-job-posts',
@@ -36,7 +19,7 @@ interface Job {
   templateUrl: './job-posts.component.html',
   styleUrls: ['./job-posts.component.scss']
 })
-export class JobPostsComponent implements OnInit {
+export class JobPostsComponent implements OnInit, OnDestroy {
   // References for DOM manipulation
   @ViewChild('jobFormContainer') jobFormContainer!: ElementRef;
 
@@ -59,94 +42,42 @@ export class JobPostsComponent implements OnInit {
   statusFilter: string = 'all';
   highlightedJobId: number | null = null;
   highlightActive = false;
+  isLoading = false;
+  error = '';
 
-  // Demo data
-  jobs: Job[] = [
-    {
-      id: 1,
-      title: 'Frontend Developer',
-      company: 'TechCorp',
-      location: 'New York, NY',
-      salary: '$80,000 - $100,000',
-      type: 'Full-time',
-      status: 'active',
-      skills: ['JavaScript', 'React', 'CSS', 'HTML5'],
-      description: 'Looking for an experienced frontend developer to join our team.',
-      postDate: '2025-04-01',
-      views: 245,
-      applications: 18,
-      matches: 7,
-      department: 'Engineering',
-      workMode: 'Hybrid',
-      experienceLevel: 'Mid-level'
-    },
-    {
-      id: 2,
-      title: 'Backend Engineer',
-      company: 'TechCorp',
-      location: 'Remote',
-      salary: '$90,000 - $120,000',
-      type: 'Full-time',
-      status: 'active',
-      skills: ['Node.js', 'Express', 'MongoDB', 'AWS'],
-      description: 'Seeking a backend engineer with experience in Node.js and cloud services.',
-      postDate: '2025-03-28',
-      views: 189,
-      applications: 12,
-      matches: 5,
-      department: 'Engineering',
-      workMode: 'Remote',
-      experienceLevel: 'Senior'
-    },
-    {
-      id: 3,
-      title: 'UX/UI Designer',
-      company: 'TechCorp',
-      location: 'San Francisco, CA',
-      salary: '$75,000 - $95,000',
-      type: 'Full-time',
-      status: 'draft',
-      skills: ['Figma', 'Adobe XD', 'User Research', 'Prototyping'],
-      description: 'Join our design team to create beautiful and intuitive user experiences.',
-      postDate: 'Not published',
-      views: 0,
-      applications: 0,
-      matches: 0,
-      department: 'Design',
-      workMode: 'On-site',
-      experienceLevel: 'Mid-level'
-    },
-    {
-      id: 4,
-      title: 'DevOps Engineer',
-      company: 'TechCorp',
-      location: 'Chicago, IL',
-      salary: '$100,000 - $130,000',
-      type: 'Full-time',
-      status: 'closed',
-      skills: ['Docker', 'Kubernetes', 'CI/CD', 'AWS', 'Terraform'],
-      description: 'Looking for a DevOps engineer to improve our deployment pipeline.',
-      postDate: '2025-02-15',
-      views: 210,
-      applications: 15,
-      matches: 6,
-      department: 'Engineering',
-      workMode: 'Hybrid',
-      experienceLevel: 'Senior'
-    }
-  ];
-
-  jobStats = {
-    active: 2,
-    applications: 45,
-    matched: 18,
-    interviews: 7
+  // Data
+  jobs: Job[] = [];
+  jobStats: JobStats = {
+    active: 0,
+    applications: 0,
+    matched: 0,
+    interviews: 0
   };
+  
+  // Subscriptions
+  private jobSubscription?: Subscription;
+  private statsSubscription?: Subscription;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private jobService: JobService
+  ) {}
 
   ngOnInit(): void {
     this.initializeForm();
+    this.loadJobs();
+    this.statsSubscription = this.jobService.jobStats$.subscribe(stats => {
+      this.jobStats = stats;
+    });
+  }
+  
+  ngOnDestroy(): void {
+    if (this.jobSubscription) {
+      this.jobSubscription.unsubscribe();
+    }
+    if (this.statsSubscription) {
+      this.statsSubscription.unsubscribe();
+    }
   }
 
   // Form initialization
@@ -191,12 +122,34 @@ export class JobPostsComponent implements OnInit {
     return this.jobs.filter(job => {
       // Filter by search term
       const matchesSearch = job.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                           job.skills.some(skill => skill.toLowerCase().includes(this.searchTerm.toLowerCase()));
+                           job.skills.some(skill => 
+                             typeof skill === 'string' 
+                               ? skill.toLowerCase().includes(this.searchTerm.toLowerCase())
+                               : skill.skillName.toLowerCase().includes(this.searchTerm.toLowerCase())
+                            );
       
       // Filter by status
       const matchesStatus = this.statusFilter === 'all' || job.status === this.statusFilter;
       
       return matchesSearch && matchesStatus;
+    });
+  }
+
+  // Load jobs from service
+  loadJobs(): void {
+    this.isLoading = true;
+    this.error = '';
+    
+    this.jobSubscription = this.jobService.getEmployerJobs().subscribe({
+      next: (jobs) => {
+        this.jobs = jobs;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading jobs:', err);
+        this.error = 'Failed to load jobs. Please try again.';
+        this.isLoading = false;
+      }
     });
   }
 
@@ -223,19 +176,41 @@ export class JobPostsComponent implements OnInit {
 
   editJob(job: Job): void {
     this.editMode = true;
+    
+    // Extract skills as strings
+    const skillStrings = job.skills.map(skill => 
+      typeof skill === 'string' ? skill : skill.skillName
+    );
+    
     this.jobForm.patchValue({
       id: job.id,
       title: job.title,
       department: job.department || '',
-      jobType: job.type,
+      jobType: job.type,  // Map job.type to jobType field
       location: job.location,
       workMode: job.workMode || 'On-site',
       experienceLevel: job.experienceLevel || 'Mid-level',
-      status: job.status
+      educationLevel: job.educationLevel || 'Bachelor\'s',
+      description: job.description || '',
+      requirements: job.requirements || '',
+      benefits: job.benefits || '',
+      status: job.status,
+      deadlineDate: job.deadlineDate || '',
+      internal: job.internal !== undefined ? job.internal : true,
+      careerSite: job.careerSite !== undefined ? job.careerSite : true,
+      linkedin: job.linkedin || false,
+      indeed: job.indeed || false,
+      teamAccess: job.teamAccess || 'all',
+      salaryVisible: job.salaryVisible !== undefined ? job.salaryVisible : true
     });
 
     // Parse salary range
-    if (job.salary) {
+    if (job.minSalary && job.maxSalary) {
+      this.jobForm.patchValue({
+        minSalary: job.minSalary,
+        maxSalary: job.maxSalary
+      });
+    } else if (job.salary) {
       const salaryMatch = job.salary.match(/\$(\d+,?\d*) - \$(\d+,?\d*)/);
       if (salaryMatch) {
         const minSalary = salaryMatch[1].replace(',', '');
@@ -247,8 +222,22 @@ export class JobPostsComponent implements OnInit {
       }
     }
 
-    this.selectedSkills = [...job.skills];
+    this.selectedSkills = [...skillStrings];
     this.jobForm.get('skills')?.setValue(this.selectedSkills);
+    
+    // Handle screening questions if available
+    if (job.screeningQuestions && job.screeningQuestions.length > 0) {
+      this.screeningQuestions.clear();
+      
+      job.screeningQuestions.forEach(question => {
+        this.screeningQuestions.push(this.fb.group({
+          question: [question.question, Validators.required],
+          type: [question.type || 'text'],
+          options: [question.options ? question.options.join('\n') : ''],
+          required: [question.required || false]
+        }));
+      });
+    }
     
     this.showJobForm = true;
   }
@@ -264,66 +253,59 @@ export class JobPostsComponent implements OnInit {
     }
 
     const formValue = this.jobForm.value;
+    this.isLoading = true;
     
-    // Format salary range
-    let salary = '';
-    if (formValue.minSalary && formValue.maxSalary) {
-      salary = `$${formValue.minSalary} - $${formValue.maxSalary}`;
-    }
-
-    const jobData: Partial<Job> = {
-      title: formValue.title,
-      company: 'TechCorp', // Assuming this is the logged-in company
-      location: formValue.location,
-      salary: salary,
-      type: formValue.jobType,
-      status: formValue.status,
-      skills: this.selectedSkills,
-      description: formValue.description,
-      department: formValue.department,
-      workMode: formValue.workMode,
-      experienceLevel: formValue.experienceLevel
-    };
-
     if (this.editMode && formValue.id) {
       // Update existing job
-      const index = this.jobs.findIndex(job => job.id === formValue.id);
-      if (index !== -1) {
-        this.jobs[index] = { ...this.jobs[index], ...jobData } as Job;
-        this.highlightedJobId = formValue.id;
-        setTimeout(() => {
-          this.highlightedJobId = null;
-        }, 2000);
-      }
+      this.jobService.updateJob(formValue.id, formValue).subscribe({
+        next: (updatedJob) => {
+          const index = this.jobs.findIndex(job => job.id === formValue.id);
+          if (index !== -1) {
+            this.jobs[index] = updatedJob;
+          }
+          this.highlightedJobId = formValue.id;
+          setTimeout(() => {
+            this.highlightedJobId = null;
+          }, 2000);
+          this.isLoading = false;
+          this.toggleJobForm();
+        },
+        error: (err) => {
+          console.error('Error updating job:', err);
+          this.error = 'Failed to update job. Please try again.';
+          this.isLoading = false;
+        }
+      });
     } else {
       // Create new job
-      const newJob: Job = {
-        id: this.generateJobId(),
-        postDate: formValue.status === 'active' ? new Date().toISOString().split('T')[0] : 'Not published',
-        views: 0,
-        applications: 0,
-        matches: 0,
-        ...jobData
-      } as Job;
-      
-      this.jobs.unshift(newJob);
-      this.highlightedJobId = newJob.id;
-      
-      // Update stats if job is active
-      if (newJob.status === 'active') {
-        this.jobStats.active += 1;
-        this.highlightActive = true;
-        setTimeout(() => {
-          this.highlightActive = false;
-        }, 2000);
-      }
-      
-      setTimeout(() => {
-        this.highlightedJobId = null;
-      }, 2000);
+      this.jobService.createJob(formValue).subscribe({
+        next: (newJob) => {
+          this.jobs.unshift(newJob);
+          this.highlightedJobId = newJob.id;
+          
+          // Update stats if job is active
+          if (newJob.status === 'active') {
+            this.highlightActive = true;
+            setTimeout(() => {
+              this.highlightActive = false;
+            }, 2000);
+          }
+          
+          setTimeout(() => {
+            this.highlightedJobId = null;
+          }, 2000);
+          
+          this.isLoading = false;
+          this.toggleJobForm();
+        },
+        error: (err) => {
+          console.error('Error creating job:', err);
+          this.error = 'Failed to create job. Please try again.';
+          this.isLoading = false;
+        }
+      });
     }
-
-    this.toggleJobForm();
+    
     this.editMode = false;
   }
 
@@ -339,42 +321,75 @@ export class JobPostsComponent implements OnInit {
   }
 
   duplicateJob(job: Job): void {
-    const newJob: Job = {
-      ...job,
-      id: this.generateJobId(),
-      title: `${job.title} (Copy)`,
-      status: 'draft',
-      postDate: 'Not published',
-      views: 0,
-      applications: 0,
-      matches: 0
+    const jobCopy = {...job};
+    delete (jobCopy as Partial<Job>).id;
+    jobCopy.title = `${job.title} (Copy)`;
+    jobCopy.status = 'draft';
+    
+    // The fix: Map the type property to jobType for the CreateJobRequest interface
+    const jobRequest = {
+      ...jobCopy,
+      jobType: job.type, // This is the critical change - ensure jobType is properly set
     };
     
-    this.jobs.unshift(newJob);
-    this.highlightedJobId = newJob.id;
-    setTimeout(() => {
-      this.highlightedJobId = null;
-    }, 2000);
+    this.isLoading = true;
+    // Transform skills to match the expected JobSkill[] type
+    const transformedJobRequest = {
+      ...jobRequest,
+      skills: jobRequest.skills.map(skill => 
+        typeof skill === 'string' 
+          ? { skillName: skill, importance: 'required' as 'required' } // Explicitly type importance
+          : { ...skill, importance: skill.importance as 'required' | 'preferred' | 'nice-to-have' } // Ensure correct typing
+      )
+    };
+
+    this.jobService.createJob(transformedJobRequest).subscribe({
+      next: (newJob) => {
+        this.jobs.unshift(newJob);
+        this.highlightedJobId = newJob.id;
+        setTimeout(() => {
+          this.highlightedJobId = null;
+        }, 2000);
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error duplicating job:', err);
+        this.error = 'Failed to duplicate job. Please try again.';
+        this.isLoading = false;
+      }
+    });
   }
 
   toggleJobStatus(job: Job): void {
-    if (job.status === 'active') {
-      job.status = 'closed';
-      this.jobStats.active -= 1;
-    } else if (job.status === 'closed') {
-      job.status = 'active';
-      this.jobStats.active += 1;
-    }
+    const newStatus = job.status === 'active' ? 'closed' : 'active';
+    
+    this.jobService.updateJobStatus(job.id, newStatus).subscribe({
+      next: (updatedJob) => {
+        const index = this.jobs.findIndex(j => j.id === job.id);
+        if (index !== -1) {
+          this.jobs[index].status = updatedJob.status;
+        }
+      },
+      error: (err) => {
+        console.error('Error updating job status:', err);
+        this.error = 'Failed to update job status. Please try again.';
+      }
+    });
   }
 
   archiveJob(jobId: number): void {
-    const index = this.jobs.findIndex(job => job.id === jobId);
-    if (index !== -1) {
-      if (this.jobs[index].status === 'active') {
-        this.jobStats.active -= 1;
+    this.jobService.updateJobStatus(jobId, 'archived').subscribe({
+      next: (updatedJob) => {
+        const index = this.jobs.findIndex(job => job.id === jobId);
+        if (index !== -1) {
+          this.jobs[index].status = 'archived';
+        }
+      },
+      error: (err) => {
+        console.error('Error archiving job:', err);
+        this.error = 'Failed to archive job. Please try again.';
       }
-      this.jobs[index].status = 'archived';
-    }
+    });
   }
 
   // Skills management
@@ -446,6 +461,12 @@ export class JobPostsComponent implements OnInit {
   setStatusFilter(status: string): void {
     this.statusFilter = status;
   }
+  getJobSkills(job: Job): any[] {
+    if (!job.skills) {
+      return [];
+    }
+    return Array.isArray(job.skills) ? job.skills : [];
+  }
 
   getEmptyStateMessage(): string {
     if (this.searchTerm) {
@@ -455,10 +476,5 @@ export class JobPostsComponent implements OnInit {
     } else {
       return 'You have not created any job posts yet.';
     }
-  }
-
-  // Utility functions
-  private generateJobId(): number {
-    return Math.max(0, ...this.jobs.map(job => job.id)) + 1;
   }
 }

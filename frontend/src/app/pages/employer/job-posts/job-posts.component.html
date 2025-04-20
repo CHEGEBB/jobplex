@@ -118,7 +118,7 @@
                 </div>
   
                 <div class="job-skills">
-                  <span *ngFor="let skill of job.skills" class="skill-badge">{{skill}}</span>
+                  <span *ngFor="let skill of getJobSkills(job)" class="skill-badge">{{ skill }}</span>
                 </div>
               </div>
   

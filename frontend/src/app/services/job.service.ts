@@ -1,9 +1,11 @@
 // src/app/services/job.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../environments/environment';
+import { AuthService } from './auth.service';
+
 
 export interface JobSkill {
   skillName: string;
@@ -90,8 +92,20 @@ export class JobService {
   
   jobStats$ = this.jobStatsSubject.asObservable();
   
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
     this.refreshJobStats();
+  }
+
+  // Helper method to get auth headers
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
   }
 
   // Get all jobs with optional filters
@@ -107,7 +121,10 @@ export class JobService {
       if (filters.limit) params = params.set('limit', filters.limit);
     }
     
-    return this.http.get<{ jobs: any[], pagination: any }>(this.apiUrl, { params }).pipe(
+    return this.http.get<{ jobs: any[], pagination: any }>(this.apiUrl, { 
+      params,
+      headers: this.getAuthHeaders()
+    }).pipe(
       map(response => {
         const formattedJobs = response.jobs.map(job => this.formatJobForFrontend(job));
         return {
@@ -121,7 +138,9 @@ export class JobService {
 
   // Get employer's own jobs
   getEmployerJobs(): Observable<Job[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/employer/me`).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/employer/me`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       map(jobs => jobs.map(job => this.formatJobForFrontend(job))),
       tap(jobs => {
         const active = jobs.filter(job => job.status === 'active').length;
@@ -146,7 +165,9 @@ export class JobService {
 
   // Get job by ID
   getJobById(id: number): Observable<Job> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       map(job => this.formatJobForFrontend(job)),
       catchError(this.handleError<Job>('getJobById'))
     );
@@ -155,7 +176,9 @@ export class JobService {
   // Create new job
   createJob(jobData: CreateJobRequest): Observable<Job> {
     const formattedJob = this.formatJobForBackend(jobData);
-    return this.http.post<any>(this.apiUrl, formattedJob).pipe(
+    return this.http.post<any>(this.apiUrl, formattedJob, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       map(job => this.formatJobForFrontend(job)),
       tap(() => this.refreshJobStats()),
       catchError(this.handleError<Job>('createJob'))
@@ -165,7 +188,9 @@ export class JobService {
   // Update job
   updateJob(id: number, jobData: Partial<CreateJobRequest>): Observable<Job> {
     const formattedJob = this.formatJobForBackend(jobData);
-    return this.http.put<any>(`${this.apiUrl}/${id}`, formattedJob).pipe(
+    return this.http.put<any>(`${this.apiUrl}/${id}`, formattedJob, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       map(job => this.formatJobForFrontend(job)),
       tap(() => this.refreshJobStats()),
       catchError(this.handleError<Job>('updateJob'))
@@ -174,7 +199,9 @@ export class JobService {
 
   // Delete job
   deleteJob(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete(`${this.apiUrl}/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       tap(() => this.refreshJobStats()),
       catchError(this.handleError('deleteJob'))
     );
@@ -182,7 +209,9 @@ export class JobService {
 
   // Update job status (active/closed/archived)
   updateJobStatus(id: number, status: string): Observable<Job> {
-    return this.http.patch<any>(`${this.apiUrl}/${id}/status`, { status }).pipe(
+    return this.http.patch<any>(`${this.apiUrl}/${id}/status`, { status }, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       map(job => this.formatJobForFrontend(job)),
       tap(() => this.refreshJobStats()),
       catchError(this.handleError<Job>('updateJobStatus'))
@@ -191,7 +220,9 @@ export class JobService {
 
   // Get job matches (for job seekers)
   getJobMatches(): Observable<{ matches: Job[], userSkills: string[], totalMatches: number }> {
-    return this.http.get<any>(`${this.apiUrl}/matches/me`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/matches/me`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       map(response => ({
         matches: response.matches.map((job: any) => this.formatJobForFrontend(job)),
         userSkills: response.userSkills,
@@ -203,7 +234,9 @@ export class JobService {
 
   // Apply for a job (for job seekers)
   applyForJob(jobId: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/${jobId}/apply`, {}).pipe(
+    return this.http.post<any>(`${this.apiUrl}/${jobId}/apply`, {}, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       catchError(this.handleError('applyForJob'))
     );
   }
