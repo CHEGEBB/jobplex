@@ -10,7 +10,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([
       (req, next) => {
-        const token = localStorage.getItem('auth_token');
+        const token = localStorage.getItem('your_secret_key_here');
         if (token) {
           req = req.clone({
             setHeaders: {
