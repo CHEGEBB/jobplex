@@ -64,8 +64,14 @@ export const createCV = async (req: Request, res: Response) => {
         [
           user.id, title, firstName, lastName, email, phone, address, city,
           country, postalCode, profileSummary, avatarUrl, website, linkedin,
-          github, isFirstCV, skills, JSON.stringify(education), JSON.stringify(experience), 
-          JSON.stringify(projects), JSON.stringify(certifications), JSON.stringify(languages), tags
+          github, isFirstCV, 
+          JSON.stringify(skills || []), // Convert to string or use empty array
+          JSON.stringify(education || []), 
+          JSON.stringify(experience || []), 
+          JSON.stringify(projects || []), 
+          JSON.stringify(certifications || []), 
+          JSON.stringify(languages || []), 
+          tags || []
         ]
       );
       

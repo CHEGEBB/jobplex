@@ -49,14 +49,14 @@ export class CvManagerComponent implements OnInit {
   
   // Avatar options
   avatars = [
-    'https://avatar-placeholder.iran.liara.run/public/boy',
-    'https://avatar-placeholder.iran.liara.run/public/girl',
-    'https://avatar-placeholder.iran.liara.run/public/man',
-    'https://avatar-placeholder.iran.liara.run/public/woman',
-    'https://avatar-placeholder.iran.liara.run/public/J',
-    'https://avatar-placeholder.iran.liara.run/public/S',
-    'https://avatar-placeholder.iran.liara.run/public/A',
-    'https://avatar-placeholder.iran.liara.run/public/D'
+    'https://avatar.iran.liara.run/public/boy',
+    'https://avatar.iran.liara.run/public/girl',
+    'https://avatar.iran.liara.run/public/boy?username=Scott',
+    'https://avatar.iran.liara.run/public/girl?username=Maria',
+    'https://avatar.iran.liara.run/public/job/doctor/male',
+    'https://avatar.iran.liara.run/public',
+    'https://avatar.iran.liara.run/public/job/doctor/female',
+    'https://avatar.iran.liara.run/public/2'
   ];
   
   // Available tags and proficiency levels
@@ -160,8 +160,8 @@ export class CvManagerComponent implements OnInit {
       institution: ['', Validators.required],
       degree: ['', Validators.required],
       field: ['', Validators.required],
-      startDate: [''],
-      endDate: [''],
+      start_date: [''],
+      end_date: [''],
       description: ['']
     }));
   }
@@ -171,9 +171,9 @@ export class CvManagerComponent implements OnInit {
       company: ['', Validators.required],
       position: ['', Validators.required],
       location: [''],
-      startDate: [''],
-      endDate: [''],
-      currentlyWorking: [false],
+      start_date: [''],
+      end_date: [''],
+      currently_working: [false],
       description: ['']
     }));
   }
@@ -198,7 +198,7 @@ export class CvManagerComponent implements OnInit {
   
   addLanguage(): void {
     this.languagesArray.push(this.fb.group({
-      language: ['', Validators.required],
+      name: ['', Validators.required],
       proficiency: ['', Validators.required]
     }));
   }
@@ -341,8 +341,8 @@ export class CvManagerComponent implements OnInit {
           institution: [education.institution, Validators.required],
           degree: [education.degree, Validators.required],
           field: [education.field, Validators.required],
-          startDate: [education.startDate || ''],
-          endDate: [education.endDate || ''],
+          start_date: [education.start_date || ''],
+          end_date: [education.end_date || ''],
           description: [education.description || '']
         }));
       });
@@ -350,22 +350,22 @@ export class CvManagerComponent implements OnInit {
       this.addEducation();
     }
     
-    // Add experience
-    if (cv.experience && cv.experience.length) {
-      cv.experience.forEach(experience => {
-        this.experienceArray.push(this.fb.group({
-          company: [experience.company, Validators.required],
-          position: [experience.position, Validators.required],
-          location: [experience.location || ''],
-          startDate: [experience.startDate || ''],
-          endDate: [experience.endDate || ''],
-          currentlyWorking: [experience.currentlyWorking || false],
-          description: [experience.description || '']
-        }));
-      });
-    } else {
-      this.addExperience();
-    }
+   // Add experience
+if (cv.experience && cv.experience.length) {
+  cv.experience.forEach(experience => {
+    this.experienceArray.push(this.fb.group({
+      company: [experience.company, Validators.required],
+      position: [experience.position, Validators.required],
+      location: [experience.location || ''],
+      start_date: [experience.start_date || ''],
+      end_date: [experience.end_date || ''],
+      currently_working: [false], // Use default value instead of accessing non-existent property
+      description: [experience.description || '']
+    }));
+  });
+} else {
+  this.addExperience();
+}
     
     // Add projects
     if (cv.projects && cv.projects.length) {
@@ -411,7 +411,7 @@ export class CvManagerComponent implements OnInit {
     if (cv.languages && cv.languages.length) {
       cv.languages.forEach(lang => {
         this.languagesArray.push(this.fb.group({
-          language: [lang.language, Validators.required],
+          name: [lang.name, Validators.required],
           proficiency: [lang.proficiency, Validators.required]
         }));
       });

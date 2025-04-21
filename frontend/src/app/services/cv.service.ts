@@ -7,8 +7,8 @@ export interface Education {
   institution: string;
   degree: string;
   field: string;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
   description: string;
 }
 
@@ -16,9 +16,10 @@ export interface Experience {
   company: string;
   position: string;
   location: string;
-  startDate: string;
-  endDate: string;
-  currentlyWorking?: boolean;
+  start_date: string;
+  end_date: string;
+  current: boolean;
+  currently_working?: boolean;
   description: string;
 }
 
@@ -37,7 +38,7 @@ export interface Certification {
 }
 
 export interface Language {
-  language: string;
+  name: string;
   proficiency: string;
 }
 
@@ -87,26 +88,126 @@ export class CvService {
     });
   }
 
-  createCV(cv: Partial<CV>): Observable<CV> {
-    return this.http.post<CV>(this.apiUrl, cv, {
+  // Transform form data to match API expected format
+  private transformFormDataToApiFormat(formData: any): any {
+    const transformedData = {
+      ...formData,
+      education: formData.education?.map((edu: any) => ({
+        institution: edu.institution,
+        degree: edu.degree,
+        field: edu.field,
+        start_date: edu.startDate,
+        end_date: edu.endDate,
+        description: edu.description
+      })) || [],
+      experience: formData.experience?.map((exp: any) => ({
+        company: exp.company,
+        position: exp.position,
+        location: exp.location,
+        start_date: exp.startDate,
+        end_date: exp.endDate,
+        current: exp.currentlyWorking,
+        description: exp.description
+      })) || [],
+      languages: formData.languages?.map((lang: any) => ({
+        name: lang.language,
+        proficiency: lang.proficiency
+      })) || []
+    };
+    
+    return transformedData;
+  }
+
+  // Transform API data to match form structure
+  private transformApiDataToFormFormat(apiData: any): any {
+    if (!apiData) return apiData;
+    
+    // If it's an array, map each item
+    if (Array.isArray(apiData)) {
+      return apiData.map(item => this.transformApiDataToFormFormat(item));
+    }
+    
+    // Clone the object to avoid mutations
+    const formattedData = { ...apiData };
+    
+    // Transform education
+    if (formattedData.education) {
+      formattedData.education = formattedData.education.map((edu: any) => ({
+        institution: edu.institution,
+        degree: edu.degree,
+        field: edu.field,
+        startDate: edu.start_date,
+        endDate: edu.end_date,
+        description: edu.description
+      }));
+    }
+    
+    // Transform experience
+    if (formattedData.experience) {
+      formattedData.experience = formattedData.experience.map((exp: any) => ({
+        company: exp.company,
+        position: exp.position,
+        location: exp.location,
+        startDate: exp.start_date,
+        endDate: exp.end_date,
+        currentlyWorking: exp.current,
+        description: exp.description
+      }));
+    }
+    
+    // Transform languages
+    if (formattedData.languages) {
+      formattedData.languages = formattedData.languages.map((lang: any) => ({
+        language: lang.name,
+        proficiency: lang.proficiency
+      }));
+    }
+    
+    return formattedData;
+  }
+
+  createCV(cv: any): Observable<CV> {
+    const transformedData = this.transformFormDataToApiFormat(cv);
+    
+    return this.http.post<CV>(this.apiUrl, transformedData, {
       headers: this.getAuthHeaders()
     });
   }
 
   getCVs(): Observable<CV[]> {
-    return this.http.get<CV[]>(this.apiUrl, {
-      headers: this.getAuthHeaders()
+    return new Observable<CV[]>(observer => {
+      this.http.get<CV[]>(this.apiUrl, {
+        headers: this.getAuthHeaders()
+      }).subscribe({
+        next: (data) => {
+          const transformedData = this.transformApiDataToFormFormat(data);
+          observer.next(transformedData);
+          observer.complete();
+        },
+        error: (err) => observer.error(err)
+      });
     });
   }
   
   getCV(cvId: number): Observable<CV> {
-    return this.http.get<CV>(`${this.apiUrl}/${cvId}`, {
-      headers: this.getAuthHeaders()
+    return new Observable<CV>(observer => {
+      this.http.get<CV>(`${this.apiUrl}/${cvId}`, {
+        headers: this.getAuthHeaders()
+      }).subscribe({
+        next: (data) => {
+          const transformedData = this.transformApiDataToFormFormat(data);
+          observer.next(transformedData);
+          observer.complete();
+        },
+        error: (err) => observer.error(err)
+      });
     });
   }
   
-  updateCV(cvId: number, cv: Partial<CV>): Observable<CV> {
-    return this.http.put<CV>(`${this.apiUrl}/${cvId}`, cv, {
+  updateCV(cvId: number, cv: any): Observable<CV> {
+    const transformedData = this.transformFormDataToApiFormat(cv);
+    
+    return this.http.put<CV>(`${this.apiUrl}/${cvId}`, transformedData, {
       headers: this.getAuthHeaders()
     });
   }
