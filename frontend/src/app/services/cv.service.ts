@@ -2,25 +2,77 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
-import { environment } from '../environments/environment';
+
+export interface Education {
+  institution: string;
+  degree: string;
+  field: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export interface Experience {
+  company: string;
+  position: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  currentlyWorking?: boolean;
+  description: string;
+}
+
+export interface Project {
+  name: string;
+  description: string;
+  url?: string;
+  technologies: string[];
+}
+
+export interface Certification {
+  name: string;
+  issuer: string;
+  date: string;
+  url?: string;
+}
+
+export interface Language {
+  language: string;
+  proficiency: string;
+}
 
 export interface CV {
   id: number;
-  file_name: string;
-  file_path?: string;
-  file_url?: string;
-  file_size?: number;
+  title: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postal_code?: string;
+  profile_summary?: string;
+  avatar_url?: string;
+  website?: string;
+  linkedin?: string;
+  github?: string;
   is_primary: boolean;
+  skills: string[];
+  education: Education[];
+  experience: Experience[];
+  projects: Project[];
+  certifications: Certification[];
+  languages: Language[];
   tags: string[];
-  uploaded_at: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class CvService {
-  // Use the environment variable for the API URL
   private apiUrl = 'http://18.208.134.30/api/cvs';
 
   constructor(
@@ -28,7 +80,6 @@ export class CvService {
     private authService: AuthService
   ) { }
 
-  // Helper method to get auth headers - for non-multipart requests
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     return new HttpHeaders({
@@ -36,24 +87,10 @@ export class CvService {
     });
   }
 
-  // File upload requires special handling for headers
-  uploadCV(file: File): Observable<CV> {
-    const formData = new FormData();
-    formData.append('cv', file);
-    
-    // For multipart/form-data, we need to pass auth token but not set Content-Type
-    // Let the browser set the Content-Type with proper boundary
-    const token = this.authService.getToken();
-    
-    // Using a simple object for headers instead of HttpHeaders
-    // This is critical for file uploads with authorization
-    const options = {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    };
-    
-    return this.http.post<CV>(this.apiUrl, formData, options);
+  createCV(cv: Partial<CV>): Observable<CV> {
+    return this.http.post<CV>(this.apiUrl, cv, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   getCVs(): Observable<CV[]> {
@@ -62,6 +99,18 @@ export class CvService {
     });
   }
   
+  getCV(cvId: number): Observable<CV> {
+    return this.http.get<CV>(`${this.apiUrl}/${cvId}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+  
+  updateCV(cvId: number, cv: Partial<CV>): Observable<CV> {
+    return this.http.put<CV>(`${this.apiUrl}/${cvId}`, cv, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   setPrimaryCV(cvId: number): Observable<CV> {
     return this.http.patch<CV>(`${this.apiUrl}/${cvId}/primary`, {}, {
       headers: this.getAuthHeaders()
@@ -71,20 +120,6 @@ export class CvService {
   deleteCV(cvId: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${cvId}`, {
       headers: this.getAuthHeaders()
-    });
-  }
-
-  downloadCV(cvId: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${cvId}/download`, {
-      headers: this.getAuthHeaders(),
-      responseType: 'blob'
-    });
-  }
-
-  viewCV(cvId: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${cvId}/view`, {
-      headers: this.getAuthHeaders(),
-      responseType: 'blob'
     });
   }
 
@@ -99,5 +134,11 @@ export class CvService {
     return this.http.delete<CV>(`${this.apiUrl}/${cvId}/tags/${tag}`, {
       headers: this.getAuthHeaders()
     });
+  }
+  
+  generateAvatarUrl(name: string): string {
+    // Use the first letter of the name to generate an avatar
+    const initial = name.charAt(0).toUpperCase();
+    return `https://avatar-placeholder.iran.liara.run/public/${initial}`;
   }
 }

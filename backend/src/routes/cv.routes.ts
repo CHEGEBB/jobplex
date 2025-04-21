@@ -1,29 +1,25 @@
 import express from 'express';
 import {
-  uploadCV,
+  createCV,
   getUserCVs,
+  getCVById,
+  updateCV,
   setPrimaryCV,
   deleteCV,
   addTag,
-  removeTag,
-  downloadCV,
-  viewCV,
+  removeTag
 } from '../controllers/cv.controller';
 import { verifyToken } from '../middleware/auth.middleware';
-import multer from 'multer';
 
-const upload = multer({ storage: multer.memoryStorage() });
 const router = express.Router();
 
 // CV CRUD operations
-router.post('/', verifyToken, upload.single('cv'), uploadCV);
+router.post('/', verifyToken, createCV);
 router.get('/', verifyToken, getUserCVs);
+router.get('/:cvId', verifyToken, getCVById);
+router.put('/:cvId', verifyToken, updateCV);
 router.patch('/:cvId/primary', verifyToken, setPrimaryCV);
 router.delete('/:cvId', verifyToken, deleteCV);
-
-// File operations
-router.get('/:cvId/download', verifyToken, downloadCV);
-router.get('/:cvId/view', verifyToken, viewCV);
 
 // Tag operations
 router.post('/:cvId/tags', verifyToken, addTag);

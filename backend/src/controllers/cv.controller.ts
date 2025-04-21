@@ -1,109 +1,85 @@
 import { Request, Response } from 'express';
-import { ID } from 'appwrite';
 import pool from '../config/db.config';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import { promisify } from 'util';
 
-// Convert callbacks to promises
-const writeFileAsync = promisify(fs.writeFile);
-const mkdirAsync = promisify(fs.mkdir);
-const existsAsync = promisify(fs.exists);
-
-// File storage configuration
-const STORAGE_DIR = process.env.CV_STORAGE_DIR || path.join(__dirname, '../../uploads/cvs');
-
-// Ensure storage directory exists
-async function ensureStorageDir() {
-  if (!(await existsAsync(STORAGE_DIR))) {
-    await mkdirAsync(STORAGE_DIR, { recursive: true });
-  }
-}
-
-// Generate safe filename
-function generateSafeFilename(originalName: string): string {
-  const timestamp = Date.now();
-  const randomString = crypto.randomBytes(8).toString('hex');
-  const extension = path.extname(originalName);
-  const safeName = `${timestamp}-${randomString}${extension}`;
-  return safeName;
-}
-
-export const uploadCV = async (req: Request, res: Response) => {
+export const createCV = async (req: Request, res: Response) => {
   try {
     const user = req.user;
-    const file = req.file;
     
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
     }
     
-    if (!file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+    const {
+      title,
+      firstName,
+      lastName,
+      email,
+      phone,
+      address,
+      city,
+      country,
+      postalCode,
+      profileSummary,
+      avatarUrl,
+      website,
+      linkedin,
+      github,
+      skills = [],
+      education = [],
+      experience = [],
+      projects = [],
+      certifications = [],
+      languages = [],
+      tags = []
+    } = req.body;
+    
+    // Validate required fields
+    if (!title || !firstName || !lastName || !email) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
     
+    // Begin transaction
+    const client = await pool.connect();
+    
     try {
-      // Ensure storage directory exists
-      await ensureStorageDir();
+      await client.query('BEGIN');
       
-      // Generate safe filename
-      const safeFilename = generateSafeFilename(file.originalname);
-      const filePath = path.join(STORAGE_DIR, safeFilename);
+      // Check if this is the user's first CV
+      const countResult = await client.query(
+        'SELECT COUNT(*) FROM cvs WHERE user_id = $1',
+        [user.id]
+      );
       
-      // Save file to disk
-      await writeFileAsync(filePath, file.buffer);
+      const isFirstCV = parseInt(countResult.rows[0].count) === 0;
       
-      // Begin transaction
-      const client = await pool.connect();
+      // Insert new CV
+      const result = await client.query(
+        `INSERT INTO cvs
+          (user_id, title, first_name, last_name, email, phone, address, city, 
+           country, postal_code, profile_summary, avatar_url, website, linkedin, 
+           github, is_primary, skills, education, experience, projects, 
+           certifications, languages, tags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+         RETURNING *`,
+        [
+          user.id, title, firstName, lastName, email, phone, address, city,
+          country, postalCode, profileSummary, avatarUrl, website, linkedin,
+          github, isFirstCV, skills, JSON.stringify(education), JSON.stringify(experience), 
+          JSON.stringify(projects), JSON.stringify(certifications), JSON.stringify(languages), tags
+        ]
+      );
       
-      try {
-        await client.query('BEGIN');
-        
-        // Check if this is the user's first CV
-        const countResult = await client.query(
-          'SELECT COUNT(*) FROM cvs WHERE user_id = $1',
-          [user.id]
-        );
-        
-        const isFirstCV = parseInt(countResult.rows[0].count) === 0;
-        
-        // Store metadata in PostgreSQL
-        const result = await client.query(
-          `INSERT INTO cvs
-            (user_id, file_path, file_name, file_size, is_primary, tags)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING id, user_id, file_name, file_size, is_primary, tags, uploaded_at, updated_at`,
-          [
-            user.id,
-            filePath,
-            file.originalname,
-            file.size,
-            isFirstCV,
-            []
-          ]
-        );
-       
-        
-        await client.query('COMMIT');
-        res.status(201).json(result.rows[0]);
-        const uploadedCV = result.rows[0]; 
-        res.status(201).json({
-          ...uploadedCV,
-          file_url: `/api/cvs/${uploadedCV.id}/view`
-        });
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
+      await client.query('COMMIT');
+      res.status(201).json(result.rows[0]);
     } catch (error) {
+      await client.query('ROLLBACK');
       throw error;
+    } finally {
+      client.release();
     }
   } catch (error) {
-    console.error('CV upload error:', error);
-    res.status(500).json({ message: 'CV upload failed', error: (error as Error).message });
+    console.error('CV creation error:', error);
+    res.status(500).json({ message: 'CV creation failed', error: (error as Error).message });
   }
 };
 
@@ -116,24 +92,18 @@ export const getUserCVs = async (req: Request, res: Response) => {
     }
     
     const result = await pool.query(
-      'SELECT id, user_id, file_name, file_size, is_primary, tags, uploaded_at, updated_at FROM cvs WHERE user_id = $1 ORDER BY uploaded_at DESC',
+      'SELECT * FROM cvs WHERE user_id = $1 ORDER BY created_at DESC',
       [user.id]
     );
-
-    // Transform the results to include file URLs
-    const cvs = result.rows.map(cv => ({
-      ...cv,
-      // Add direct file URLs for frontend use
-      file_url: `/api/cvs/${cv.id}/view`
-    }));
     
-    res.json(cvs);
+    res.json(result.rows);
   } catch (error) {
     console.error('Error fetching CVs:', error);
     res.status(500).json({ message: 'Failed to fetch CVs' });
   }
 };
-export const downloadCV = async (req: Request, res: Response) => {
+
+export const getCVById = async (req: Request, res: Response) => {
   try {
     const { cvId } = req.params;
     const user = req.user;
@@ -142,37 +112,23 @@ export const downloadCV = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
     }
     
-    // Get CV details
-    const cvResult = await pool.query(
+    const result = await pool.query(
       'SELECT * FROM cvs WHERE id = $1 AND user_id = $2',
       [cvId, user.id]
     );
     
-    if (cvResult.rowCount === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'CV not found' });
     }
     
-    const cv = cvResult.rows[0];
-    
-    // Check if file exists
-    if (!(await existsAsync(cv.file_path))) {
-      return res.status(404).json({ message: 'CV file not found' });
-    }
-    
-    // Set appropriate headers
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${cv.file_name}"`);
-    
-    // Stream the file to response
-    const fileStream = fs.createReadStream(cv.file_path);
-    fileStream.pipe(res);
+    res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error downloading CV:', error);
-    res.status(500).json({ message: 'Failed to download CV' });
+    console.error('Error fetching CV:', error);
+    res.status(500).json({ message: 'Failed to fetch CV' });
   }
 };
 
-export const viewCV = async (req: Request, res: Response) => {
+export const updateCV = async (req: Request, res: Response) => {
   try {
     const { cvId } = req.params;
     const user = req.user;
@@ -181,33 +137,84 @@ export const viewCV = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
     }
     
-    // Get CV details
-    const cvResult = await pool.query(
-      'SELECT * FROM cvs WHERE id = $1 AND user_id = $2',
+    const {
+      title,
+      firstName,
+      lastName,
+      email,
+      phone,
+      address,
+      city,
+      country,
+      postalCode,
+      profileSummary,
+      avatarUrl,
+      website,
+      linkedin,
+      github,
+      skills,
+      education,
+      experience,
+      projects,
+      certifications,
+      languages,
+      tags
+    } = req.body;
+    
+    // Validate required fields
+    if (!title || !firstName || !lastName || !email) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+    
+    // Check if CV exists and belongs to user
+    const checkResult = await pool.query(
+      'SELECT id FROM cvs WHERE id = $1 AND user_id = $2',
       [cvId, user.id]
     );
     
-    if (cvResult.rowCount === 0) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'CV not found' });
     }
     
-    const cv = cvResult.rows[0];
+    const result = await pool.query(
+      `UPDATE cvs SET
+        title = $1,
+        first_name = $2,
+        last_name = $3,
+        email = $4,
+        phone = $5,
+        address = $6,
+        city = $7,
+        country = $8,
+        postal_code = $9,
+        profile_summary = $10,
+        avatar_url = $11,
+        website = $12,
+        linkedin = $13,
+        github = $14,
+        skills = $15,
+        education = $16,
+        experience = $17,
+        projects = $18,
+        certifications = $19,
+        languages = $20,
+        tags = $21,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $22 AND user_id = $23
+      RETURNING *`,
+      [
+        title, firstName, lastName, email, phone, address, city,
+        country, postalCode, profileSummary, avatarUrl, website, linkedin,
+        github, skills, JSON.stringify(education), JSON.stringify(experience), 
+        JSON.stringify(projects), JSON.stringify(certifications), JSON.stringify(languages), 
+        tags, cvId, user.id
+      ]
+    );
     
-    // Check if file exists
-    if (!(await existsAsync(cv.file_path))) {
-      return res.status(404).json({ message: 'CV file not found' });
-    }
-    
-    // Set appropriate headers for inline viewing
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${cv.file_name}"`);
-    
-    // Stream the file to response
-    const fileStream = fs.createReadStream(cv.file_path);
-    fileStream.pipe(res);
+    res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error viewing CV:', error);
-    res.status(500).json({ message: 'Failed to view CV' });
+    console.error('Error updating CV:', error);
+    res.status(500).json({ message: 'Failed to update CV' });
   }
 };
 
@@ -243,7 +250,7 @@ export const setPrimaryCV = async (req: Request, res: Response) => {
       
       // Set new primary
       const result = await client.query(
-        'UPDATE cvs SET is_primary = TRUE WHERE id = $1 AND user_id = $2 RETURNING id, user_id, file_name, is_primary, tags, uploaded_at, updated_at',
+        'UPDATE cvs SET is_primary = TRUE WHERE id = $1 AND user_id = $2 RETURNING *',
         [cvId, user.id]
       );
       
@@ -275,7 +282,7 @@ export const deleteCV = async (req: Request, res: Response) => {
     try {
       await client.query('BEGIN');
       
-      // Get CV details
+      // Get CV details to check if it's primary
       const cvResult = await client.query(
         'SELECT * FROM cvs WHERE id = $1 AND user_id = $2',
         [cvId, user.id]
@@ -287,20 +294,13 @@ export const deleteCV = async (req: Request, res: Response) => {
       
       const cv = cvResult.rows[0];
       
-      // Delete file from filesystem if it exists
-      if (cv.file_path && (await existsAsync(cv.file_path))) {
-        fs.unlink(cv.file_path, (err) => {
-          if (err) console.error('Error deleting file:', err);
-        });
-      }
-      
-      // Delete from database
+      // Delete the CV
       await client.query('DELETE FROM cvs WHERE id = $1', [cvId]);
       
       // If the deleted CV was primary, set another CV as primary if any exist
       if (cv.is_primary) {
         const remainingCVsResult = await client.query(
-          'SELECT id FROM cvs WHERE user_id = $1 ORDER BY uploaded_at DESC LIMIT 1',
+          'SELECT id FROM cvs WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
           [user.id]
         );
         
@@ -365,7 +365,7 @@ export const addTag = async (req: Request, res: Response) => {
         
         // Update CV with new tag
         const result = await client.query(
-          'UPDATE cvs SET tags = $1 WHERE id = $2 RETURNING id, user_id, file_name, is_primary, tags, uploaded_at, updated_at',
+          'UPDATE cvs SET tags = $1 WHERE id = $2 RETURNING *',
           [updatedTags, cvId]
         );
         
@@ -374,15 +374,7 @@ export const addTag = async (req: Request, res: Response) => {
       } else {
         // Tag already exists, just return current CV
         await client.query('COMMIT');
-        res.json({
-          id: cv.id,
-          user_id: cv.user_id,
-          file_name: cv.file_name,
-          is_primary: cv.is_primary,
-          tags: cv.tags,
-          uploaded_at: cv.uploaded_at,
-          updated_at: cv.updated_at
-        });
+        res.json(cv);
       }
     } catch (error) {
       await client.query('ROLLBACK');
@@ -424,11 +416,11 @@ export const removeTag = async (req: Request, res: Response) => {
       const currentTags = cv.tags || [];
       
       // Remove the tag if it exists
-      const updatedTags: string[] = currentTags.filter((t: string) => t !== tag);
+      const updatedTags = currentTags.filter((t: string) => t !== tag);
       
       // Update CV with new tags array
       const result = await client.query(
-        'UPDATE cvs SET tags = $1 WHERE id = $2 RETURNING id, user_id, file_name, is_primary, tags, uploaded_at, updated_at',
+        'UPDATE cvs SET tags = $1 WHERE id = $2 RETURNING *',
         [updatedTags, cvId]
       );
       

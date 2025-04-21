@@ -5,12 +5,12 @@
     (toggleSidebar)="onToggleSidebar($event)">
   </app-sidebar>
 
-  <main class="main-content" [class.expanded]="sidebarCollapsed">
+  <main class="main-content overflow-y-auto" [class.expanded]="sidebarCollapsed">
     <!-- Header section with title and actions -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">CV Manager</h1>
-        <p class="text-gray-500 mt-1">Upload, organize, and manage your CVs</p>
+        <h1 class="text-2xl font-bold text-gray-800">CV Creator</h1>
+        <p class="text-gray-500 mt-1">Create, manage, and organize your professional CVs</p>
       </div>
       
       <div class="flex items-center mt-4 md:mt-0 space-x-3">
@@ -31,6 +31,14 @@
           <i *ngIf="!isGridView" class="fa fa-th-large mr-1 text-gray-500"></i>
           <span>{{ isGridView ? 'List View' : 'Grid View' }}</span>
         </button>
+        
+        <!-- Create new CV button -->
+        <button 
+          (click)="openCvForm()" 
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          <i class="fa fa-plus mr-1"></i>
+          Create CV
+        </button>
       </div>
     </div>
     
@@ -40,33 +48,728 @@
       <button (click)="loadCVs()" class="mt-2 text-sm font-medium text-red-700 underline">Try Again</button>
     </div>
     
-    <!-- Upload area -->
-    <div class="mb-6">
-      <div 
-        (dragover)="onDragOver($event)" 
-        (dragleave)="onDragLeave($event)" 
-        (drop)="onDrop($event)" 
-        [class.border-blue-400]="isDragging" 
-        [class.bg-blue-50]="isDragging"
-        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors duration-200">
-        
-        <div class="flex flex-col items-center">
-          <i class="fa fa-upload text-4xl text-gray-400 mb-2"></i>
-          <p class="text-lg font-medium text-gray-700">Drag and drop your CV files here</p>
-          <p class="text-sm text-gray-500 mb-4">or</p>
-          <button 
-            (click)="triggerFileInput()" 
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-            Select Files
+    <!-- CV Form Modal -->
+    <div *ngIf="showCvForm" class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 flex items-center justify-center overflow-y-auto">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <!-- Form Header -->
+        <div class="flex justify-between items-center p-4 border-b">
+          <h2 class="text-xl font-bold text-gray-800">{{ editMode ? 'Edit CV' : 'Create New CV' }}</h2>
+          <button (click)="closeCvForm()" class="text-gray-500 hover:text-gray-700">
+            <i class="fa fa-times text-xl"></i>
           </button>
-          <input 
-            #fileInput 
-            type="file" 
-            accept=".pdf" 
-            multiple 
-            (change)="onFileSelected($event)" 
-            class="hidden">
-          <p class="text-xs text-gray-500 mt-2">Only PDF files are accepted</p>
+        </div>
+        
+        <!-- Form Content -->
+        <div class="p-6">
+          <form [formGroup]="cvForm">
+            <!-- Form Steps Indicator -->
+            <div class="mb-6">
+              <div class="flex items-center justify-between w-full">
+                <div 
+                  *ngFor="let stepNum of [1, 2, 3, 4, 5, 6, 7]"
+                  [class.bg-blue-600]="step >= stepNum"
+                  [class.bg-gray-300]="step < stepNum"
+                  class="w-full h-1 transition-colors duration-200 first:rounded-l-full last:rounded-r-full">
+                </div>
+              </div>
+              <div class="flex justify-between mt-2 text-xs text-gray-500">
+                <span [class.font-medium]="step === 1" [class.text-blue-600]="step === 1">Personal</span>
+                <span [class.font-medium]="step === 2" [class.text-blue-600]="step === 2">Contact</span>
+                <span [class.font-medium]="step === 3" [class.text-blue-600]="step === 3">Skills</span>
+                <span [class.font-medium]="step === 4" [class.text-blue-600]="step === 4">Education</span>
+                <span [class.font-medium]="step === 5" [class.text-blue-600]="step === 5">Experience</span>
+                <span [class.font-medium]="step === 6" [class.text-blue-600]="step === 6">Projects</span>
+                <span [class.font-medium]="step === 7" [class.text-blue-600]="step === 7">Additional</span>
+              </div>
+            </div>
+            
+            <!-- Step 1: Personal Details -->
+            <div *ngIf="step === 1" @fadeInOut>
+              <h3 class="text-lg font-medium text-gray-800 mb-4">Personal Details</h3>
+              
+              <!-- Avatar Selection -->
+              <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Choose Avatar</label>
+                <div class="grid grid-cols-4 gap-4">
+                  <div 
+                    *ngFor="let avatar of avatars"
+                    (click)="selectAvatar(avatar)"
+                    class="cursor-pointer p-2 border rounded-lg hover:bg-blue-50 transition-colors"
+                    [class.border-blue-500]="cvForm.get('avatar_url')?.value === avatar"
+                    [class.bg-blue-50]="cvForm.get('avatar_url')?.value === avatar">
+                    <img [src]="avatar" alt="Avatar" class="w-full h-auto rounded-full aspect-square">
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Title -->
+              <div class="mb-4">
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input 
+                  type="text" 
+                  id="title" 
+                  formControlName="title"
+                  placeholder="e.g., Full Stack Developer"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <div *ngIf="cvForm.get('title')?.invalid && cvForm.get('title')?.touched" class="text-red-500 text-sm mt-1">
+                  Title is required
+                </div>
+              </div>
+              
+              <!-- Name -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                  <input 
+                    type="text" 
+                    id="first_name" 
+                    formControlName="first_name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  <div *ngIf="cvForm.get('first_name')?.invalid && cvForm.get('first_name')?.touched" class="text-red-500 text-sm mt-1">
+                    First name is required
+                  </div>
+                </div>
+                <div>
+                  <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                  <input 
+                    type="text" 
+                    id="last_name" 
+                    formControlName="last_name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  <div *ngIf="cvForm.get('last_name')?.invalid && cvForm.get('last_name')?.touched" class="text-red-500 text-sm mt-1">
+                    Last name is required
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Professional Summary -->
+              <div class="mb-4">
+                <label for="profile_summary" class="block text-sm font-medium text-gray-700 mb-1">Professional Summary</label>
+                <textarea 
+                  id="profile_summary" 
+                  formControlName="profile_summary"
+                  rows="4"
+                  placeholder="A brief overview of your professional background and career goals"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+              </div>
+            </div>
+            
+            <!-- Step 2: Contact Information -->
+            <div *ngIf="step === 2" @fadeInOut>
+              <h3 class="text-lg font-medium text-gray-800 mb-4">Contact Information</h3>
+              
+              <!-- Email -->
+              <div class="mb-4">
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <div *ngIf="cvForm.get('email')?.invalid && cvForm.get('email')?.touched" class="text-red-500 text-sm mt-1">
+                  Valid email is required
+                </div>
+              </div>
+              
+              <!-- Phone -->
+              <div class="mb-4">
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input 
+                  type="tel" 
+                  id="phone" 
+                  formControlName="phone"
+                  placeholder="e.g., +1 (555) 123-4567"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <!-- Address -->
+              <div class="mb-4">
+                <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <input 
+                  type="text" 
+                  id="address" 
+                  formControlName="address"
+                  placeholder="Street address"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <!-- City, Country, Postal Code -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input 
+                    type="text" 
+                    id="city" 
+                    formControlName="city"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <input 
+                    type="text" 
+                    id="country" 
+                    formControlName="country"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                  <input 
+                    type="text" 
+                    id="postal_code" 
+                    formControlName="postal_code"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+              </div>
+              
+              <!-- Social/Professional Links -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Professional Links</label>
+                <div class="space-y-3">
+                  <div class="flex items-center">
+                    <span class="text-gray-500 mr-2 w-8"><i class="fa fa-globe"></i></span>
+                    <input 
+                      type="url" 
+                      placeholder="Website URL" 
+                      formControlName="website"
+                      class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                  <div class="flex items-center">
+                    <span class="text-gray-500 mr-2 w-8"><i class="fa fa-linkedin"></i></span>
+                    <input 
+                      type="url" 
+                      placeholder="LinkedIn URL" 
+                      formControlName="linkedin"
+                      class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                  <div class="flex items-center">
+                    <span class="text-gray-500 mr-2 w-8"><i class="fa fa-github"></i></span>
+                    <input 
+                      type="url" 
+                      placeholder="GitHub URL" 
+                      formControlName="github"
+                      class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 3: Skills -->
+            <div *ngIf="step === 3" @fadeInOut>
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-800">Skills</h3>
+                <button 
+                  type="button"
+                  (click)="addSkill()"
+                  class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <i class="fa fa-plus mr-1"></i> Add Skill
+                </button>
+              </div>
+              
+              <div class="space-y-3" formArrayName="skills">
+                <div *ngFor="let skill of skillsArray.controls; let i = index" class="flex items-center">
+                  <input 
+                    type="text" 
+                    [formControlName]="i"
+                    placeholder="e.g., JavaScript, Project Management, UX Design"
+                    class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  <button 
+                    type="button"
+                    (click)="removeFormArrayItem(skillsArray, i)"
+                    class="ml-2 px-2 py-2 text-red-500 hover:text-red-700 focus:outline-none"
+                    *ngIf="skillsArray.length > 1">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div *ngIf="skillsArray.invalid && (skillsArray.touched || skillsArray.dirty)" class="text-red-500 text-sm mt-1">
+                All skills must be filled
+              </div>
+            </div>
+            
+            <!-- Step 4: Education -->
+            <div *ngIf="step === 4" @fadeInOut>
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-800">Education</h3>
+                <button 
+                  type="button"
+                  (click)="addEducation()"
+                  class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <i class="fa fa-plus mr-1"></i> Add Education
+                </button>
+              </div>
+              
+              <div class="space-y-6" formArrayName="education">
+                <div *ngFor="let edu of educationArray.controls; let i = index" [formGroupName]="i" class="p-4 border border-gray-200 rounded-md bg-white shadow-sm">
+                  <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-medium text-gray-700">Education #{{ i+1 }}</h4>
+                    <button 
+                      type="button"
+                      (click)="removeFormArrayItem(educationArray, i)"
+                      class="text-red-500 hover:text-red-700 focus:outline-none"
+                      *ngIf="educationArray.length > 1">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Institution</label>
+                      <input 
+                        type="text" 
+                        formControlName="institution"
+                        placeholder="University/School name"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                      <div *ngIf="edu.get('institution')?.invalid && edu.get('institution')?.touched" class="text-red-500 text-sm mt-1">
+                        Institution is required
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Degree</label>
+                      <input 
+                        type="text" 
+                        formControlName="degree"
+                        placeholder="e.g., Bachelor's, Master's"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                      <div *ngIf="edu.get('degree')?.invalid && edu.get('degree')?.touched" class="text-red-500 text-sm mt-1">
+                        Degree is required
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Field of Study</label>
+                    <input 
+                      type="text" 
+                      formControlName="field"
+                      placeholder="e.g., Computer Science, Business"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <div *ngIf="edu.get('field')?.invalid && edu.get('field')?.touched" class="text-red-500 text-sm mt-1">
+                      Field of study is required
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                      <input 
+                        type="date" 
+                        formControlName="startDate"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                      <input 
+                        type="date" 
+                        formControlName="endDate"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea 
+                      formControlName="description"
+                      rows="3"
+                      placeholder="Relevant courses, achievements, etc."
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 5: Experience -->
+            <div *ngIf="step === 5" @fadeInOut>
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-800">Work Experience</h3>
+                <button 
+                  type="button"
+                  (click)="addExperience()"
+                  class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <i class="fa fa-plus mr-1"></i> Add Experience
+                </button>
+              </div>
+              
+              <div class="space-y-6" formArrayName="experience">
+                <div *ngFor="let exp of experienceArray.controls; let i = index" [formGroupName]="i" class="p-4 border border-gray-200 rounded-md bg-white shadow-sm">
+                  <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-medium text-gray-700">Experience #{{ i+1 }}</h4>
+                    <button 
+                      type="button"
+                      (click)="removeFormArrayItem(experienceArray, i)"
+                      class="text-red-500 hover:text-red-700 focus:outline-none"
+                      *ngIf="experienceArray.length > 1">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                      <input 
+                        type="text" 
+                        formControlName="company"
+                        placeholder="Company name"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                      <div *ngIf="exp.get('company')?.invalid && exp.get('company')?.touched" class="text-red-500 text-sm mt-1">
+                        Company is required
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                      <input 
+                        type="text" 
+                        formControlName="position"
+                        placeholder="Your job title"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                      <div *ngIf="exp.get('position')?.invalid && exp.get('position')?.touched" class="text-red-500 text-sm mt-1">
+                        Position is required
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input 
+                      type="text" 
+                      formControlName="location"
+                      placeholder="City, Country or Remote"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                      <input 
+                        type="date" 
+                        formControlName="startDate"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                      <div class="flex items-center justify-between mb-1">
+                        <label class="block text-sm font-medium text-gray-700">End Date</label>
+                        <div class="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="currentlyWorking{{i}}" 
+                            formControlName="currentlyWorking"
+                            class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4">
+                          <label for="currentlyWorking{{i}}" class="ml-2 text-sm text-gray-700">
+                            Currently working here
+                          </label>
+                        </div>
+                      </div>
+                      <input 
+                        type="date" 
+                        formControlName="endDate"
+                        [disabled]="exp.get('currentlyWorking')?.value"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        [class.bg-gray-100]="exp.get('currentlyWorking')?.value">
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+                    <textarea 
+                      formControlName="description"
+                      rows="3"
+                      placeholder="Main responsibilities, achievements, and projects"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 6: Projects -->
+            <div *ngIf="step === 6" @fadeInOut>
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-800">Projects</h3>
+                <button 
+                  type="button"
+                  (click)="addProject()"
+                  class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <i class="fa fa-plus mr-1"></i> Add Project
+                </button>
+              </div>
+              
+              <div class="space-y-6" formArrayName="projects">
+                <div *ngFor="let project of projectsArray.controls; let i = index" [formGroupName]="i" class="p-4 border border-gray-200 rounded-md bg-white shadow-sm">
+                  <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-medium text-gray-700">Project #{{ i+1 }}</h4>
+                    <button 
+                      type="button"
+                      (click)="removeFormArrayItem(projectsArray, i)"
+                      class="text-red-500 hover:text-red-700 focus:outline-none"
+                      *ngIf="projectsArray.length > 1">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                    <input 
+                      type="text" 
+                      formControlName="name"
+                      placeholder="Project name"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <div *ngIf="project.get('name')?.invalid && project.get('name')?.touched" class="text-red-500 text-sm mt-1">
+                      Project name is required
+                    </div>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Project URL</label>
+                    <input 
+                      type="url" 
+                      formControlName="url"
+                      placeholder="https://..."
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                  
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Project Description</label>
+                    <textarea 
+                      formControlName="description"
+                      rows="3"
+                      placeholder="Describe what the project does and your role in it"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <div *ngIf="project.get('description')?.invalid && project.get('description')?.touched" class="text-red-500 text-sm mt-1">
+                      Project description is required
+                    </div>
+                  </div>
+                  
+                  <div formArrayName="technologies">
+                    <div class="flex justify-between items-center mb-2">
+                      <label class="block text-sm font-medium text-gray-700">Technologies Used</label>
+                      <button 
+                        type="button"
+                        (click)="addTechnology(i)"
+                        class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
+                        <i class="fa fa-plus mr-1"></i> Add Tech
+                      </button>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <div *ngFor="let tech of getTechnologies(i).controls; let j = index" class="flex items-center">
+                        <input 
+                          type="text" 
+                          [formControlName]="j"
+                          placeholder="e.g., React, Node.js, AWS"
+                          class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <button 
+                          type="button"
+                          (click)="removeTechnology(i, j)"
+                          class="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
+                          *ngIf="getTechnologies(i).length > 1">
+                          <i class="fa fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 7: Additional Info (Certifications, Languages, Tags) -->
+            <div *ngIf="step === 7" @fadeInOut>
+              <!-- Certifications -->
+              <div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-medium text-gray-800">Certifications</h3>
+                  <button 
+                    type="button"
+                    (click)="addCertification()"
+                    class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fa fa-plus mr-1"></i> Add Certification
+                  </button>
+                </div>
+                
+                <div class="space-y-4" formArrayName="certifications">
+                  <div *ngFor="let cert of certificationsArray.controls; let i = index" [formGroupName]="i" class="p-3 border border-gray-200 rounded-md bg-white shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                      <h4 class="font-medium text-gray-700 text-sm">Certification #{{ i+1 }}</h4>
+                      <button 
+                        type="button"
+                        (click)="removeFormArrayItem(certificationsArray, i)"
+                        class="text-red-500 hover:text-red-700 focus:outline-none"
+                        *ngIf="certificationsArray.length > 1">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Certification Name</label>
+                        <input 
+                          type="text" 
+                          formControlName="name"
+                          placeholder="e.g., AWS Solutions Architect"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <div *ngIf="cert.get('name')?.invalid && cert.get('name')?.touched" class="text-red-500 text-xs mt-1">
+                          Name is required
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Issuing Organization</label>
+                        <input 
+                          type="text" 
+                          formControlName="issuer"
+                          placeholder="e.g., Amazon Web Services"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <div *ngIf="cert.get('issuer')?.invalid && cert.get('issuer')?.touched" class="text-red-500 text-xs mt-1">
+                          Issuer is required
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Date</label>
+                        <input 
+                          type="date" 
+                          formControlName="date"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">URL</label>
+                        <input 
+                          type="url" 
+                          formControlName="url"
+                          placeholder="Credential URL"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Languages -->
+              <div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-medium text-gray-800">Languages</h3>
+                  <button 
+                    type="button"
+                    (click)="addLanguage()"
+                    class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fa fa-plus mr-1"></i> Add Language
+                  </button>
+                </div>
+                
+                <div class="space-y-3" formArrayName="languages">
+                  <div *ngFor="let lang of languagesArray.controls; let i = index" [formGroupName]="i" class="flex items-center">
+                    <div class="flex-grow grid grid-cols-2 gap-3">
+                      <div>
+                        <input 
+                          type="text" 
+                          formControlName="language"
+                          placeholder="e.g., English, Spanish"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <div *ngIf="lang.get('language')?.invalid && lang.get('language')?.touched" class="text-red-500 text-xs mt-1">
+                          Language is required
+                        </div>
+                      </div>
+                      <div>
+                        <select 
+                          formControlName="proficiency"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                          <option value="" disabled>Select proficiency</option>
+                          <option *ngFor="let level of proficiencyLevels" [value]="level">{{ level }}</option>
+                        </select>
+                        <div *ngIf="lang.get('proficiency')?.invalid && lang.get('proficiency')?.touched" class="text-red-500 text-xs mt-1">
+                          Proficiency is required
+                        </div>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      (click)="removeFormArrayItem(languagesArray, i)"
+                      class="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
+                      *ngIf="languagesArray.length > 1">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Tags -->
+              <div>
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-medium text-gray-800">Tags</h3>
+                  <button 
+                    type="button"
+                    (click)="addTag()"
+                    class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fa fa-plus mr-1"></i> Add Tag
+                  </button>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 mb-2">
+                  <button 
+                    *ngFor="let tag of availableTags"
+                    type="button"
+                    (click)="tagsArray.push(fb.control(tag))"
+                    class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fa fa-plus text-xs mr-1"></i>
+                    {{ tag }}
+                  </button>
+                </div>
+                
+                <div class="space-y-2" formArrayName="tags">
+                  <div *ngFor="let tag of tagsArray.controls; let i = index" class="flex items-center">
+                    <input 
+                      type="text" 
+                      [formControlName]="i"
+                      placeholder="Custom tag"
+                      class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <button 
+                      type="button"
+                      (click)="removeFormArrayItem(tagsArray, i)"
+                      class="ml-2 text-red-500 hover:text-red-700 focus:outline-none">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Form Footer -->
+        <div class="p-4 border-t bg-gray-50 flex justify-between">
+          <button 
+            type="button"
+            (click)="prevStep()"
+            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [disabled]="step === 1"
+            [class.opacity-50]="step === 1"
+            [class.cursor-not-allowed]="step === 1">
+            <i class="fa fa-arrow-left mr-1"></i> Back
+          </button>
+          
+          <div>
+            <button 
+              type="button"
+              (click)="closeCvForm()"
+              class="mr-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              Cancel
+            </button>
+            
+            <button 
+              *ngIf="step < maxSteps"
+              type="button"
+              (click)="nextStep()"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+              Next <i class="fa fa-arrow-right ml-1"></i>
+            </button>
+            
+            <button 
+              *ngIf="step === maxSteps"
+              type="button"
+              (click)="saveCV()"
+              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+              <i class="fa fa-save mr-1"></i> {{ editMode ? 'Update' : 'Save' }} CV
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -81,8 +784,8 @@
           <!-- CV Card Header -->
           <div class="p-4 border-b border-gray-200 flex justify-between items-center">
             <div class="flex items-center">
-              <i class="fa fa-file-pdf-o text-gray-500 mr-2"></i>
-              <span class="font-medium text-gray-800 truncate max-w-[150px]">{{ cv.file_name }}</span>
+              <i class="fa fa-file-text-o text-gray-500 mr-2"></i>
+              <span class="font-medium text-gray-800 truncate max-w-[150px]">{{ cv.title }}</span>
             </div>
             
             <!-- Primary badge -->
@@ -94,10 +797,12 @@
           
           <!-- CV Preview -->
           <div class="relative h-48 bg-gray-100 flex items-center justify-center">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <i class="fa fa-file-pdf-o text-6xl text-gray-300"></i>
+            <div class="p-4 text-center">
+              <img [src]="cv.avatar_url || avatars[0]" alt="Avatar" class="w-20 h-20 rounded-full mx-auto mb-2">
+              <h3 class="font-bold text-gray-800">{{ cv.first_name }} {{ cv.last_name }}</h3>
+              <p class="text-sm text-gray-600">{{ cv.title }}</p>
+              <p class="mt-2 text-xs text-gray-500 line-clamp-2">{{ getCvSummary(cv) }}</p>
             </div>
-            <!-- We'll just show an icon since we can't actually preview PDFs directly -->
           </div>
           
           <!-- Tags section -->
@@ -105,75 +810,55 @@
             <div class="flex flex-wrap gap-2">
               <span *ngFor="let tag of cv.tags" class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
                 {{ tag }}
-                <button (click)="removeTag(cv, tag)" class="ml-1 text-gray-500 hover:text-gray-700">
+                <button (click)="removeCvTag(cv, tag)" class="ml-1 text-gray-500 hover:text-gray-700">
                   <i class="fa fa-times text-xs"></i>
                 </button>
               </span>
               
-              <!-- Add tag button -->
-              <button 
-                *ngIf="!cv.isAddingTag" 
-                (click)="startAddTag(cv)" 
-                class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs hover:bg-gray-200">
-                <i class="fa fa-plus text-xs mr-1"></i>
-                Add Tag
-              </button>
-              
-              <!-- Tag dropdown when adding -->
-              <div *ngIf="cv.isAddingTag" class="relative">
-                <select 
-                  [(ngModel)]="cv.newTag" 
-                  (change)="addTag(cv, cv.newTag!)" 
-                  class="form-select block w-full pl-3 pr-10 py-1 text-xs border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md shadow-sm">
-                  <option value="" disabled>Select a tag</option>
-                  <option *ngFor="let tag of availableTags" [value]="tag">{{ tag }}</option>
-                </select>
-              </div>
+              <!-- Add tag dropdown -->
+              <select 
+                #tagSelect
+                (change)="addCvTag(cv, tagSelect.value); tagSelect.value = ''"
+                class="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs border-none focus:ring-blue-500">
+                <option value="" selected disabled>+ Add Tag</option>
+                <option *ngFor="let tag of availableTags" [value]="tag" [disabled]="cv.tags.includes(tag)">{{ tag }}</option>
+              </select>
             </div>
           </div>
           
           <!-- Actions footer -->
-          <!-- Actions footer for Grid View -->
-<div class="p-3 bg-gray-50 flex justify-between items-center">
-  <div class="text-xs text-gray-500">
-    Added {{ formatDate(cv.uploaded_at) }}
-  </div>
-  
-  <div class="flex space-x-2">
-    <!-- View button -->
-    <button 
-      (click)="viewCV(cv.id)" 
-      class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
-      title="View CV">
-      <i class="fa fa-eye"></i>
-    </button>
-    
-    <!-- Download button -->
-    <button 
-      (click)="downloadCV(cv.id)" 
-      class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
-      title="Download CV">
-      <i class="fa fa-download"></i>
-    </button>
-    
-    <!-- Set as primary button -->
-    <button 
-      (click)="setPrimaryCV(cv.id)" 
-      [class.text-blue-600]="cv.is_primary"
-      class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
-      title="Set as primary CV">
-      <i class="fa fa-star"></i>
-    </button>
-    
-    <!-- Delete button -->
-    <button 
-      (click)="removeCV(cv.id)" 
-      class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
-      title="Delete CV">
-      <i class="fa fa-trash"></i>
-    </button>
-  </div>
-</div>
+          <div class="p-3 bg-gray-50 flex justify-between items-center">
+            <div class="text-xs text-gray-500">
+              Added {{ formatDate(cv.created_at) }}
+            </div>
+            
+            <div class="flex space-x-2">
+              <!-- Edit button -->
+              <button 
+                (click)="editCV(cv)" 
+                class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                title="Edit CV">
+                <i class="fa fa-pencil"></i>
+              </button>
+              
+              <!-- Set as primary button -->
+              <button 
+                (click)="setPrimaryCV(cv.id)" 
+                [class.text-blue-600]="cv.is_primary"
+                class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                title="Set as primary CV">
+                <i class="fa fa-star"></i>
+              </button>
+              
+              <!-- Delete button -->
+              <button 
+                (click)="deleteCV(cv.id)" 
+                class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                title="Delete CV">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -185,16 +870,14 @@
           
           <!-- CV Preview (thumbnail) -->
           <div class="w-full sm:w-24 h-24 bg-gray-100 flex items-center justify-center shrink-0">
-            <div class="flex items-center justify-center">
-              <i class="fa fa-file-pdf-o text-4xl text-gray-300"></i>
-            </div>
+            <img [src]="cv.avatar_url || avatars[0]" alt="Avatar" class="h-16 w-16 rounded-full">
           </div>
           
           <!-- CV Details -->
           <div class="p-4 flex-grow">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
               <div class="flex items-center mb-2 sm:mb-0">
-                <span class="font-medium text-gray-800 mr-2">{{ cv.file_name }}</span>
+                <span class="font-medium text-gray-800 mr-2">{{ cv.first_name }} {{ cv.last_name }} - {{ cv.title }}</span>
                 <div *ngIf="cv.is_primary" class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
                   <i class="fa fa-star text-blue-800 text-sm mr-1"></i>
                   Primary
@@ -202,49 +885,40 @@
               </div>
               
               <div class="text-sm text-gray-500">
-                Added {{ formatDate(cv.uploaded_at) }}
+                Added {{ formatDate(cv.created_at) }}
               </div>
             </div>
+            
+            <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ getCvSummary(cv) }}</p>
             
             <!-- Tags -->
             <div class="mt-3 flex flex-wrap gap-2">
               <span *ngFor="let tag of cv.tags" class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
                 {{ tag }}
-                <button (click)="removeTag(cv, tag)" class="ml-1 text-gray-500 hover:text-gray-700">
+                <button (click)="removeCvTag(cv, tag)" class="ml-1 text-gray-500 hover:text-gray-700">
                   <i class="fa fa-times text-xs"></i>
                 </button>
               </span>
               
-              <!-- Add tag button -->
-              <button 
-                *ngIf="!cv.isAddingTag" 
-                (click)="startAddTag(cv)" 
-                class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs hover:bg-gray-200">
-                <i class="fa fa-plus text-xs mr-1"></i>
-                Add Tag
-              </button>
-              
-              <!-- Tag dropdown when adding -->
-              <div *ngIf="cv.isAddingTag" class="relative">
-                <select 
-                  [(ngModel)]="cv.newTag" 
-                  (change)="addTag(cv, cv.newTag!)" 
-                  class="form-select block w-full pl-3 pr-10 py-1 text-xs border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md shadow-sm">
-                  <option value="" disabled>Select a tag</option>
-                  <option *ngFor="let tag of availableTags" [value]="tag">{{ tag }}</option>
-                </select>
-              </div>
+              <!-- Add tag dropdown -->
+              <select 
+                #tagSelectList
+                (change)="addCvTag(cv, tagSelectList.value); tagSelectList.value = ''"
+                class="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs border-none focus:ring-blue-500">
+                <option value="" selected disabled>+ Add Tag</option>
+                <option *ngFor="let tag of availableTags" [value]="tag" [disabled]="cv.tags.includes(tag)">{{ tag }}</option>
+              </select>
             </div>
           </div>
           
           <!-- Actions -->
           <div class="px-4 py-3 border-t sm:border-t-0 sm:border-l border-gray-200 flex sm:flex-col justify-between sm:justify-center items-center sm:space-y-3">
-            <!-- Download button -->
+            <!-- Edit button -->
             <button 
-              (click)="downloadCV(cv.id)" 
+              (click)="editCV(cv)" 
               class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
-              title="Download CV">
-              <i class="fa fa-download"></i>
+              title="Edit CV">
+              <i class="fa fa-pencil"></i>
             </button>
             
             <!-- Set as primary button -->
@@ -258,7 +932,7 @@
             
             <!-- Delete button -->
             <button 
-              (click)="removeCV(cv.id)" 
+              (click)="deleteCV(cv.id)" 
               class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" 
               title="Delete CV">
               <i class="fa fa-trash"></i>
@@ -271,12 +945,12 @@
     <!-- Empty state -->
     <div *ngIf="cvList.length === 0 && !isLoading && !hasError" class="text-center p-8 border border-gray-200 rounded-lg bg-gray-50">
       <i class="fa fa-file-text-o text-5xl text-gray-400 mb-2"></i>
-      <h3 class="text-xl font-medium text-gray-700 mb-2">No CVs uploaded yet</h3>
-      <p class="text-gray-500 mb-4">Upload your CV to get started with the CV manager</p>
+      <h3 class="text-xl font-medium text-gray-700 mb-2">No CVs created yet</h3>
+      <p class="text-gray-500 mb-4">Create your professional CV to showcase your skills and experience</p>
       <button 
-        (click)="triggerFileInput()" 
+        (click)="openCvForm()" 
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-        Upload CV
+        <i class="fa fa-plus mr-1"></i> Create Your First CV
       </button>
     </div>
   </main>
