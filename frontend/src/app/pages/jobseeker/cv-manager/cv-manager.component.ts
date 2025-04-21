@@ -3,18 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
-import { CvService } from '../../../services/cv.service';
+import { CvService, CV } from '../../../services/cv.service';
 import { finalize } from 'rxjs/operators';
 import { HttpClientModule } from '@angular/common/http';
 
-interface CV {
-  id: number;
-  file_name: string;
-  file_url: string;
-  is_primary: boolean;
-  tags: string[];
-  uploaded_at: string;
-  // UI-specific properties
+// Extended CV interface for UI features
+interface CvWithUI extends CV {
   isAddingTag?: boolean;
   newTag?: string;
   previewUrl?: string;
@@ -60,7 +54,7 @@ export class CvManagerComponent implements OnInit {
   availableTags = ['Remote', 'Tech', 'Finance', 'Marketing', 'Design', 'Entry Level', 'Senior', 'Contract'];
   
   // CV Data
-  cvList: CV[] = [];
+  cvList: CvWithUI[] = [];
   isLoading = false;
   hasError = false;
   errorMessage = '';
@@ -83,8 +77,8 @@ export class CvManagerComponent implements OnInit {
             ...cv,
             isAddingTag: false,
             newTag: '',
-            // Use file_url as preview URL
-            previewUrl: cv.file_url
+            // Set file_url if needed
+            file_url: cv.file_url || `http://18.208.134.30/api/cvs/${cv.id}/view`
           }));
         },
         error: (err) => {
@@ -153,9 +147,15 @@ export class CvManagerComponent implements OnInit {
         }
       }))
       .subscribe({
-        next: (response: any) => {
-          // Refresh the CV list
-          this.loadCVs();
+        next: (response) => {
+          // Add the new CV to the list with UI properties
+          const newCV: CvWithUI = {
+            ...response,
+            isAddingTag: false,
+            newTag: '',
+            file_url: `http://18.208.134.30/api/cvs/${response.id}/view`
+          };
+          this.cvList.unshift(newCV);
         },
         error: (err) => {
           console.error('Error uploading CV:', err);
@@ -191,7 +191,7 @@ export class CvManagerComponent implements OnInit {
     this.cvService.setPrimaryCV(id)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
-        next: (updatedCV: any) => {
+        next: (updatedCV) => {
           // Update primary status across all CVs
           this.cvList.forEach(cv => {
             cv.is_primary = cv.id === id;
@@ -205,80 +205,114 @@ export class CvManagerComponent implements OnInit {
   }
   
   downloadCV(id: number): void {
-    const cv = this.cvList.find(cv => cv.id === id);
-    if (cv) {
-      this.cvService.downloadCV(cv.file_url);
-    }
+    this.isLoading = true;
+    this.cvService.downloadCV(id)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (blob) => {
+          // Find the CV to get its filename
+          const cv = this.cvList.find(c => c.id === id);
+          if (cv) {
+            // Create blob URL and trigger download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = cv.file_name;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }
+        },
+        error: (err) => {
+          console.error('Error downloading CV:', err);
+          alert('Failed to download CV. Please try again later.');
+        }
+      });
   }
   
-  startAddTag(cv: CV): void {
+  viewCV(id: number): void {
+    this.isLoading = true;
+    this.cvService.viewCV(id)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (blob) => {
+          // Create a blob URL and open in new tab
+          const url = window.URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        },
+        error: (err) => {
+          console.error('Error viewing CV:', err);
+          alert('Failed to view CV. Please try again later.');
+        }
+      });
+  }
+  
+  startAddTag(cv: CvWithUI): void {
     // Reset any other CV that might be in tag adding mode
     this.cvList.forEach(c => c.isAddingTag = false);
     cv.isAddingTag = true;
     cv.newTag = '';
   }
   
- // Only updating the tag-related methods in the component
-// These should replace the existing methods in your component
-
-addTag(cv: CV, tag: string): void {
-  if (!tag) {
-    cv.isAddingTag = false;
-    return;
-  }
-  
-  if (!cv.tags) {
-    cv.tags = [];
-  }
-  
-  if (tag && !cv.tags.includes(tag)) {
-    this.isLoading = true;
-    
-    this.cvService['addTag'](cv.id, tag)
-      .pipe(finalize(() => {
-      this.isLoading = false;
+  addTag(cv: CvWithUI, tag: string): void {
+    if (!tag) {
       cv.isAddingTag = false;
-      }))
-      .subscribe({
-      next: (updatedCV: CV) => {
-        // Update the CV with server response
-        const index: number = this.cvList.findIndex((c: CV) => c.id === cv.id);
-        if (index !== -1) {
-        this.cvList[index].tags = updatedCV.tags;
-        }
-      },
-      error: (err: any) => {
-        console.error('Error adding tag:', err);
-        alert('Failed to add tag. Please try again later.');
-      }
-      });
-  } else {
-    cv.isAddingTag = false;
-  }
-}
-
-removeTag(cv: CV, tag: string): void {
-  const index = cv.tags?.indexOf(tag);
-  if (index !== undefined && index !== -1) {
-    this.isLoading = true;
+      return;
+    }
     
-    this.cvService['removeTag'](cv.id, tag)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-      next: (updatedCV: CV) => {
-        // Update the CV with server response
-        const index: number = this.cvList.findIndex((c: CV) => c.id === cv.id);
-        if (index !== -1) {
-        this.cvList[index].tags = updatedCV.tags;
-        }
-      },
-      error: (err: any) => {
-        console.error('Error removing tag:', err);
-        alert('Failed to remove tag. Please try again later.');
-      }
-      });
+    if (!cv.tags) {
+      cv.tags = [];
+    }
+    
+    if (tag && !cv.tags.includes(tag)) {
+      this.isLoading = true;
+      
+      this.cvService.addTag(cv.id, tag)
+        .pipe(finalize(() => {
+          this.isLoading = false;
+          cv.isAddingTag = false;
+        }))
+        .subscribe({
+          next: (updatedCV) => {
+            // Update the CV with server response
+            const index = this.cvList.findIndex(c => c.id === cv.id);
+            if (index !== -1) {
+              this.cvList[index].tags = updatedCV.tags;
+            }
+          },
+          error: (err) => {
+            console.error('Error adding tag:', err);
+            alert('Failed to add tag. Please try again later.');
+          }
+        });
+    } else {
+      cv.isAddingTag = false;
+    }
   }
-}
+  
+  removeTag(cv: CvWithUI, tag: string): void {
+    const index = cv.tags?.indexOf(tag);
+    if (index !== undefined && index !== -1) {
+      this.isLoading = true;
+      
+      this.cvService.removeTag(cv.id, tag)
+        .pipe(finalize(() => this.isLoading = false))
+        .subscribe({
+          next: (updatedCV) => {
+            // Update the CV with server response
+            const index = this.cvList.findIndex(c => c.id === cv.id);
+            if (index !== -1) {
+              this.cvList[index].tags = updatedCV.tags;
+            }
+          },
+          error: (err) => {
+            console.error('Error removing tag:', err);
+            alert('Failed to remove tag. Please try again later.');
+          }
+        });
+    }
+  }
   
   formatDate(dateString: string): string {
     const date = new Date(dateString);

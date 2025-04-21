@@ -7,10 +7,13 @@ import { environment } from '../environments/environment';
 export interface CV {
   id: number;
   file_name: string;
-  file_url: string;
+  file_path?: string;
+  file_url?: string;
+  file_size?: number;
   is_primary: boolean;
   tags: string[];
   uploaded_at: string;
+  updated_at?: string;
 }
 
 @Injectable({
@@ -18,7 +21,7 @@ export interface CV {
 })
 export class CvService {
   // Use the environment variable for the API URL
-  private apiUrl = 'http://18.208.134.30/api/cvs'; // Hardcoded for now
+  private apiUrl = 'http://18.208.134.30/api/cvs';
 
   constructor(
     private http: HttpClient,
@@ -34,7 +37,7 @@ export class CvService {
   }
 
   // File upload requires special handling for headers
-  uploadCV(file: File): Observable<any> {
+  uploadCV(file: File): Observable<CV> {
     const formData = new FormData();
     formData.append('cv', file);
     
@@ -50,7 +53,7 @@ export class CvService {
       }
     };
     
-    return this.http.post(this.apiUrl, formData, options);
+    return this.http.post<CV>(this.apiUrl, formData, options);
   }
 
   getCVs(): Observable<CV[]> {
@@ -58,9 +61,9 @@ export class CvService {
       headers: this.getAuthHeaders()
     });
   }
-
-  setPrimaryCV(cvId: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${cvId}/primary`, {}, {
+  
+  setPrimaryCV(cvId: number): Observable<CV> {
+    return this.http.patch<CV>(`${this.apiUrl}/${cvId}/primary`, {}, {
       headers: this.getAuthHeaders()
     });
   }
@@ -71,19 +74,29 @@ export class CvService {
     });
   }
 
-  downloadCV(fileUrl: string): void {
-    window.open(fileUrl, '_blank');
+  downloadCV(cvId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${cvId}/download`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  viewCV(cvId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${cvId}/view`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
   }
 
   // Tag management methods
-  addTag(cvId: number, tag: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${cvId}/tags`, { tag }, {
+  addTag(cvId: number, tag: string): Observable<CV> {
+    return this.http.post<CV>(`${this.apiUrl}/${cvId}/tags`, { tag }, {
       headers: this.getAuthHeaders()
     });
   }
 
-  removeTag(cvId: number, tag: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${cvId}/tags/${tag}`, {
+  removeTag(cvId: number, tag: string): Observable<CV> {
+    return this.http.delete<CV>(`${this.apiUrl}/${cvId}/tags/${tag}`, {
       headers: this.getAuthHeaders()
     });
   }
