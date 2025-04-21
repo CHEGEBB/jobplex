@@ -52,26 +52,27 @@ export const createCV = async (req: Request, res: Response) => {
       
       const isFirstCV = parseInt(countResult.rows[0].count) === 0;
       
-      // Insert new CV
+      // Insert new CV - using JSONB for complex arrays and properly cast array for tags
       const result = await client.query(
         `INSERT INTO cvs
           (user_id, title, first_name, last_name, email, phone, address, city, 
            country, postal_code, profile_summary, avatar_url, website, linkedin, 
            github, is_primary, skills, education, experience, projects, 
            certifications, languages, tags)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
+                $17::jsonb, $18::jsonb, $19::jsonb, $20::jsonb, $21::jsonb, $22::jsonb, $23::text[])
          RETURNING *`,
         [
           user.id, title, firstName, lastName, email, phone, address, city,
           country, postalCode, profileSummary, avatarUrl, website, linkedin,
           github, isFirstCV, 
-          JSON.stringify(skills || []), // Convert to string or use empty array
-          JSON.stringify(education || []), 
-          JSON.stringify(experience || []), 
-          JSON.stringify(projects || []), 
-          JSON.stringify(certifications || []), 
-          JSON.stringify(languages || []), 
-          tags || []
+          JSON.stringify(skills), 
+          JSON.stringify(education), 
+          JSON.stringify(experience), 
+          JSON.stringify(projects), 
+          JSON.stringify(certifications), 
+          JSON.stringify(languages), 
+          tags
         ]
       );
       
@@ -158,13 +159,13 @@ export const updateCV = async (req: Request, res: Response) => {
       website,
       linkedin,
       github,
-      skills,
-      education,
-      experience,
-      projects,
-      certifications,
-      languages,
-      tags
+      skills = [],
+      education = [],
+      experience = [],
+      projects = [],
+      certifications = [],
+      languages = [],
+      tags = []
     } = req.body;
     
     // Validate required fields
@@ -198,22 +199,28 @@ export const updateCV = async (req: Request, res: Response) => {
         website = $12,
         linkedin = $13,
         github = $14,
-        skills = $15,
-        education = $16,
-        experience = $17,
-        projects = $18,
-        certifications = $19,
-        languages = $20,
-        tags = $21,
+        skills = $15::jsonb,
+        education = $16::jsonb,
+        experience = $17::jsonb,
+        projects = $18::jsonb,
+        certifications = $19::jsonb,
+        languages = $20::jsonb,
+        tags = $21::text[],
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $22 AND user_id = $23
       RETURNING *`,
       [
         title, firstName, lastName, email, phone, address, city,
         country, postalCode, profileSummary, avatarUrl, website, linkedin,
-        github, skills, JSON.stringify(education), JSON.stringify(experience), 
-        JSON.stringify(projects), JSON.stringify(certifications), JSON.stringify(languages), 
-        tags, cvId, user.id
+        github, 
+        JSON.stringify(skills), 
+        JSON.stringify(education), 
+        JSON.stringify(experience), 
+        JSON.stringify(projects), 
+        JSON.stringify(certifications), 
+        JSON.stringify(languages), 
+        tags, 
+        cvId, user.id
       ]
     );
     
@@ -367,12 +374,10 @@ export const addTag = async (req: Request, res: Response) => {
       
       // Don't add duplicate tags
       if (!currentTags.includes(tag)) {
-        const updatedTags = [...currentTags, tag];
-        
-        // Update CV with new tag
+        // Use array_append for proper PostgreSQL array handling
         const result = await client.query(
-          'UPDATE cvs SET tags = $1 WHERE id = $2 RETURNING *',
-          [updatedTags, cvId]
+          'UPDATE cvs SET tags = array_append(tags, $1) WHERE id = $2 RETURNING *',
+          [tag, cvId]
         );
         
         await client.query('COMMIT');
@@ -418,16 +423,10 @@ export const removeTag = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'CV not found' });
       }
       
-      const cv = cvResult.rows[0];
-      const currentTags = cv.tags || [];
-      
-      // Remove the tag if it exists
-      const updatedTags = currentTags.filter((t: string) => t !== tag);
-      
-      // Update CV with new tags array
+      // Use array_remove for proper PostgreSQL array handling
       const result = await client.query(
-        'UPDATE cvs SET tags = $1 WHERE id = $2 RETURNING *',
-        [updatedTags, cvId]
+        'UPDATE cvs SET tags = array_remove(tags, $1) WHERE id = $2 RETURNING *',
+        [tag, cvId]
       );
       
       await client.query('COMMIT');
