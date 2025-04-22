@@ -19,10 +19,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const { email, password, role, firstName, lastName }: RegisterRequest = req.body;
   
   // Validate input
-  if (!email || !password || !role || !['jobseeker', 'employer'].includes(role)) {
-    res.status(400).json({ message: 'Invalid input data' });
-    return;
-  }
+  // Validate input
+if (!email || !password || !role || !['jobseeker', 'employer', 'admin'].includes(role)) {
+  res.status(400).json({ message: 'Invalid input data' });
+  return;
+}
 
   try {
     // Check if user already exists
