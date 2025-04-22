@@ -23,11 +23,11 @@ router.put('/me', verifyToken, updateCurrentUser);
 
 // Admin routes
 router.get('/users',verifyToken, getAllUsers);
-router.get('/users/:id', isAdminOrResourceOwner, getUserById);
-router.put('/users/:id', isAdmin, updateUserById);
-router.delete('/users/:id', isAdmin,deleteUserById);
-router.patch('/users/:id/role', isAdmin,changeUserRole);
-router.patch('/users/:id/ban', isAdmin,toggleUserBanStatus);
-router.get('/users/:id/activity', isAdmin,getUserActivityLog);
+router.get('/users/:id', verifyToken, getUserById);
+router.put('/users/:id', verifyToken, updateUserById);
+router.delete('/users/:id', verifyToken,deleteUserById);
+router.patch('/users/:id/role', verifyToken,changeUserRole);
+router.patch('/users/:id/ban', verifyToken,toggleUserBanStatus);
+router.get('/users/:id/activity', verifyToken,getUserActivityLog);
 
 export default router;
