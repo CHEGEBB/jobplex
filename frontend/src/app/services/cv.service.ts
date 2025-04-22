@@ -19,7 +19,6 @@ export interface Experience {
   start_date: string;
   end_date: string;
   current: boolean;
-  currently_working?: boolean;
   description: string;
 }
 
@@ -43,7 +42,7 @@ export interface Language {
 }
 
 export interface CV {
-  id: number;
+  id?: number;
   title: string;
   first_name: string;
   last_name: string;
@@ -90,32 +89,51 @@ export class CvService {
 
   // Transform form data to match API expected format
   private transformFormDataToApiFormat(formData: any): any {
-    const transformedData = {
-      ...formData,
-      education: formData.education?.map((edu: any) => ({
-        institution: edu.institution,
-        degree: edu.degree,
-        field: edu.field,
-        start_date: edu.startDate,
-        end_date: edu.endDate,
-        description: edu.description
-      })) || [],
-      experience: formData.experience?.map((exp: any) => ({
-        company: exp.company,
-        position: exp.position,
-        location: exp.location,
-        start_date: exp.startDate,
-        end_date: exp.endDate,
-        current: exp.currentlyWorking,
-        description: exp.description
-      })) || [],
-      languages: formData.languages?.map((lang: any) => ({
-        name: lang.language,
-        proficiency: lang.proficiency
-      })) || []
+    const transformed = { ...formData };
+  
+    // Transform arrays
+    const arrayTransformations = {
+      education: ['institution', 'degree', 'field', 'startDate', 'endDate', 'description'],
+      experience: ['company', 'position', 'location', 'startDate', 'endDate', 'currentlyWorking', 'description'],
+      languages: ['language', 'proficiency']
     };
-    
-    return transformedData;
+  
+    Object.entries(arrayTransformations).forEach(([key, fields]) => {
+      if (transformed[key]) {
+        transformed[key] = transformed[key].map((item: any) => {
+          const newItem: any = {};
+          fields.forEach(field => {
+            const apiField = field.replace(/[A-Z]/g, m => `_${m.toLowerCase()}`);
+            newItem[apiField] = item[field] || '';
+            
+            // Handle boolean fields
+            if (field === 'currentlyWorking') {
+              newItem.current = item[field] || false;
+            }
+          });
+          return newItem;
+        });
+      }
+    });
+  
+    // Clean empty array values
+    ['skills', 'tags'].forEach(field => {
+      if (transformed[field]) {
+        transformed[field] = transformed[field].filter((item: string) => item.trim() !== '');
+      }
+    });
+  
+    return transformed;
+  }
+  
+  private handleError(error: any): Error {
+    let errorMessage = 'An unknown error occurred';
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `Client-side error: ${error.error.message}`;
+    } else if (error.status) {
+      errorMessage = `Server error ${error.status}: ${error.error?.message || error.statusText}`;
+    }
+    return new Error(errorMessage);
   }
 
   // Transform API data to match form structure

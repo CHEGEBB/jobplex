@@ -1,497 +1,523 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
-import { trigger, transition, style, animate } from '@angular/animations';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { CvService, CV, Education, Experience, Language } from '../../../services/cv.service';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
-import { CvService, CV } from '../../../services/cv.service';
-import { finalize } from 'rxjs/operators';
-import { HttpClientModule } from '@angular/common/http';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faPen, faTrash, faStar, faPlus, faTimes, faCheck, faArrowUp, faArrowDown, 
+  faGraduationCap, faBriefcase, faGlobe, faCertificate, faLanguage, faTag,
+  faSave, faEye, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { faLinkedin, faGithub } from '@fortawesome/free-brands-svg-icons';
+import { Router } from '@angular/router';
+import { Subject, finalize, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-cv-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SidebarComponent, HttpClientModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    SidebarComponent,
+    FontAwesomeModule
+  ],
   templateUrl: './cv-manager.component.html',
-  styleUrls: ['./cv-manager.component.scss'],
-  animations: [
-    trigger('fadeInOut', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('300ms ease-in', style({ opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('300ms ease-out', style({ opacity: 0 }))
-      ])
-    ]),
-    trigger('slideInOut', [
-      transition(':enter', [
-        style({ transform: 'translateY(20px)', opacity: 0 }),
-        animate('300ms ease-out', style({ transform: 'translateY(0)', opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('300ms ease-in', style({ transform: 'translateY(20px)', opacity: 0 }))
-      ])
-    ])
-  ]
+  styleUrls: ['./cv-manager.component.scss']
 })
-export class CvManagerComponent implements OnInit {
-  // UI state
+export class CvManagerComponent implements OnInit, OnDestroy {
+  // Font Awesome icons
+  faPen = faPen;
+  faTrash = faTrash;
+  faStar = faStar;
+  faPlus = faPlus;
+  faTimes = faTimes;
+  faCheck = faCheck;
+  faArrowUp = faArrowUp;
+  faArrowDown = faArrowDown;
+  faGraduationCap = faGraduationCap;
+  faBriefcase = faBriefcase;
+  faGlobe = faGlobe;
+  faCertificate = faCertificate;
+  faLanguage = faLanguage;
+  faTag = faTag;
+  faSave = faSave;
+  faEye = faEye;
+  faCopy = faCopy;
+  faLinkedin = faLinkedin;
+  faGithub = faGithub;
+
+  // Component state
   sidebarCollapsed = false;
-  isGridView = true;
+  cvs: CV[] = [];
+  cvForm!: FormGroup;
+  isEditMode = false;
+  editingCvId?: number;
   isLoading = false;
-  hasError = false;
-  errorMessage = '';
-  showCvForm = false;
-  editMode = false;
-  currentCvId: number | null = null;
-  step = 1;
-  maxSteps = 7;
+  selectedAvatar = '';
+  notification = { show: false, message: '', isError: false };
+  activeTab = 'personal';
   
-  // Avatar options
+  // Avatar selection
   avatars = [
     'https://avatar.iran.liara.run/public/boy',
     'https://avatar.iran.liara.run/public/girl',
     'https://avatar.iran.liara.run/public/boy?username=Scott',
     'https://avatar.iran.liara.run/public/girl?username=Maria',
     'https://avatar.iran.liara.run/public/job/doctor/male',
-    'https://avatar.iran.liara.run/public',
     'https://avatar.iran.liara.run/public/job/doctor/female',
-    'https://avatar.iran.liara.run/public/2'
+    'https://avatar.iran.liara.run/public/2',
+    'https://avatar.iran.liara.run/public'
   ];
-  
-  // Available tags and proficiency levels
-  availableTags = ['Remote', 'Tech', 'Finance', 'Marketing', 'Design', 'Entry Level', 'Senior', 'Contract'];
-  proficiencyLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert', 'Native'];
-  
-  // CV Data
-  cvList: CV[] = [];
-  
-  // Form
-  cvForm: FormGroup;
-  
+
+  private destroy$ = new Subject<void>();
+
   constructor(
-    public fb: FormBuilder,
-    private cvService: CvService
-  ) {
-    this.cvForm = this.createCvForm();
-  }
-  
+    private fb: FormBuilder,
+    private cvService: CvService,
+    private router: Router
+  ) { }
+
   ngOnInit(): void {
+    this.initForm();
     this.loadCVs();
   }
-  
-  createCvForm(): FormGroup {
-    return this.fb.group({
-      // Personal Details
-      title: ['', Validators.required],
-      first_name: ['', Validators.required],
-      last_name: ['', Validators.required],
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onToggleSidebar(collapsed: boolean): void {
+    this.sidebarCollapsed = collapsed;
+  }
+
+  initForm(): void {
+    this.cvForm = this.fb.group({
+      title: ['My CV', Validators.required],
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: [''],
       address: [''],
       city: [''],
       country: [''],
-      postal_code: [''],
-      profile_summary: [''],
-      avatar_url: ['https://avatar-placeholder.iran.liara.run/public/boy'],
+      postalCode: [''],
+      profileSummary: [''],
+      avatarUrl: [''],
       website: [''],
       linkedin: [''],
       github: [''],
-      
-      // Skills
-      skills: this.fb.array([]),
-      
-      // Education
+      skills: this.fb.array([this.createSkillControl()]),
       education: this.fb.array([]),
-      
-      // Experience
       experience: this.fb.array([]),
-      
-      // Projects
       projects: this.fb.array([]),
-      
-      // Certifications
       certifications: this.fb.array([]),
-      
-      // Languages
       languages: this.fb.array([]),
-      
-      // Tags
-      tags: this.fb.array([])
+      tags: this.fb.array([this.createTagControl()])
     });
+
+    this.selectedAvatar = this.avatars[0];
+    this.cvForm.get('avatarUrl')?.setValue(this.selectedAvatar);
   }
-  
+
   // Form array getters
   get skillsArray(): FormArray {
     return this.cvForm.get('skills') as FormArray;
   }
-  
+
   get educationArray(): FormArray {
     return this.cvForm.get('education') as FormArray;
   }
-  
+
   get experienceArray(): FormArray {
     return this.cvForm.get('experience') as FormArray;
   }
-  
+
   get projectsArray(): FormArray {
     return this.cvForm.get('projects') as FormArray;
   }
-  
+
   get certificationsArray(): FormArray {
     return this.cvForm.get('certifications') as FormArray;
   }
-  
+
   get languagesArray(): FormArray {
     return this.cvForm.get('languages') as FormArray;
   }
-  
+
   get tagsArray(): FormArray {
     return this.cvForm.get('tags') as FormArray;
   }
-  
-  // Form array add methods
-  addSkill(): void {
-    this.skillsArray.push(this.fb.control('', Validators.required));
+
+  // Form array creation methods
+  createSkillControl() {
+    return this.fb.control('', Validators.required);
   }
-  
-  addEducation(): void {
-    this.educationArray.push(this.fb.group({
+
+  createTagControl() {
+    return this.fb.control('');
+  }
+
+  createEducationGroup() {
+    return this.fb.group({
       institution: ['', Validators.required],
       degree: ['', Validators.required],
-      field: ['', Validators.required],
-      start_date: [''],
-      end_date: [''],
+      field: [''],
+      startDate: [''],
+      endDate: [''],
       description: ['']
-    }));
+    });
   }
-  
-  addExperience(): void {
-    this.experienceArray.push(this.fb.group({
+
+  createExperienceGroup() {
+    return this.fb.group({
       company: ['', Validators.required],
       position: ['', Validators.required],
       location: [''],
-      start_date: [''],
-      end_date: [''],
-      currently_working: [false],
+      startDate: [''],
+      endDate: [''],
+      currentlyWorking: [false],
       description: ['']
-    }));
+    });
   }
-  
-  addProject(): void {
-    this.projectsArray.push(this.fb.group({
+
+  createProjectGroup() {
+    return this.fb.group({
       name: ['', Validators.required],
-      description: ['', Validators.required],
+      description: [''],
       url: [''],
       technologies: this.fb.array([this.fb.control('')])
-    }));
+    });
   }
-  
-  addCertification(): void {
-    this.certificationsArray.push(this.fb.group({
+
+  createCertificationGroup() {
+    return this.fb.group({
       name: ['', Validators.required],
-      issuer: ['', Validators.required],
+      issuer: [''],
       date: [''],
       url: ['']
-    }));
+    });
   }
-  
+
+  createLanguageGroup() {
+    return this.fb.group({
+      language: ['', Validators.required],
+      proficiency: ['Beginner']
+    });
+  }
+
+  // Add items to arrays
+  addSkill(): void {
+    this.skillsArray.push(this.createSkillControl());
+  }
+
+  addEducation(): void {
+    this.educationArray.push(this.createEducationGroup());
+  }
+
+  addExperience(): void {
+    this.experienceArray.push(this.createExperienceGroup());
+  }
+
+  addProject(): void {
+    this.projectsArray.push(this.createProjectGroup());
+  }
+
+  addCertification(): void {
+    this.certificationsArray.push(this.createCertificationGroup());
+  }
+
   addLanguage(): void {
-    this.languagesArray.push(this.fb.group({
-      name: ['', Validators.required],
-      proficiency: ['', Validators.required]
-    }));
+    this.languagesArray.push(this.createLanguageGroup());
   }
-  
+
   addTag(): void {
-    this.tagsArray.push(this.fb.control('', Validators.required));
+    this.tagsArray.push(this.createTagControl());
   }
-  
-  // Remove items from form arrays
-  removeFormArrayItem(formArray: FormArray, index: number): void {
-    formArray.removeAt(index);
+
+  // Remove items from arrays
+  removeSkill(index: number): void {
+    this.skillsArray.removeAt(index);
   }
-  
-  // Add technology to a project
-  addTechnology(projectIndex: number): void {
-    const technologies = (this.projectsArray.at(projectIndex).get('technologies') as FormArray);
-    technologies.push(this.fb.control(''));
+
+  removeEducation(index: number): void {
+    this.educationArray.removeAt(index);
   }
-  
-  // Remove technology from a project
-  removeTechnology(projectIndex: number, techIndex: number): void {
-    const technologies = (this.projectsArray.at(projectIndex).get('technologies') as FormArray);
-    technologies.removeAt(techIndex);
+
+  removeExperience(index: number): void {
+    this.experienceArray.removeAt(index);
   }
-  
-  // Get technologies form array for a specific project
-  getTechnologies(projectIndex: number): FormArray {
-    return this.projectsArray.at(projectIndex).get('technologies') as FormArray;
+
+  removeProject(index: number): void {
+    this.projectsArray.removeAt(index);
   }
-  
+
+  removeCertification(index: number): void {
+    this.certificationsArray.removeAt(index);
+  }
+
+  removeLanguage(index: number): void {
+    this.languagesArray.removeAt(index);
+  }
+
+  removeTag(index: number): void {
+    this.tagsArray.removeAt(index);
+  }
+
+  // Select avatar
+  selectAvatar(avatar: string): void {
+    this.selectedAvatar = avatar;
+    this.cvForm.get('avatarUrl')?.setValue(avatar);
+  }
+
+  // Load CVs from API
   loadCVs(): void {
     this.isLoading = true;
-    this.hasError = false;
-    
     this.cvService.getCVs()
-      .pipe(finalize(() => this.isLoading = false))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoading = false)
+      )
       .subscribe({
-        next: (cvs) => {
-          this.cvList = cvs;
+        next: (data) => {
+          this.cvs = data;
         },
-        error: (err) => {
-          console.error('Error loading CVs:', err);
-          this.hasError = true;
-          this.errorMessage = 'Failed to load your CVs. Please try again later.';
+        error: (error) => {
+          this.showNotification('Error loading CVs: ' + error.message, true);
         }
       });
   }
-  
-  onToggleSidebar(collapsed: boolean): void {
-    this.sidebarCollapsed = collapsed;
-  }
-  
-  toggleView(): void {
-    this.isGridView = !this.isGridView;
-  }
-  
-  openCvForm(): void {
-    this.showCvForm = true;
-    this.editMode = false;
-    this.currentCvId = null;
-    this.step = 1;
-    this.cvForm = this.createCvForm();
-    
-    // Initialize with empty skills, education, etc.
-    this.addSkill();
-    this.addEducation();
-    this.addExperience();
-    this.addLanguage();
-  }
-  
+
+  // Edit a CV
   editCV(cv: CV): void {
-    this.showCvForm = true;
-    this.editMode = true;
-    this.currentCvId = cv.id;
-    this.step = 1;
+    this.isEditMode = true;
+    this.editingCvId = cv.id;
+    this.selectedAvatar = cv.avatar_url || this.avatars[0];
     
-    // Reset the form
-    this.cvForm = this.createCvForm();
+    // Reset form and populate with CV data
+    this.cvForm.reset();
     
-    // Populate the form with existing CV data
+    // Set basic fields
     this.cvForm.patchValue({
       title: cv.title,
-      first_name: cv.first_name,
-      last_name: cv.last_name,
+      firstName: cv.first_name,
+      lastName: cv.last_name,
       email: cv.email,
       phone: cv.phone || '',
       address: cv.address || '',
       city: cv.city || '',
       country: cv.country || '',
-      postal_code: cv.postal_code || '',
-      profile_summary: cv.profile_summary || '',
-      avatar_url: cv.avatar_url || this.avatars[0],
+      postalCode: cv.postal_code || '',
+      profileSummary: cv.profile_summary || '',
+      avatarUrl: cv.avatar_url || this.selectedAvatar,
       website: cv.website || '',
       linkedin: cv.linkedin || '',
       github: cv.github || ''
     });
     
-    // Clear existing form arrays
-    while (this.skillsArray.length) {
-      this.skillsArray.removeAt(0);
-    }
+    // Clear and recreate arrays
+    this.clearFormArrays();
     
-    while (this.educationArray.length) {
-      this.educationArray.removeAt(0);
-    }
-    
-    while (this.experienceArray.length) {
-      this.experienceArray.removeAt(0);
-    }
-    
-    while (this.projectsArray.length) {
-      this.projectsArray.removeAt(0);
-    }
-    
-    while (this.certificationsArray.length) {
-      this.certificationsArray.removeAt(0);
-    }
-    
-    while (this.languagesArray.length) {
-      this.languagesArray.removeAt(0);
-    }
-    
-    while (this.tagsArray.length) {
-      this.tagsArray.removeAt(0);
-    }
-    
-    // Add skills
+    // Populate skills
     if (cv.skills && cv.skills.length) {
+      this.skillsArray.clear();
       cv.skills.forEach(skill => {
-        this.skillsArray.push(this.fb.control(skill, Validators.required));
+        this.skillsArray.push(this.fb.control(skill));
       });
-    } else {
-      this.addSkill();
     }
     
-    // Add education
+    // Populate education
     if (cv.education && cv.education.length) {
-      cv.education.forEach(education => {
+      cv.education.forEach(edu => {
         this.educationArray.push(this.fb.group({
-          institution: [education.institution, Validators.required],
-          degree: [education.degree, Validators.required],
-          field: [education.field, Validators.required],
-          start_date: [education.start_date || ''],
-          end_date: [education.end_date || ''],
-          description: [education.description || '']
+          institution: [edu.institution],
+          degree: [edu.degree],
+          field: [edu.field || ''],
+          startDate: [edu.start_date || ''],
+          endDate: [edu.end_date || ''],
+          description: [edu.description || '']
         }));
       });
     } else {
       this.addEducation();
     }
     
-   // Add experience
-if (cv.experience && cv.experience.length) {
-  cv.experience.forEach(experience => {
-    this.experienceArray.push(this.fb.group({
-      company: [experience.company, Validators.required],
-      position: [experience.position, Validators.required],
-      location: [experience.location || ''],
-      start_date: [experience.start_date || ''],
-      end_date: [experience.end_date || ''],
-      currently_working: [false], // Use default value instead of accessing non-existent property
-      description: [experience.description || '']
-    }));
-  });
-} else {
-  this.addExperience();
-}
-    
-    // Add projects
-    if (cv.projects && cv.projects.length) {
-      cv.projects.forEach(project => {
-        const projectGroup = this.fb.group({
-          name: [project.name, Validators.required],
-          description: [project.description, Validators.required],
-          url: [project.url || ''],
-          technologies: this.fb.array([])
-        });
-        
-        const techArray = projectGroup.get('technologies') as FormArray;
-        
-        if (project.technologies && project.technologies.length) {
-          project.technologies.forEach(tech => {
-            techArray.push(this.fb.control(tech));
-          });
-        } else {
-          techArray.push(this.fb.control(''));
-        }
-        
-        this.projectsArray.push(projectGroup);
-      });
-    } else {
-      this.addProject();
-    }
-    
-    // Add certifications
-    if (cv.certifications && cv.certifications.length) {
-      cv.certifications.forEach(cert => {
-        this.certificationsArray.push(this.fb.group({
-          name: [cert.name, Validators.required],
-          issuer: [cert.issuer, Validators.required],
-          date: [cert.date || ''],
-          url: [cert.url || '']
+    // Populate experience
+    if (cv.experience && cv.experience.length) {
+      cv.experience.forEach(exp => {
+        this.experienceArray.push(this.fb.group({
+          company: [exp.company],
+          position: [exp.position],
+          location: [exp.location || ''],
+          startDate: [exp.start_date || ''],
+          endDate: [exp.end_date || ''],
+          currentlyWorking: [exp.current || false],
+          description: [exp.description || '']
         }));
       });
     } else {
-      this.addCertification();
+      this.addExperience();
     }
     
-    // Add languages
+    // Populate tags
+    if (cv.tags && cv.tags.length) {
+      this.tagsArray.clear();
+      cv.tags.forEach(tag => {
+        this.tagsArray.push(this.fb.control(tag));
+      });
+    }
+    
+    // Populate languages
     if (cv.languages && cv.languages.length) {
       cv.languages.forEach(lang => {
         this.languagesArray.push(this.fb.group({
-          name: [lang.name, Validators.required],
-          proficiency: [lang.proficiency, Validators.required]
+          language: [lang.name],
+          proficiency: [lang.proficiency]
         }));
       });
     } else {
       this.addLanguage();
     }
+  }
+
+  // Create a new CV
+  createNewCV(): void {
+    this.isEditMode = false;
+    this.editingCvId = undefined;
+    this.selectedAvatar = this.avatars[0];
+    this.initForm();
+    this.activeTab = 'personal';
+  }
+
+  // Clear all form arrays
+  clearFormArrays(): void {
+    this.skillsArray.clear();
+    this.educationArray.clear();
+    this.experienceArray.clear();
+    this.projectsArray.clear();
+    this.certificationsArray.clear();
+    this.languagesArray.clear();
+    this.tagsArray.clear();
     
-    // Add tags
-    if (cv.tags && cv.tags.length) {
-      cv.tags.forEach(tag => {
-        this.tagsArray.push(this.fb.control(tag, Validators.required));
-      });
-    }
+    // Add default empty items
+    this.addSkill();
+    this.addTag();
   }
-  
-  closeCvForm(): void {
-    this.showCvForm = false;
-  }
-  
-  nextStep(): void {
-    if (this.step < this.maxSteps) {
-      this.step++;
-    }
-  }
-  
-  prevStep(): void {
-    if (this.step > 1) {
-      this.step--;
-    }
-  }
-  
-  saveCV(): void {
+
+  // Submit the form
+  onSubmit(): void {
     if (this.cvForm.invalid) {
-      // Mark all fields as touched to show validation errors
       this.markFormGroupTouched(this.cvForm);
+      this.showNotification('Please fix the errors in the form.', true);
       return;
     }
     
+    // Clean empty array values
+    const formData = this.cleanFormData(this.cvForm.value);
+    
     this.isLoading = true;
     
-    if (this.editMode && this.currentCvId) {
+    if (this.isEditMode && this.editingCvId) {
       // Update existing CV
-      this.cvService.updateCV(this.currentCvId, this.cvForm.value)
-        .pipe(finalize(() => {
-          this.isLoading = false;
-          this.showCvForm = false;
-        }))
+      this.cvService.updateCV(this.editingCvId, formData)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => this.isLoading = false)
+        )
         .subscribe({
-          next: (updatedCV) => {
-            // Replace the old CV with the updated one
-            const index = this.cvList.findIndex(cv => cv.id === this.currentCvId);
-            if (index !== -1) {
-              this.cvList[index] = updatedCV;
-            }
+          next: (data) => {
+            this.showNotification('CV updated successfully!', false);
+            this.loadCVs();
           },
-          error: (err) => {
-            console.error('Error updating CV:', err);
-            alert('Failed to update CV. Please try again later.');
+          error: (error) => {
+            this.showNotification('Error updating CV: ' + error.message, true);
           }
         });
     } else {
       // Create new CV
-      this.cvService.createCV(this.cvForm.value)
-        .pipe(finalize(() => {
-          this.isLoading = false;
-          this.showCvForm = false;
-        }))
+      this.cvService.createCV(formData)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => this.isLoading = false)
+        )
         .subscribe({
-          next: (newCV) => {
-            // Add new CV to the list
-            this.cvList.unshift(newCV);
+          next: (data) => {
+            this.showNotification('CV created successfully!', false);
+            this.loadCVs();
+            this.createNewCV();
           },
-          error: (err) => {
-            console.error('Error creating CV:', err);
-            alert('Failed to create CV. Please try again later.');
+          error: (error) => {
+            this.showNotification('Error creating CV: ' + error.message, true);
           }
         });
     }
   }
-  
+
+  // Clean form data
+  cleanFormData(formData: any): any {
+    const cleanData = { ...formData };
+    
+    // Clean empty skills
+    if (cleanData.skills) {
+      cleanData.skills = cleanData.skills.filter((s: string) => s.trim() !== '');
+    }
+    
+    // Clean empty tags
+    if (cleanData.tags) {
+      cleanData.tags = cleanData.tags.filter((t: string) => t.trim() !== '');
+    }
+    
+    return cleanData;
+  }
+
+  // Set primary CV
+  setPrimaryCV(cv: CV): void {
+    this.isLoading = true;
+    if (cv.id !== undefined) {
+      this.cvService.setPrimaryCV(cv.id)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => this.isLoading = false)
+        )
+        .subscribe({
+          next: (data) => {
+            this.showNotification('Primary CV set successfully!', false);
+            this.loadCVs();
+          },
+          error: (error) => {
+            this.showNotification('Error setting primary CV: ' + error.message, true);
+          }
+        });
+    } else {
+      this.showNotification('Error: CV ID is undefined.', true);
+    }
+  }
+
+  // Delete CV
+  deleteCV(cv: CV): void {
+    if (confirm(`Are you sure you want to delete "${cv.title}"?`)) {
+      this.isLoading = true;
+      if (cv.id !== undefined) {
+        this.cvService.deleteCV(cv.id)
+              .pipe(
+                takeUntil(this.destroy$),
+                finalize(() => this.isLoading = false)
+              )
+              .subscribe({
+                next: () => {
+                  this.showNotification('CV deleted successfully!', false);
+                  this.loadCVs();
+                },
+                error: (error) => {
+                  this.showNotification('Error deleting CV: ' + error.message, true);
+                }
+              });
+      } else {
+        this.showNotification('Error: CV ID is undefined.', true);
+      }
+    }
+  }
+
   // Helper to mark all form controls as touched
   markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
@@ -499,128 +525,58 @@ if (cv.experience && cv.experience.length) {
       
       if (control instanceof FormGroup) {
         this.markFormGroupTouched(control);
-      } else if (control instanceof FormArray) {
-        for (let i = 0; i < control.length; i++) {
-          const arrayControl = control.at(i);
-          if (arrayControl instanceof FormGroup) {
-            this.markFormGroupTouched(arrayControl);
+      }
+      
+      if (control instanceof FormArray) {
+        control.controls.forEach(ctrl => {
+          if (ctrl instanceof FormGroup) {
+            this.markFormGroupTouched(ctrl);
           } else {
-            arrayControl.markAsTouched();
+            ctrl.markAsTouched();
           }
-        }
+        });
       }
     });
   }
-  
-  setPrimaryCV(cvId: number): void {
-    this.isLoading = true;
-    this.cvService.setPrimaryCV(cvId)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: (updatedCV) => {
-          // Update primary status across all CVs
-          this.cvList.forEach(cv => {
-            cv.is_primary = cv.id === cvId;
-          });
-        },
-        error: (err) => {
-          console.error('Error setting primary CV:', err);
-          alert('Failed to set primary CV. Please try again later.');
-        }
-      });
+
+  // Show notification message
+  showNotification(message: string, isError: boolean): void {
+    this.notification = { show: true, message, isError };
+    
+    // Hide notification after 5 seconds
+    setTimeout(() => {
+      this.notification.show = false;
+    }, 5000);
   }
-  
-  deleteCV(cvId: number): void {
-    if (confirm('Are you sure you want to delete this CV?')) {
-      this.isLoading = true;
-      this.cvService.deleteCV(cvId)
-        .pipe(finalize(() => this.isLoading = false))
-        .subscribe({
-          next: () => {
-            // Remove from the list
-            this.cvList = this.cvList.filter(cv => cv.id !== cvId);
-          },
-          error: (err) => {
-            console.error('Error deleting CV:', err);
-            alert('Failed to delete CV. Please try again later.');
-          }
-        });
-    }
+
+  // Change tab
+  changeTab(tab: string): void {
+    this.activeTab = tab;
   }
-  
-  // Tag operations
-  addCvTag(cv: CV, tag: string): void {
-    if (!tag || cv.tags.includes(tag)) {
-      return;
-    }
+
+  // Clone a CV
+  cloneCV(cv: CV): void {
+    const clonedCv = { ...cv };
+    
+    // Modify the clone to make it a new CV
+    delete clonedCv.id;
+    clonedCv.title = `Copy of ${clonedCv.title}`;
+    clonedCv.is_primary = false;
     
     this.isLoading = true;
-    this.cvService.addTag(cv.id, tag)
-      .pipe(finalize(() => this.isLoading = false))
+    this.cvService.createCV(clonedCv)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoading = false)
+      )
       .subscribe({
-        next: (updatedCV) => {
-          // Update the CV with new tags
-          const index = this.cvList.findIndex(c => c.id === cv.id);
-          if (index !== -1) {
-            this.cvList[index].tags = updatedCV.tags;
-          }
+        next: (data) => {
+          this.showNotification('CV cloned successfully!', false);
+          this.loadCVs();
         },
-        error: (err) => {
-          console.error('Error adding tag:', err);
-          alert('Failed to add tag. Please try again.');
+        error: (error) => {
+          this.showNotification('Error cloning CV: ' + error.message, true);
         }
       });
-  }
-  
-  removeCvTag(cv: CV, tag: string): void {
-    this.isLoading = true;
-    this.cvService.removeTag(cv.id, tag)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: (updatedCV) => {
-          // Update the CV with new tags
-          const index = this.cvList.findIndex(c => c.id === cv.id);
-          if (index !== -1) {
-            this.cvList[index].tags = updatedCV.tags;
-          }
-        },
-        error: (err) => {
-          console.error('Error removing tag:', err);
-          alert('Failed to remove tag. Please try again.');
-        }
-      });
-  }
-  
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
-  
-  selectAvatar(url: string): void {
-    this.cvForm.patchValue({
-      avatar_url: url
-    });
-  }
-  
-  // Generate a display name from the form
-  getDisplayName(): string {
-    const firstName = this.cvForm.get('first_name')?.value || '';
-    const lastName = this.cvForm.get('last_name')?.value || '';
-    return `${firstName} ${lastName}`.trim() || 'New CV';
-  }
-  
-  // Get a summary for display in the CV card
-  getCvSummary(cv: CV): string {
-    const skills = cv.skills || [];
-    if (skills.length > 0) {
-      return `Skills: ${skills.slice(0, 3).join(', ')}${skills.length > 3 ? '...' : ''}`;
-    } else if (cv.profile_summary) {
-      return cv.profile_summary.substring(0, 100) + (cv.profile_summary.length > 100 ? '...' : '');
-    }
-    return 'No summary available';
   }
 }
