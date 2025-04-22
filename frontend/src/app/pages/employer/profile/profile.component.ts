@@ -6,11 +6,12 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { 
   faBuilding, faUsers, faMapMarkerAlt, faGlobe, faPhone, 
   faEnvelope, faBriefcase, faHandshake, faEdit, faSave, 
-  faTrash, faImage, faVideo, faLeaf, faHeart, faLightbulb
+  faTrash, faImage, faVideo, faLeaf, faHeart, faLightbulb,
+  faPlus, faCamera, faCheck, faExclamationCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { SidebarEmployerComponent } from '../../../components/sidebar-employer/sidebar-employer.component';
-
-// Import the employer sidebar
+import { EmployerProfileService } from '../../../services/employer-profile.service';
+import { finalize, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-profile',
@@ -44,53 +45,123 @@ export class ProfileComponent implements OnInit {
   faLeaf = faLeaf;
   faHeart = faHeart;
   faLightbulb = faLightbulb;
+  faPlus = faPlus;
+  faCamera = faCamera;
+  faCheck = faCheck;
+  faExclamationCircle = faExclamationCircle;
 
   companyForm!: FormGroup;
   isEditing = false;
   showEditModal = false;
   activeTab = 'overview';
   benefitsData: any[] = [];
+  loading = true;
+  hasProfile = false;
+  showCreateProfileModal = false;
+  savingProfile = false;
+  errorMessage = '';
+  successMessage = '';
+  
+  // Available cover images for selection
+  availableCoverImages = [
+    'https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=1470',
+    'https://images.unsplash.com/photo-1497215842964-222b430dc094?q=80&w=1470',
+    'https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=1470',
+    'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1470',
+    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1470',
+    'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1470',
+    'https://images.unsplash.com/photo-1431540015161-0bf868a2d407?q=80&w=1470',
+    'https://plus.unsplash.com/premium_photo-1709932754899-5c36599fface?q=80&w=1509'
+  ];
+  
+  // Selected cover image 
+  selectedCoverImage = this.availableCoverImages[0];
 
-  // Mock company data (would come from an API in production)
-  companyData = {
-    name: 'TechInnovate Solutions',
-    logo: 'assets/logocompany.png',
-    coverImage: 'assets/cover.jpg',
-    description: 'TechInnovate Solutions is a leading technology company specializing in AI-driven solutions for enterprise clients. We create innovative software that transforms how businesses operate.',
-    industry: 'Technology',
-    founded: '2015',
-    size: '50-200 employees',
-    headquarters: 'San Francisco, CA',
-    website: 'www.techinnovate.example.com',
-    phone: '+1 (555) 123-4567',
-    email: 'careers@techinnovate.example.com',
-    mission: 'Our mission is to democratize artificial intelligence and make it accessible to businesses of all sizes.',
-    vision: 'We envision a world where technology enhances human potential and creates sustainable solutions for global challenges.',
+  // Company logo generation options
+  logoOptions = [
+    { name: 'Letter', value: 'letter' },
+    { name: 'Icon', value: 'icon' }
+  ];
+  selectedLogoOption = 'letter';
+  logoLetter = '';
+  logoColor = '#4F46E5'; // Indigo default
+  logoColors = [
+    '#4F46E5', // Indigo
+    '#10B981', // Emerald
+    '#F59E0B', // Amber
+    '#EF4444', // Red
+    '#8B5CF6', // Violet
+    '#06B6D4', // Cyan
+    '#EC4899', // Pink
+    '#6366F1'  // Indigo
+  ];
+
+  // Empty company data template
+  companyData: any = {
+    name: '',
+    logo: '',
+    coverImage: '',
+    description: '',
+    industry: '',
+    founded: '',
+    size: '',
+    headquarters: '',
+    website: '',
+    phone: '',
+    email: '',
+    mission: '',
+    vision: '',
     culture: {
       values: [
-        { title: 'Innovation', description: 'We foster creativity and embrace cutting-edge technologies' },
-        { title: 'Collaboration', description: 'We believe great ideas come from diverse teams working together' },
-        { title: 'Excellence', description: 'We pursue the highest standards in everything we do' }
+        { title: '', description: '' },
+        { title: '', description: '' },
+        { title: '', description: '' }
       ],
-      workEnvironment: 'Modern open-plan offices with flexible work policies and remote options available'
+      workEnvironment: ''
     },
     benefits: [
-      { icon: 'heart', title: 'Health & Wellness', description: 'Comprehensive medical, dental, and vision coverage' },
-      { icon: 'briefcase', title: 'Flexible Work', description: 'Remote work options and flexible hours' },
-      { icon: 'lightbulb', title: 'Learning Budget', description: '$2000 annual learning and development budget' },
-      { icon: 'leaf', title: 'Paid Time Off', description: 'Generous vacation policy with 20+ days PTO' }
+      { icon: 'heart', title: 'Health & Wellness', description: '' },
+      { icon: 'briefcase', title: 'Flexible Work', description: '' },
+      { icon: 'lightbulb', title: 'Learning Budget', description: '' },
+      { icon: 'leaf', title: 'Paid Time Off', description: '' }
     ],
     socialResponsibility: [
-      { title: 'Green Initiatives', description: 'Carbon-neutral operations since 2020' },
-      { title: 'Community Outreach', description: 'Regular tech workshops for underserved communities' }
+      { title: 'Green Initiatives', description: '' },
+      { title: 'Community Outreach', description: '' }
     ]
   };
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private employerProfileService: EmployerProfileService
+  ) {}
 
   ngOnInit(): void {
-    this.initializeForm();
-    this.benefitsData = this.companyData.benefits;
+    this.loadEmployerProfile();
+  }
+
+  loadEmployerProfile(): void {
+    this.loading = true;
+    this.employerProfileService.getProfile()
+      .pipe(
+        finalize(() => this.loading = false)
+      )
+      .subscribe({
+        next: (profile) => {
+          if (profile) {
+            this.companyData = profile;
+            this.hasProfile = true;
+            this.benefitsData = this.companyData.benefits;
+            this.initializeForm();
+          } else {
+            this.hasProfile = false;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading profile:', error);
+          this.hasProfile = false;
+        }
+      });
   }
 
   initializeForm(): void {
@@ -110,6 +181,23 @@ export class ProfileComponent implements OnInit {
     });
   }
 
+  initializeCreateForm(): void {
+    this.companyForm = this.fb.group({
+      name: ['', Validators.required],
+      industry: ['', Validators.required],
+      description: ['', Validators.required],
+      founded: ['', Validators.required],
+      size: ['', Validators.required],
+      headquarters: ['', Validators.required],
+      website: ['', Validators.required],
+      phone: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      mission: ['', Validators.required],
+      vision: ['', Validators.required],
+      workEnvironment: ['', Validators.required]
+    });
+  }
+
   toggleEditMode(): void {
     this.showEditModal = true;
   }
@@ -118,24 +206,127 @@ export class ProfileComponent implements OnInit {
     this.showEditModal = false;
   }
 
+  showCreateProfile(): void {
+    this.initializeCreateForm();
+    this.showCreateProfileModal = true;
+    // Generate initial logo letter based on company name
+    this.logoLetter = 'C';
+  }
+
+  closeCreateModal(): void {
+    this.showCreateProfileModal = false;
+    this.errorMessage = '';
+  }
+
   saveCompanyProfile(): void {
     if (this.companyForm.valid) {
-      // In a real app, this would be an API call
-      console.log('Form data to save:', this.companyForm.value);
-      
-      // Update the local data (simulating successful API call)
-      this.companyData = {
+      // Prepare the data to save with current form values
+      const updatedCompany = {
         ...this.companyData,
-        ...this.companyForm.value
+        ...this.companyForm.value,
+        culture: {
+          ...this.companyData.culture,
+          workEnvironment: this.companyForm.value.workEnvironment
+        }
       };
       
-      this.showEditModal = false;
-      
-      // Show success message (would use a proper notification service)
-      alert('Company profile updated successfully!');
+      this.savingProfile = true;
+      this.employerProfileService.updateProfile(updatedCompany)
+        .pipe(
+          finalize(() => this.savingProfile = false)
+        )
+        .subscribe({
+          next: (response) => {
+            this.companyData = response;
+            this.showEditModal = false;
+            this.successMessage = 'Company profile updated successfully!';
+            setTimeout(() => this.successMessage = '', 3000);
+          },
+          error: (error) => {
+            console.error('Error updating profile:', error);
+            this.errorMessage = 'Failed to update profile. Please try again.';
+            setTimeout(() => this.errorMessage = '', 3000);
+          }
+        });
     } else {
       this.companyForm.markAllAsTouched();
     }
+  }
+
+  createCompanyProfile(): void {
+    if (this.companyForm.valid) {
+      // Generate the logo based on selection
+      let logoUrl = '';
+      if (this.selectedLogoOption === 'letter') {
+        logoUrl = this.generateLetterLogo();
+      } else {
+        logoUrl = 'assets/company-icon.png'; // Default icon
+      }
+
+      // Prepare the new company profile data
+      const newCompany = {
+        ...this.companyForm.value,
+        logo: logoUrl,
+        coverImage: this.selectedCoverImage,
+        culture: {
+          values: [
+            { title: 'Innovation', description: 'We foster creativity and embrace cutting-edge technologies' },
+            { title: 'Collaboration', description: 'We believe great ideas come from diverse teams working together' },
+            { title: 'Excellence', description: 'We pursue the highest standards in everything we do' }
+          ],
+          workEnvironment: this.companyForm.value.workEnvironment
+        },
+        benefits: [
+          { icon: 'heart', title: 'Health & Wellness', description: 'Comprehensive medical, dental, and vision coverage' },
+          { icon: 'briefcase', title: 'Flexible Work', description: 'Remote work options and flexible hours' },
+          { icon: 'lightbulb', title: 'Learning Budget', description: 'Annual learning and development budget' },
+          { icon: 'leaf', title: 'Paid Time Off', description: 'Generous vacation policy' }
+        ],
+        socialResponsibility: [
+          { title: 'Green Initiatives', description: 'Environmentally conscious operations' },
+          { title: 'Community Outreach', description: 'Regular workshops and programs for the community' }
+        ]
+      };
+      
+      this.savingProfile = true;
+      this.employerProfileService.createProfile(newCompany)
+        .pipe(
+          finalize(() => this.savingProfile = false)
+        )
+        .subscribe({
+          next: (response) => {
+            this.companyData = response;
+            this.benefitsData = this.companyData.benefits;
+            this.hasProfile = true;
+            this.showCreateProfileModal = false;
+            this.successMessage = 'Company profile created successfully!';
+            setTimeout(() => this.successMessage = '', 3000);
+          },
+          error: (error) => {
+            console.error('Error creating profile:', error);
+            this.errorMessage = 'Failed to create profile. Please try again.';
+            setTimeout(() => this.errorMessage = '', 3000);
+          }
+        });
+    } else {
+      this.companyForm.markAllAsTouched();
+    }
+  }
+
+  generateLetterLogo(): string {
+    // In a real implementation, you might use canvas to generate a real image
+    // Here we're just returning a "fake" data URL that would represent the letter logo
+    // In production, you would want to actually generate an image or store this information to recreate it
+    return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="${this.logoColor.replace('#', '%23')}"/><text x="50" y="70" font-family="Arial" font-size="60" text-anchor="middle" fill="white">${this.logoLetter}</text></svg>`;
+  }
+
+  updateLogoLetter(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.logoLetter = input.value.charAt(0).toUpperCase();
+  }
+
+  selectCoverImage(imageUrl: string): void {
+    this.selectedCoverImage = imageUrl;
   }
 
   setActiveTab(tab: string): void {

@@ -1,4 +1,3 @@
-// src/app/services/auth.service.ts
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, throwError, of } from 'rxjs';
@@ -95,28 +94,27 @@ export class AuthService {
       );
   }
 
-  // Add this method to your AuthService
-getCurrentUserProfile(): Observable<User> {
-  // If we already have the user data stored locally, return it
-  const currentUser = this.currentUserValue;
-  if (currentUser) {
-    return of(currentUser);
-  }
-  
-  // Otherwise, fetch it from the server
-  return this.http.get<User>(`${this.API_URL}/users/me`, {
-    headers: {
-      Authorization: `Bearer ${this.getToken()}`
+  getCurrentUserProfile(): Observable<User> {
+    // If we already have the user data stored locally, return it
+    const currentUser = this.currentUserValue;
+    if (currentUser) {
+      return of(currentUser);
     }
-  }).pipe(
-    tap(user => {
-      // Update the stored user
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-      this.currentUserSubject.next(user);
-    }),
-    catchError(this.handleError)
-  );
-}
+    
+    // Otherwise, fetch it from the server
+    return this.http.get<User>(`${this.API_URL}/users/me`, {
+      headers: {
+        Authorization: `Bearer ${this.getToken()}`
+      }
+    }).pipe(
+      tap(user => {
+        // Update the stored user
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      }),
+      catchError(this.handleError)
+    );
+  }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
     console.log('Login service called with:', credentials);
@@ -129,6 +127,11 @@ getCurrentUserProfile(): Observable<User> {
       .pipe(
         tap(response => {
           console.log('Login successful:', response);
+          // Verify that user can only log in with their actual role
+          if (response.user.role !== credentials.role) {
+            this.logout();
+            throw new Error(`Access denied. You cannot log in as ${credentials.role} with a ${response.user.role} account.`);
+          }
           this.handleAuthentication(response);
         }),
         catchError(this.handleError)
@@ -159,6 +162,12 @@ getCurrentUserProfile(): Observable<User> {
 
   isLoggedIn(): boolean {
     return this.isAuthenticatedSubject.value;
+  }
+
+  // Check if user has proper role to access a specific route
+  hasRoleAccess(requiredRole: string): boolean {
+    const userRole = this.getUserRole();
+    return userRole === requiredRole || userRole === 'admin'; // Admin can access all routes
   }
 
   // Error handling
@@ -213,7 +222,15 @@ getCurrentUserProfile(): Observable<User> {
       employer: '/employer/dashboard',
       admin: '/admin/dashboard'
     };
-    this.router.navigate([routes[role as keyof typeof routes] || '/']);
+    // Ensure the role is valid before redirecting
+    const targetRoute = routes[role as keyof typeof routes];
+    if (targetRoute) {
+      this.router.navigate([targetRoute]);
+    } else {
+      // If role is not valid, log out and redirect to login
+      console.error('Invalid role detected:', role);
+      this.logout();
+    }
   }
 
   // Additional authentication methods
@@ -232,6 +249,24 @@ getCurrentUserProfile(): Observable<User> {
         return of(false);
       })
     );
+  }
+
+  // Route guard method to protect routes by role
+  canAccessRoute(requiredRole: 'jobseeker' | 'employer' | 'admin'): boolean {
+    const currentUser = this.currentUserValue;
+    
+    if (!currentUser) {
+      this.router.navigate(['/login']);
+      return false;
+    }
+    
+    // Check if user has the required role
+    if (currentUser.role !== requiredRole && currentUser.role !== 'admin') {
+      this.router.navigate([`/${currentUser.role}/dashboard`]);
+      return false;
+    }
+    
+    return true;
   }
 
   updateUserProfile(updates: Partial<User>): Observable<User> {
@@ -271,7 +306,13 @@ getCurrentUserProfile(): Observable<User> {
   loginWithGoogle(role: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.API_URL}/auth/google/login`, { role })
       .pipe(
-        tap(response => this.handleAuthentication(response)),
+        tap(response => {
+          // Verify that user can only log in with their actual role
+          if (response.user.role !== role) {
+            throw new Error(`Access denied. You cannot log in as ${role} with a ${response.user.role} account.`);
+          }
+          this.handleAuthentication(response);
+        }),
         catchError(this.handleError)
       );
   }
@@ -279,7 +320,13 @@ getCurrentUserProfile(): Observable<User> {
   loginWithLinkedIn(role: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.API_URL}/auth/linkedin/login`, { role })
       .pipe(
-        tap(response => this.handleAuthentication(response)),
+        tap(response => {
+          // Verify that user can only log in with their actual role
+          if (response.user.role !== role) {
+            throw new Error(`Access denied. You cannot log in as ${role} with a ${response.user.role} account.`);
+          }
+          this.handleAuthentication(response);
+        }),
         catchError(this.handleError)
       );
   }
