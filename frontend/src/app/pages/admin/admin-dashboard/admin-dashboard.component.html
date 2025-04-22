@@ -1,565 +1,685 @@
 <div class="flex h-screen overflow-hidden">
-    <!-- Import the sidebar-admin component -->
-    <app-sidebar-admin class="sidebar-container"></app-sidebar-admin>
-  
-    <!-- Main Content Area -->
-    <div class="flex-1 overflow-y-auto bg-slate-50 pb-8 content-container">
-        <div class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center">
-              <h2 class="text-lg font-semibold text-gray-800">Admin Dashboard</h2>
-            </div>
-            <div class="flex items-center gap-4">
-              <div class="relative">
-                <input type="text" placeholder="Search..." class="border border-gray-300 rounded-md py-1 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-700">Admin user</span>
-                <img class="h-8 w-8 rounded-full" src="assets/joe.jpg" alt="Admin">
-              </div>
-            </div>
-          </div>
-        
-      <div class="p-6 md:p-8">
+  <!-- Import the sidebar-admin component -->
+  <app-sidebar-admin class="sidebar-container"></app-sidebar-admin>
 
-        <!-- Welcome Section -->
-        <div class="rounded-xl bg-gradient-to-r from-[#c026d3] to-red-400 p-6 shadow-lg mb-8">
-          <div class="flex flex-col md:flex-row items-center justify-between">
-            <div class="mb-4 md:mb-0">
-              <h1 class="text-2xl font-bold text-white mb-2">Welcome back, Admin!</h1>
-              <p class="text-gray-200">
-                Platform performance is optimal. <span class="text-slate-600 font-medium">12 new users</span> joined today.
-              </p>
-            </div>
-            <div class="w-32 h-32">
-              <img src="assets/admin.svg" alt="Admin Dashboard" class="w-full h-full">
-            </div>
-          </div>
+  <!-- Main Content Area -->
+  <div class="flex-1 overflow-y-auto bg-slate-50 pb-8 content-container">
+    <div class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center">
+        <h2 class="text-lg font-semibold text-gray-800">Admin Dashboard</h2>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="relative">
+          <input type="text" placeholder="Search..."
+            class="border border-gray-300 rounded-md py-1 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
         </div>
-  
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <!-- Users Card -->
-          <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <div class="p-5">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="text-gray-500 text-sm">Total Users</p>
-                  <h3 class="text-2xl font-bold mt-1">8,249</h3>
-                  <div class="flex items-center mt-2">
-                    <span class="text-emerald-500 text-sm flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
-                      </svg>
-                      +12.5%
-                    </span>
-                    <span class="text-xs text-gray-500 ml-2">vs last month</span>
-                  </div>
-                </div>
-                <div class="p-3 rounded-lg bg-purple-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-5 py-3">
-              <a href="#" class="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200 flex items-center" (click)="showUserDetails()">
-                View details
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
+        <div class="relative" id="profileDropdown">
+          <div class="flex items-center gap-2 cursor-pointer" (click)="toggleProfileDropdown($event)">
+            <span class="text-sm text-gray-700">{{ currentUser?.firstName || 'Admin' }} {{ currentUser?.lastName || ''
+              }}</span>
+            <div
+              class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-medium text-sm">
+              {{ userInitials }}
             </div>
           </div>
-  
-          <!-- Jobs Card -->
-          <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <div class="p-5">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="text-gray-500 text-sm">Active Jobs</p>
-                  <h3 class="text-2xl font-bold mt-1">1,423</h3>
-                  <div class="flex items-center mt-2">
-                    <span class="text-emerald-500 text-sm flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
-                      </svg>
-                      +8.2%
-                    </span>
-                    <span class="text-xs text-gray-500 ml-2">vs last month</span>
-                  </div>
-                </div>
-                <div class="p-3 rounded-lg bg-blue-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              </div>
+
+          <!-- Profile dropdown -->
+          <div *ngIf="showProfileDropdown"
+            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1 border border-gray-200">
+            <div class="px-4 py-2 border-b border-gray-100">
+              <p class="text-sm font-medium text-gray-900">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</p>
+              <p class="text-xs text-gray-500 truncate">{{ currentUser?.email }}</p>
             </div>
-            <div class="bg-gray-50 px-5 py-3">
-              <a href="#" class="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200 flex items-center" (click)="showJobDetails()">
-                View details
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            </div>
-          </div>
-  
-          <!-- Matches Card -->
-          <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <div class="p-5">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="text-gray-500 text-sm">Successful Matches</p>
-                  <h3 class="text-2xl font-bold mt-1">5,874</h3>
-                  <div class="flex items-center mt-2">
-                    <span class="text-emerald-500 text-sm flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
-                      </svg>
-                      +15.3%
-                    </span>
-                    <span class="text-xs text-gray-500 ml-2">vs last month</span>
-                  </div>
-                </div>
-                <div class="p-3 rounded-lg bg-green-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-5 py-3">
-              <a href="#" class="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200 flex items-center" (click)="showMatchDetails()">
-                View details
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            </div>
-          </div>
-  
-          <!-- AI Accuracy Card -->
-          <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <div class="p-5">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="text-gray-500 text-sm">AI Match Accuracy</p>
-                  <h3 class="text-2xl font-bold mt-1">92.7%</h3>
-                  <div class="flex items-center mt-2">
-                    <span class="text-emerald-500 text-sm flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
-                      </svg>
-                      +3.1%
-                    </span>
-                    <span class="text-xs text-gray-500 ml-2">vs last month</span>
-                  </div>
-                </div>
-                <div class="p-3 rounded-lg bg-purple-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-5 py-3">
-              <a href="#" class="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200 flex items-center" (click)="showAIDetails()">
-                View details
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Platform Activity and System Performance -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <!-- Platform Activity Chart -->
-          <div class="bg-white rounded-xl shadow-md p-6 lg:col-span-2">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-lg font-semibold text-gray-800">Platform Activity</h2>
-              <div class="relative" #activityDropdown>
-                <button (click)="toggleActivityDropdown()" class="text-gray-500 hover:text-purple-600 focus:outline-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
-                <div *ngIf="showActivityDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                  <div class="py-1">
-                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" (click)="$event.preventDefault(); filterActivity('day')">Last 24 hours</a>
-                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" (click)="$event.preventDefault(); filterActivity('week')">Last 7 days</a>
-                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" (click)="$event.preventDefault(); filterActivity('month')">Last 30 days</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="h-80">
-              <canvas id="activityChart"></canvas>
-            </div>
-          </div>
-  
-          <!-- System Performance -->
-          <div class="bg-white rounded-xl shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-6">System Performance</h2>
-            
-            <!-- CPU Usage -->
-            <div class="mb-6">
-              <div class="flex justify-between mb-2">
-                <span class="text-sm text-gray-600">CPU Usage</span>
-                <span class="text-sm font-medium text-gray-800">42%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-green-500 h-2 rounded-full" style="width: 42%"></div>
-              </div>
-            </div>
-            
-            <!-- Memory Usage -->
-            <div class="mb-6">
-              <div class="flex justify-between mb-2">
-                <span class="text-sm text-gray-600">Memory Usage</span>
-                <span class="text-sm font-medium text-gray-800">68%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-yellow-500 h-2 rounded-full" style="width: 68%"></div>
-              </div>
-            </div>
-            
-            <!-- API Response Time -->
-            <div class="mb-6">
-              <div class="flex justify-between mb-2">
-                <span class="text-sm text-gray-600">API Response Time</span>
-                <span class="text-sm font-medium text-gray-800">128ms</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-blue-500 h-2 rounded-full" style="width: 32%"></div>
-              </div>
-            </div>
-            
-            <!-- Database Load -->
-            <div>
-              <div class="flex justify-between mb-2">
-                <span class="text-sm text-gray-600">Database Load</span>
-                <span class="text-sm font-medium text-gray-800">54%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-purple-500 h-2 rounded-full" style="width: 54%"></div>
-              </div>
-            </div>
-            
-            <button (click)="refreshSystemMetrics()" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh Metrics
-            </button>
-          </div>
-        </div>
-  
-        <!-- User Growth and Alerts Sections -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <!-- User Growth Section -->
-          <div class="bg-white rounded-xl shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-6">User Growth</h2>
-            <div class="h-64">
-              <canvas id="userGrowthChart"></canvas>
-            </div>
-            <div class="flex justify-between items-center mt-4">
-              <div>
-                <p class="text-sm text-gray-500">Conversion Rate</p>
-                <p class="text-lg font-semibold">28.6%</p>
-              </div>
-              <div>
-                <p class="text-sm text-gray-500">Retention Rate</p>
-                <p class="text-lg font-semibold">76.2%</p>
-              </div>
-              <div>
-                <p class="text-sm text-gray-500">Churn Rate</p>
-                <p class="text-lg font-semibold">3.8%</p>
-              </div>
-            </div>
-          </div>
-  
-          <!-- Critical Alerts Section -->
-          <div class="bg-white rounded-xl shadow-md p-6 lg:col-span-2">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-lg font-semibold text-gray-800">Critical Alerts</h2>
-              <div class="flex items-center">
-                <div class="relative mr-2">
-                  <button (click)="toggleFilterDropdown()" class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    Filter
-                  </button>
-                  <div *ngIf="showFilterDropdown" class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
-                    <div class="py-1">
-                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" (click)="$event.preventDefault(); filterAlerts('all')">All Alerts</a>
-                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" (click)="$event.preventDefault(); filterAlerts('security')">Security</a>
-                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" (click)="$event.preventDefault(); filterAlerts('performance')">Performance</a>
-                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" (click)="$event.preventDefault(); filterAlerts('system')">System</a>
-                    </div>
-                  </div>
-                </div>
-                <button (click)="refreshAlerts()" class="text-gray-500 hover:text-purple-600 focus:outline-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <div class="overflow-hidden">
-              <ul class="divide-y divide-gray-200">
-                <!-- Security Alert -->
-                <li class="py-4">
-                  <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                      <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div class="ml-3 flex-1">
-                      <div class="flex items-center justify-between">
-                        <p class="text-sm font-medium text-gray-900">Security: Unusual Login Patterns</p>
-                        <p class="text-xs text-gray-500">1h ago</p>
-                      </div>
-                      <p class="text-sm text-gray-500 mt-1">Multiple failed login attempts detected from IP 203.45.78.105. Possible brute force attack.</p>
-                      <div class="mt-2">
-                        <button (click)="handleAlert('security', 1)" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                          Investigate
-                        </button>
-                        <button (click)="dismissAlert(1)" class="ml-3 inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                          Dismiss
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-                
-                <!-- System Alert -->
-                <li class="py-4">
-                  <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                      <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-yellow-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div class="ml-3 flex-1">
-                      <div class="flex items-center justify-between">
-                        <p class="text-sm font-medium text-gray-900">System: Database Storage High</p>
-                        <p class="text-xs text-gray-500">3h ago</p>
-                      </div>
-                      <p class="text-sm text-gray-500 mt-1">Database storage utilization reached 85%. Consider scaling or clean-up operations.</p>
-                      <div class="mt-2">
-                        <button (click)="handleAlert('system', 2)" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-                          Review
-                        </button>
-                        <button (click)="dismissAlert(2)" class="ml-3 inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                          Dismiss
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-                
-                <!-- Performance Alert -->
-                <li class="py-4">
-                  <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                      <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div class="ml-3 flex-1">
-                      <div class="flex items-center justify-between">
-                        <p class="text-sm font-medium text-gray-900">Performance: API Response Time Increased</p>
-                        <p class="text-xs text-gray-500">6h ago</p>
-                      </div>
-                      <p class="text-sm text-gray-500 mt-1">Average API response time increased to 230ms from baseline of 120ms.</p>
-                      <div class="mt-2">
-                        <button (click)="handleAlert('performance', 3)" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                          Analyze
-                        </button>
-                        <button (click)="dismissAlert(3)" class="ml-3 inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                          Dismiss
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            
-            <div class="mt-4 text-center">
-              <a href="#" class="text-sm text-purple-600 hover:text-purple-800" (click)="viewAllAlerts()">View all alerts</a>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Feature Adoption & Maintenance -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Feature Adoption -->
-          <div class="bg-white rounded-xl shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-6">Feature Adoption Rates</h2>
-            <div class="space-y-4">
-              <!-- AI Matching -->
-              <div>
-                <div class="flex justify-between mb-1">
-                  <span class="text-sm font-medium text-gray-700">AI Matching</span>
-                  <span class="text-sm font-medium text-gray-700">87%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-purple-600 h-2.5 rounded-full" style="width: 87%"></div>
-                </div>
-              </div>
-              
-              <!-- Skill Assessment -->
-              <div>
-                <div class="flex justify-between mb-1">
-                  <span class="text-sm font-medium text-gray-700">Skill Assessment</span>
-                  <span class="text-sm font-medium text-gray-700">76%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-purple-600 h-2.5 rounded-full" style="width: 76%"></div>
-                </div>
-              </div>
-              
-              <!-- Career Path Guidance -->
-              <div>
-                <div class="flex justify-between mb-1">
-                  <span class="text-sm font-medium text-gray-700">Career Path Guidance</span>
-                  <span class="text-sm font-medium text-gray-700">63%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-purple-600 h-2.5 rounded-full" style="width: 63%"></div>
-                </div>
-              </div>
-              
-              <!-- Video Interviews -->
-              <div>
-                <div class="flex justify-between mb-1">
-                  <span class="text-sm font-medium text-gray-700">Video Interviews</span>
-                  <span class="text-sm font-medium text-gray-700">54%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-purple-600 h-2.5 rounded-full" style="width: 54%"></div>
-                </div>
-              </div>
-              
-              <!-- Portfolio Builder -->
-              <div>
-                <div class="flex justify-between mb-1">
-                  <span class="text-sm font-medium text-gray-700">Portfolio Builder</span>
-                  <span class="text-sm font-medium text-gray-700">42%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-purple-600 h-2.5 rounded-full" style="width: 42%"></div>
-                </div>
-              </div>
-            </div>
-            
-            <button (click)="viewFeatureDetails()" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              View Detailed Analysis
-            </button>
-          </div>
-  
-          <!-- Upcoming Maintenance -->
-          <div class="bg-white rounded-xl shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-6">Upcoming Maintenance</h2>
-            <div class="space-y-4">
-              <!-- Database Optimization -->
-              <div class="flex p-4 rounded-lg border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition-colors duration-200">
-                <div class="flex-shrink-0">
-                  <span class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-purple-100 text-purple-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="ml-4 flex-1">
-                  <h3 class="text-sm font-medium text-gray-900">Database Optimization</h3>
-                  <p class="mt-1 text-sm text-gray-500">Scheduled query optimization and index rebuilding.</p>
-                  <div class="mt-2 flex items-center justify-between">
-                    <span class="inline-flex items-center text-xs font-medium text-purple-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      April 15, 2025
-                    </span>
-                    <span class="inline-block px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded">No Downtime</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Security Updates -->
-              <div class="flex p-4 rounded-lg border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition-colors duration-200">
-                <div class="flex-shrink-0">
-                  <span class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-red-100 text-red-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="ml-4 flex-1">
-                  <h3 class="text-sm font-medium text-gray-900">Security Updates</h3>
-                  <p class="mt-1 text-sm text-gray-500">Critical security patches and dependency updates.</p>
-                  <div class="mt-2 flex items-center justify-between">
-                    <span class="inline-flex items-center text-xs font-medium text-purple-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      April 17, 2025
-                    </span>
-                    <span class="inline-block px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded">10 min Downtime</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- AI Model Update -->
-              <div class="flex p-4 rounded-lg border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition-colors duration-200">
-                <div class="flex-shrink-0">
-                  <span class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-blue-100 text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="ml-4 flex-1">
-                  <h3 class="text-sm font-medium text-gray-900">AI Model Update</h3>
-                  <p class="mt-1 text-sm text-gray-500">Deploying improved matching algorithm with better accuracy.</p>
-                  <div class="mt-2 flex items-center justify-between">
-                    <span class="inline-flex items-center text-xs font-medium text-purple-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      April 20, 2025
-                    </span>
-                    <span class="inline-block px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">Partial Rollout</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <button (click)="viewMaintenanceCalendar()" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              View Full Calendar
-            </button>
+            <a (click)="viewProfile()"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Your Profile</a>
+            <a (click)="viewSettings()"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Settings</a>
+            <a (click)="logout()"
+              class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 cursor-pointer">Logout</a>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="p-6 md:p-8">
+
+      <!-- Welcome Section -->
+      <div class="rounded-xl bg-gradient-to-r from-[#c026d3] to-red-400 p-6 shadow-lg mb-8">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+          <div class="mb-4 md:mb-0">
+            <h1 class="text-2xl font-bold text-white mb-2">Welcome back, {{ currentUser?.firstName || 'Admin' }}!</h1>
+            <p class="text-gray-200">
+              Platform performance is optimal. <span class="text-slate-600 font-medium">12 new users</span> joined
+              today.
+            </p>
+          </div>
+          <div class="w-32 h-32">
+            <img src="assets/admin.svg" alt="Admin Dashboard" class="w-full h-full">
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Users Card -->
+        <div
+          class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <div class="p-5">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-500 text-sm">Total Users</p>
+                <h3 class="text-2xl font-bold mt-1">8,249</h3>
+                <div class="flex items-center mt-2">
+                  <span class="text-emerald-500 text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                        clip-rule="evenodd" />
+                    </svg>
+                    +12.5%
+                  </span>
+                  <span class="text-xs text-gray-500 ml-2">vs last month</span>
+                </div>
+              </div>
+              <div class="p-3 rounded-lg bg-purple-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-5 py-3">
+            <a href="#"
+              class="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200 flex items-center"
+              (click)="showUserDetails()">
+              View details
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Jobs Card -->
+        <div
+          class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <div class="p-5">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-500 text-sm">Active Jobs</p>
+                <h3 class="text-2xl font-bold mt-1">1,423</h3>
+                <div class="flex items-center mt-2">
+                  <span class="text-emerald-500 text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                        clip-rule="evenodd" />
+                    </svg>
+                    +8.2%
+                  </span>
+                  <span class="text-xs text-gray-500 ml-2">vs last month</span>
+                </div>
+              </div>
+              <div class="p-3 rounded-lg bg-blue-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-5 py-3">
+            <a href="#"
+              class="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200 flex items-center"
+              (click)="showJobDetails()">
+              View details
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Matches Card -->
+        <div
+          class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <div class="p-5">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-500 text-sm">Successful Matches</p>
+                <h3 class="text-2xl font-bold mt-1">5,874</h3>
+                <div class="flex items-center mt-2">
+                  <span class="text-emerald-500 text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                        clip-rule="evenodd" />
+                    </svg>
+                    +15.3%
+                  </span>
+                  <span class="text-xs text-gray-500 ml-2">vs last month</span>
+                </div>
+              </div>
+              <div class="p-3 rounded-lg bg-green-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-5 py-3">
+            <a href="#"
+              class="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200 flex items-center"
+              (click)="showMatchDetails()">
+              View details
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- AI Accuracy Card -->
+        <div
+          class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <div class="p-5">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-500 text-sm">AI Match Accuracy</p>
+                <h3 class="text-2xl font-bold mt-1">92.7%</h3>
+                <div class="flex items-center mt-2">
+                  <span class="text-emerald-500 text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                        clip-rule="evenodd" />
+                    </svg>
+                    +3.1%
+                  </span>
+                  <span class="text-xs text-gray-500 ml-2">vs last month</span>
+                </div>
+              </div>
+              <div class="p-3 rounded-lg bg-purple-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-5 py-3">
+            <a href="#"
+              class="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200 flex items-center"
+              (click)="showAIDetails()">
+              View details
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Activity and System Performance -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Platform Activity Chart -->
+        <div class="bg-white rounded-xl shadow-md p-6 lg:col-span-2">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-semibold text-gray-800">Platform Activity</h2>
+            <div class="relative" #activityDropdown>
+              <button (click)="toggleActivityDropdown()" class="text-gray-500 hover:text-purple-600 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+              </button>
+              <div *ngIf="showActivityDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                <div class="py-1">
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                    (click)="$event.preventDefault(); filterActivity('day')">Last 24 hours</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                    (click)="$event.preventDefault(); filterActivity('week')">Last 7 days</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                    (click)="$event.preventDefault(); filterActivity('month')">Last 30 days</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="h-80">
+            <canvas id="activityChart"></canvas>
+          </div>
+        </div>
+
+        <!-- System Performance -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-6">System Performance</h2>
+
+          <!-- CPU Usage -->
+          <div class="mb-6">
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-gray-600">CPU Usage</span>
+              <span class="text-sm font-medium text-gray-800">42%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-green-500 h-2 rounded-full" style="width: 42%"></div>
+            </div>
+          </div>
+
+          <!-- Memory Usage -->
+          <div class="mb-6">
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-gray-600">Memory Usage</span>
+              <span class="text-sm font-medium text-gray-800">68%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-yellow-500 h-2 rounded-full" style="width: 68%"></div>
+            </div>
+          </div>
+
+          <!-- API Response Time -->
+          <div class="mb-6">
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-gray-600">API Response Time</span>
+              <span class="text-sm font-medium text-gray-800">128ms</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-blue-500 h-2 rounded-full" style="width: 32%"></div>
+            </div>
+          </div>
+
+          <!-- Database Load -->
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-gray-600">Database Load</span>
+              <span class="text-sm font-medium text-gray-800">54%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-purple-500 h-2 rounded-full" style="width: 54%"></div>
+            </div>
+          </div>
+
+          <button (click)="refreshSystemMetrics()"
+            class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh Metrics
+          </button>
+        </div>
+      </div>
+
+      <!-- User Growth and Alerts Sections -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- User Growth Section -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-6">User Growth</h2>
+          <div class="h-64">
+            <canvas id="userGrowthChart"></canvas>
+          </div>
+          <div class="flex justify-between items-center mt-4">
+            <div>
+              <p class="text-sm text-gray-500">Conversion Rate</p>
+              <p class="text-lg font-semibold">28.6%</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Retention Rate</p>
+              <p class="text-lg font-semibold">76.2%</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Churn Rate</p>
+              <p class="text-lg font-semibold">3.8%</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Critical Alerts Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 lg:col-span-2">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-semibold text-gray-800">Critical Alerts</h2>
+            <div class="flex items-center">
+              <div class="relative mr-2">
+                <button (click)="toggleFilterDropdown()"
+                  class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  Filter
+                </button>
+                <div *ngIf="showFilterDropdown" class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
+                  <div class="py-1">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                      (click)="$event.preventDefault(); filterAlerts('all')">All Alerts</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                      (click)="$event.preventDefault(); filterAlerts('security')">Security</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                      (click)="$event.preventDefault(); filterAlerts('performance')">Performance</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                      (click)="$event.preventDefault(); filterAlerts('system')">System</a>
+                  </div>
+                </div>
+              </div>
+              <button (click)="refreshAlerts()" class="text-gray-500 hover:text-purple-600 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-hidden">
+            <ul class="divide-y divide-gray-200">
+              <!-- Security Alert -->
+              <li class="py-4">
+                <div class="flex items-start">
+                  <div class="flex-shrink-0">
+                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="ml-3 flex-1">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-gray-900">Security: Unusual Login Patterns</p>
+                      <p class="text-xs text-gray-500">1h ago</p>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Multiple failed login attempts detected from IP 203.45.78.105.
+                      Possible brute force attack.</p>
+                    <div class="mt-2">
+                      <button (click)="handleAlert('security', 1)"
+                        class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Investigate
+                      </button>
+                      <button (click)="dismissAlert(1)"
+                        class="ml-3 inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <!-- System Alert -->
+              <li class="py-4">
+                <div class="flex items-start">
+                  <div class="flex-shrink-0">
+                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-yellow-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="ml-3 flex-1">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-gray-900">System: Database Storage High</p>
+                      <p class="text-xs text-gray-500">3h ago</p>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Database storage utilization reached 85%. Consider scaling or
+                      clean-up operations.</p>
+                    <div class="mt-2">
+                      <button (click)="handleAlert('system', 2)"
+                        class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                        Review
+                      </button>
+                      <button (click)="dismissAlert(2)"
+                        class="ml-3 inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <!-- Performance Alert -->
+              <li class="py-4">
+                <div class="flex items-start">
+                  <div class="flex-shrink-0">
+                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="ml-3 flex-1">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-gray-900">Performance: API Response Time Increased</p>
+                      <p class="text-xs text-gray-500">6h ago</p>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Average API response time increased to 230ms from baseline of
+                      120ms.</p>
+                    <div class="mt-2">
+                      <button (click)="handleAlert('performance', 3)"
+                        class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Analyze
+                      </button>
+                      <button (click)="dismissAlert(3)"
+                        class="ml-3 inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="mt-4 text-center">
+            <a href="#" class="text-sm text-purple-600 hover:text-purple-800" (click)="viewAllAlerts()">View all
+              alerts</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Adoption & Maintenance -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Feature Adoption -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-6">Feature Adoption Rates</h2>
+          <div class="space-y-4">
+            <!-- AI Matching -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700">AI Matching</span>
+                <span class="text-sm font-medium text-gray-700">87%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-purple-600 h-2.5 rounded-full" style="width: 87%"></div>
+              </div>
+            </div>
+
+            <!-- Skill Assessment -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700">Skill Assessment</span>
+                <span class="text-sm font-medium text-gray-700">76%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-purple-600 h-2.5 rounded-full" style="width: 76%"></div>
+              </div>
+            </div>
+
+            <!-- Career Path Guidance -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700">Career Path Guidance</span>
+                <span class="text-sm font-medium text-gray-700">63%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-purple-600 h-2.5 rounded-full" style="width: 63%"></div>
+              </div>
+            </div>
+
+            <!-- Video Interviews -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700">Video Interviews</span>
+                <span class="text-sm font-medium text-gray-700">54%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-purple-600 h-2.5 rounded-full" style="width: 54%"></div>
+              </div>
+            </div>
+
+            <!-- Portfolio Builder -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700">Portfolio Builder</span>
+                <span class="text-sm font-medium text-gray-700">42%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-purple-600 h-2.5 rounded-full" style="width: 42%"></div>
+              </div>
+            </div>
+          </div>
+
+          <button (click)="viewFeatureDetails()"
+            class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            View Detailed Analysis
+          </button>
+        </div>
+
+        <!-- Upcoming Maintenance -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-6">Upcoming Maintenance</h2>
+          <div class="space-y-4">
+            <!-- Database Optimization -->
+            <div
+              class="flex p-4 rounded-lg border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition-colors duration-200">
+              <div class="flex-shrink-0">
+                <span
+                  class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-purple-100 text-purple-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                </span>
+              </div>
+              <div class="ml-4 flex-1">
+                <h3 class="text-sm font-medium text-gray-900">Database Optimization</h3>
+                <p class="mt-1 text-sm text-gray-500">Scheduled query optimization and index rebuilding.</p>
+                <div class="mt-2 flex items-center justify-between">
+                  <span class="inline-flex items-center text-xs font-medium text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    April 15, 2025
+                  </span>
+                  <span class="inline-block px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded">No
+                    Downtime</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Security Updates -->
+            <div
+              class="flex p-4 rounded-lg border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition-colors duration-200">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-red-100 text-red-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="ml-4 flex-1">
+                <h3 class="text-sm font-medium text-gray-900">Security Updates</h3>
+                <p class="mt-1 text-sm text-gray-500">Critical security patches and dependency updates.</p>
+                <div class="mt-2 flex items-center justify-between">
+                  <span class="inline-flex items-center text-xs font-medium text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    April 17, 2025
+                  </span>
+                  <span class="inline-block px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded">10 min
+                    Downtime</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Model Update -->
+            <div
+              class="flex p-4 rounded-lg border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition-colors duration-200">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-blue-100 text-blue-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="ml-4 flex-1">
+                <h3 class="text-sm font-medium text-gray-900">AI Model Update</h3>
+                <p class="mt-1 text-sm text-gray-500">Deploying improved matching algorithm with better accuracy.</p>
+                <div class="mt-2 flex items-center justify-between">
+                  <span class="inline-flex items-center text-xs font-medium text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    April 20, 2025
+                  </span>
+                  <span
+                    class="inline-block px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">Partial
+                    Rollout</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button (click)="viewMaintenanceCalendar()"
+            class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            View Full Calendar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
+</div>

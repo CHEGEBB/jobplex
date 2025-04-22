@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import Chart from 'chart.js/auto';
 
 // Import SidebarAdmin component
-// Assuming you have a sidebar-admin component
 import { SidebarAdminComponent } from '../../../components/sidebar-admin/sidebar-admin.component';
+// Import AuthService
+import { AuthService, User } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +15,13 @@ import { SidebarAdminComponent } from '../../../components/sidebar-admin/sidebar
   styleUrls: ['./admin-dashboard.component.scss']
 })
 export class AdminDashboardComponent implements OnInit {
+  // Current user
+  currentUser: User | null = null;
+  userInitials: string = '';
+  
+  // Profile dropdown state
+  showProfileDropdown = false;
+  
   // Charts
   activityChart: any;
   userGrowthChart: any;
@@ -41,9 +49,12 @@ export class AdminDashboardComponent implements OnInit {
   
   @ViewChild('activityDropdown') activityDropdownRef!: ElementRef;
 
-  constructor() {}
+  constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
+    // Get the current user from auth service
+    this.getCurrentUser();
+    
     // Initialize charts after view is ready
     setTimeout(() => {
       this.initActivityChart();
@@ -52,6 +63,55 @@ export class AdminDashboardComponent implements OnInit {
     
     // Listen for clicks outside dropdowns to close them
     document.addEventListener('click', this.closeDropdowns.bind(this));
+  }
+
+  // Get current user from auth service
+  getCurrentUser(): void {
+    // First check if we already have the user in the service
+    this.currentUser = this.authService.currentUserValue;
+    
+    if (this.currentUser) {
+      this.generateUserInitials();
+    } else {
+      // If not, fetch the current user profile
+      this.authService.getCurrentUserProfile().subscribe({
+        next: (user) => {
+          this.currentUser = user;
+          this.generateUserInitials();
+        },
+        error: (error) => {
+          console.error('Error fetching user profile:', error);
+        }
+      });
+    }
+  }
+
+  // Generate user initials for the avatar
+  generateUserInitials(): void {
+    if (this.currentUser?.firstName && this.currentUser?.lastName) {
+      this.userInitials = this.currentUser.firstName.charAt(0) + this.currentUser.lastName.charAt(0);
+    } else if (this.currentUser?.email) {
+      // If no name, use first letter of email
+      this.userInitials = this.currentUser.email.charAt(0).toUpperCase();
+    } else {
+      this.userInitials = 'A'; // Default fallback
+    }
+  }
+
+  // Logout user
+  logout(): void {
+    this.authService.logout();
+  }
+
+  // Toggle profile dropdown
+  toggleProfileDropdown(event: Event): void {
+    this.showProfileDropdown = !this.showProfileDropdown;
+    // Close other dropdowns
+    if (this.showProfileDropdown) {
+      this.showActivityDropdown = false;
+      this.showFilterDropdown = false;
+    }
+    event.stopPropagation();
   }
 
   // Initialize platform activity chart
@@ -106,7 +166,6 @@ export class AdminDashboardComponent implements OnInit {
           y: {
             beginAtZero: true,
             grid: {
-              // Removed drawBorder property as it doesn't exist in the type
               color: 'rgba(0, 0, 0, 0.05)'
             }
           },
@@ -156,7 +215,6 @@ export class AdminDashboardComponent implements OnInit {
           y: {
             beginAtZero: true,
             grid: {
-              // Removed drawBorder property as it doesn't exist in the type
               color: 'rgba(0, 0, 0, 0.05)'
             }
           },
@@ -176,6 +234,7 @@ export class AdminDashboardComponent implements OnInit {
     // Close other dropdowns
     if (this.showActivityDropdown) {
       this.showFilterDropdown = false;
+      this.showProfileDropdown = false;
     }
     event?.stopPropagation();
   }
@@ -185,6 +244,7 @@ export class AdminDashboardComponent implements OnInit {
     // Close other dropdowns
     if (this.showFilterDropdown) {
       this.showActivityDropdown = false;
+      this.showProfileDropdown = false;
     }
     event?.stopPropagation();
   }
@@ -197,6 +257,10 @@ export class AdminDashboardComponent implements OnInit {
     
     if (!(event.target as Element).closest('#filterDropdown') && this.showFilterDropdown) {
       this.showFilterDropdown = false;
+    }
+    
+    if (!(event.target as Element).closest('#profileDropdown') && this.showProfileDropdown) {
+      this.showProfileDropdown = false;
     }
   }
 
@@ -304,5 +368,17 @@ export class AdminDashboardComponent implements OnInit {
 
   showAIDetails(): void {
     console.log('Navigating to AI details');
+  }
+  
+  // Navigate to profile page
+  viewProfile(): void {
+    // In a real app, this would navigate to the profile page
+    console.log('Navigating to profile page');
+  }
+  
+  // Navigate to settings page
+  viewSettings(): void {
+    // In a real app, this would navigate to the settings page
+    console.log('Navigating to settings page');
   }
 }
