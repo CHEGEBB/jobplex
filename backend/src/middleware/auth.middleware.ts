@@ -13,7 +13,11 @@ interface DecodedToken {
 declare global {
   namespace Express {
     interface Request {
-      user?: DecodedToken;
+      user?: {
+        id: number;
+        email: string;
+        role: string;
+      };
     }
   }
 }
@@ -98,16 +102,26 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
     console.log('User found in database:', userResult.rows[0]);
     
     // Verify that the role in the token matches the role in the database
-    if (decoded.role !== userResult.rows[0].role) {
+    const dbRole = userResult.rows[0].role;
+    if (decoded.role !== dbRole) {
       console.log('Role mismatch between token and database');
       console.log('Token role:', decoded.role);
-      console.log('Database role:', userResult.rows[0].role);
-      return res.status(401).json({ message: 'Invalid user role' });
+      console.log('Database role:', dbRole);
+      
+      // Use the database role instead of failing
+      console.log('Using database role instead of token role');
+      decoded.role = dbRole;
     }
     
-    // Attach user info to request
-    req.user = decoded;
-    console.log('User authentication successful, proceeding to next middleware');
+    // Attach user info to request - using db values to ensure accuracy
+    req.user = {
+      id: userResult.rows[0].id,
+      email: userResult.rows[0].email,
+      role: userResult.rows[0].role
+    };
+    
+    console.log('User authentication successful with role:', req.user.role);
+    console.log('Proceeding to next middleware');
     
     next();
   } catch (error) {
