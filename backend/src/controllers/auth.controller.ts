@@ -57,8 +57,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         );
       } else if (role === 'employer') {
         await client.query(
-          'INSERT INTO employer_profiles (user_id, company_name) VALUES ($1, $2)',
-          [user.id, '']
+          'INSERT INTO employer_profiles (user_id, name) VALUES ($1, $2)',
+          [user.id, req.body.company_name || req.body.name || 'Default Company Name']
         );
       }
       
