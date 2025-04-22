@@ -16,7 +16,7 @@ const router = express.Router();
 router.use(verifyToken, isJobSeeker);
 
 // Profile routes
-router.get('/', getProfile);
+router.get('/me', getProfile);
 router.put('/', updateProfile);
 router.post('/photo', uploadProfilePhoto);
 

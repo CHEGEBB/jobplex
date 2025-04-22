@@ -1,178 +1,514 @@
 <!-- jobseeker-profile.component.html -->
 <div class="flex h-screen bg-slate-50">
-    <!-- Sidebar Component -->
-    <app-sidebar 
-      [collapsed]="sidebarCollapsed" 
-      (toggleSidebar)="onToggleSidebar($event)">
-    </app-sidebar>  
-<main class="main-content" [class.expanded]="sidebarCollapsed">
-      <!-- Header with logo and user menu -->
-      <header class="bg-white border-b border-gray-200 py-3 px-4 mb-6 rounded-lg shadow-sm" @fadeIn>
-        <div class="flex justify-between items-center">
-          <div class="flex items-center">
-            <span class="text-blue-500 text-xl font-semibold">
-              <i class="fas fa-briefcase mr-2"></i>JobPlex
-            </span>
-          </div>
-          <div class="flex items-center space-x-4">
-            <button class="text-gray-500 hover:text-gray-700">
-              <i class="fas fa-bell"></i>
-            </button>
-            <button class="text-gray-500 hover:text-gray-700">
-              <i class="fas fa-cog"></i>
-            </button>
-            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center">
-              <span class="text-sm">ER</span>
-            </div>
-          </div>
+  <!-- Sidebar Component -->
+  <app-sidebar 
+    [collapsed]="sidebarCollapsed" 
+    (toggleSidebar)="onToggleSidebar($event)">
+  </app-sidebar>  
+
+  <main class="main-content overflow-y-auto" [class.expanded]="sidebarCollapsed">
+    <!-- Header with logo and user menu -->
+    <header class="bg-white border-b border-gray-200 py-3 px-4 mb-6 rounded-lg shadow-sm" @fadeIn>
+      <div class="flex justify-between items-center">
+        <div class="flex items-center">
+          <span class="text-blue-500 text-xl font-semibold">
+            <i class="fas fa-briefcase mr-2"></i>JobPlex
+          </span>
         </div>
-      </header>
-  
-      <!-- Profile header section -->
-      <section class="bg-white rounded-lg shadow-sm p-6 mb-6" @slideIn>
-        <div class="flex flex-col md:flex-row items-start md:items-center">
-          <div class="flex items-center mb-4 md:mb-0">
-            <div class="relative">
-              <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile picture" 
-                  class="w-20 h-20 rounded-full object-cover border-4 border-white shadow">
-              <div class="absolute bottom-0 right-0 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
-            </div>
-            <div class="ml-4">
-              <h2 class="text-xl font-bold">{{ user.name }}</h2>
-              <p class="text-gray-600">{{ user.title }}</p>
-              <div class="flex items-center text-sm text-gray-500 mt-1">
-                <i class="fas fa-map-marker-alt mr-1"></i>
-                <span>{{ user.location }}</span>
-                <span class="mx-2">•</span>
-                <i class="fas fa-envelope mr-1"></i>
-                <span>{{ user.email }}</span>
-              </div>
-            </div>
-          </div>
-          <button class="ml-auto bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-md transition-all duration-300 text-sm flex items-center">
-            <i class="fas fa-edit mr-2"></i>
-            Edit Profile
+        <div class="flex items-center space-x-4">
+          <button class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-bell"></i>
           </button>
+          <button class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-cog"></i>
+          </button>
+          <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center">
+            <span class="text-sm">{{ profileData?.user?.first_name?.charAt(0) }}{{ profileData?.user?.last_name?.charAt(0) }}</span>
+          </div>
         </div>
-      </section>
-      
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left column for main profile info -->
-        <div class="lg:col-span-2">
-          <!-- About section -->
-          <section class="bg-white rounded-lg shadow-sm mb-6" @fadeIn>
-            <div class="p-6">
-              <h3 class="text-lg font-semibold mb-4">About</h3>
-              <p class="text-gray-700">{{ user.about }}</p>
-            </div>
-          </section>
+      </div>
+    </header>
   
-          <!-- Skills section -->
-          <section class="bg-white rounded-lg shadow-sm mb-6" @fadeIn>
-            <div class="p-6">
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Skills</h3>
-                <button (click)="addSkill()" class="text-blue-500 hover:text-blue-700 flex items-center text-sm transition-colors duration-200">
-                  <i class="fas fa-plus mr-1"></i> Add Skill
-                </button>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <div *ngFor="let skill of user.skills" 
-                    class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm hover:bg-blue-200 transition-colors duration-200">
-                  {{ skill }}
-                </div>
+    <!-- Profile header section -->
+    <section class="bg-white rounded-lg shadow-sm p-6 mb-6" @slideIn>
+      <div class="flex flex-col md:flex-row items-start md:items-center">
+        <div class="flex items-center mb-4 md:mb-0">
+          <div class="relative">
+            <img [src]="profileData?.profile?.profile_photo_url || 'https://randomuser.me/api/portraits/women/44.jpg'" 
+                alt="Profile picture" 
+                class="w-20 h-20 rounded-full object-cover border-4 border-white shadow">
+            <div class="absolute bottom-0 right-0 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
+          </div>
+          <div class="ml-4">
+            <h2 class="text-xl font-bold">{{ profileData?.user?.first_name }} {{ profileData?.user?.last_name }}</h2>
+            <p class="text-gray-600">{{ profileData?.profile?.title || 'No title specified' }}</p>
+            <div class="flex items-center text-sm text-gray-500 mt-1">
+              <i class="fas fa-map-marker-alt mr-1"></i>
+              <span>{{ profileData?.profile?.location || 'No location specified' }}</span>
+              <span class="mx-2">•</span>
+              <i class="fas fa-envelope mr-1"></i>
+              <span>{{ profileData?.user?.email }}</span>
+            </div>
+          </div>
+        </div>
+        <button (click)="startEditingProfile()" class="ml-auto bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-md transition-all duration-300 text-sm flex items-center">
+          <i class="fas fa-edit mr-2"></i>
+          Edit Profile
+        </button>
+      </div>
+
+      <!-- Profile photo selector -->
+      <div *ngIf="isEditingProfile" class="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+        <h3 class="text-md font-semibold mb-3">Choose Profile Photo</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+          <div *ngFor="let avatar of avatars" 
+               (click)="selectProfilePhoto(avatar)"
+               class="cursor-pointer transition-all transform hover:scale-105"
+               [class.ring-2]="profileData?.profile?.profile_photo_url === avatar"
+               [class.ring-blue-500]="profileData?.profile?.profile_photo_url === avatar">
+            <img [src]="avatar" alt="Avatar option" class="w-16 h-16 rounded-full object-cover">
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile edit form (shown when isEditingProfile is true) -->
+      <div *ngIf="isEditingProfile" class="mt-4 p-4 border border-gray-200 rounded-lg">
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Professional Title</label>
+              <input type="text" formControlName="title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="form-group">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+              <input type="text" formControlName="location" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="form-group col-span-1 md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+              <textarea formControlName="bio" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <input type="text" formControlName="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="form-group">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+              <input type="text" formControlName="website" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="form-group">
+              <label class="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+              <input type="text" formControlName="linkedin_url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="form-group">
+              <label class="block text-sm font-medium text-gray-700 mb-1">GitHub</label>
+              <input type="text" formControlName="github_url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="form-group">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
+              <input type="number" formControlName="years_of_experience" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="form-group">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Desired Salary Range</label>
+              <input type="text" formControlName="desired_salary_range" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="form-group">
+              <div class="flex items-center mt-4">
+                <input type="checkbox" formControlName="is_remote_ok" id="is_remote_ok" class="h-4 w-4 text-blue-600 rounded border-gray-300">
+                <label for="is_remote_ok" class="ml-2 text-sm text-gray-700">Open to remote work</label>
               </div>
             </div>
-          </section>
-  
-          <!-- Experience section -->
-          <section class="bg-white rounded-lg shadow-sm" @fadeIn>
-            <div class="p-6">
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Experience</h3>
-                <button (click)="addExperience()" class="text-blue-500 hover:text-blue-700 flex items-center text-sm transition-colors duration-200">
-                  <i class="fas fa-plus mr-1"></i> Add Experience
-                </button>
+
+            <div class="form-group">
+              <div class="flex items-center mt-4">
+                <input type="checkbox" formControlName="willing_to_relocate" id="willing_to_relocate" class="h-4 w-4 text-blue-600 rounded border-gray-300">
+                <label for="willing_to_relocate" class="ml-2 text-sm text-gray-700">Willing to relocate</label>
               </div>
-              
-              <div *ngFor="let exp of user.experience; let isLast = last" 
-                  class="relative" [class.pb-6]="!isLast" [class.border-b]="!isLast" [class.border-gray-200]="!isLast">
-                <div class="flex mb-2">
-                  <div class="w-10 h-10 rounded-md bg-gray-200 flex items-center justify-center text-gray-600 mr-4">
-                    <i class="fas fa-building"></i>
+            </div>
+          </div>
+          
+          <div class="flex justify-end mt-4 space-x-2">
+            <button type="button" (click)="cancelEditingProfile()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+              Cancel
+            </button>
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left column for main profile info -->
+      <div class="lg:col-span-2">
+        <!-- About section -->
+        <section class="bg-white rounded-lg shadow-sm mb-6" @fadeIn>
+          <div class="p-6">
+            <h3 class="text-lg font-semibold mb-4">About</h3>
+            <p class="text-gray-700">{{ profileData?.profile?.bio || 'No bio information provided yet. Click "Edit Profile" to add your professional summary.' }}</p>
+          </div>
+        </section>
+
+        <!-- Skills section -->
+        <section class="bg-white rounded-lg shadow-sm mb-6" @fadeIn>
+          <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">Skills</h3>
+              <button (click)="startAddingSkill()" class="text-blue-500 hover:text-blue-700 flex items-center text-sm transition-colors duration-200">
+                <i class="fas fa-plus mr-1"></i> Add Skill
+              </button>
+            </div>
+            
+            <!-- Skills form (shown when isAddingSkill is true) -->
+            <div *ngIf="isAddingSkill" class="mb-4 p-4 border border-gray-200 rounded-lg">
+              <form [formGroup]="skillForm" (ngSubmit)="saveSkill()">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Skill Name</label>
+                    <input type="text" formControlName="name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                   </div>
-                  <div>
-                    <h4 class="font-medium text-gray-900">{{ exp.title }}</h4>
-                    <p class="text-gray-600">{{ exp.company }}</p>
-                    <p class="text-gray-500 text-sm">{{ exp.period }}</p>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Proficiency</label>
+                    <select formControlName="proficiency" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                      <option value="expert">Expert</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Years Experience</label>
+                    <input type="number" formControlName="years_experience" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                   </div>
                 </div>
                 
-                <!-- Timeline dot and line for visual connection -->
-                <div *ngIf="!isLast" class="absolute left-5 top-12 bottom-0 w-px bg-gray-300"></div>
+                <div class="flex justify-end mt-4 space-x-2">
+                  <button type="button" (click)="cancelAddingSkill()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Cancel
+                  </button>
+                  <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Display skills -->
+            <div class="flex flex-wrap gap-2">
+              <div *ngFor="let skill of profileData?.skills" 
+                  class="px-3 py-1 rounded-full text-sm hover:bg-opacity-80 transition-colors duration-200 flex items-center"
+                  [ngClass]="getProficiencyColorClass(skill.proficiency)">
+                {{ skill.name }}
+                <span class="ml-1 text-xs">({{ skill.years_experience }} {{ skill.years_experience === 1 ? 'year' : 'years' }})</span>
+                <button (click)="removeSkill(skill.id)" class="ml-2 text-xs opacity-70 hover:opacity-100">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div *ngIf="profileData?.skills?.length === 0" class="text-gray-500 italic">
+                No skills added yet. Click "Add Skill" to showcase your abilities.
               </div>
             </div>
-          </section>
-        </div>
-  
-        <!-- Right column for sidebar widgets -->
-        <div class="lg:col-span-1 space-y-6">
-          <!-- Profile completion -->
-          <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
-            <h3 class="text-lg font-semibold mb-3">Profile Completion</h3>
-            <div class="relative pt-1">
-              <div class="flex mb-2 items-center justify-between">
-                <div>
-                  <span class="text-xs font-semibold inline-block text-emerald-600">
-                    {{ profileCompletion }}% complete
-                  </span>
+          </div>
+        </section>
+
+        <!-- Experience section -->
+        <section class="bg-white rounded-lg shadow-sm" @fadeIn>
+          <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">Experience</h3>
+              <button (click)="startAddingExperience()" class="text-blue-500 hover:text-blue-700 flex items-center text-sm transition-colors duration-200">
+                <i class="fas fa-plus mr-1"></i> Add Experience
+              </button>
+            </div>
+            
+            <!-- Experience form (shown when isAddingExperience is true) -->
+            <div *ngIf="isAddingExperience" class="mb-4 p-4 border border-gray-200 rounded-lg">
+              <form [formGroup]="experienceForm" (ngSubmit)="saveExperience()">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                    <input type="text" formControlName="company_name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                    <input type="text" formControlName="position" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input type="text" formControlName="location" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input type="date" formControlName="start_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input type="date" formControlName="end_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group flex items-center">
+                    <input type="checkbox" formControlName="is_current" id="is_current" class="mr-2">
+                    <label for="is_current" class="text-sm font-medium text-gray-700">I currently work here</label>
+                  </div>
+                  
+                  <div class="form-group col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea formControlName="description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                  </div>
+                </div>
+                
+                <div class="flex justify-end mt-4 space-x-2">
+                  <button type="button" (click)="cancelAddingExperience()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Cancel
+                  </button>
+                  <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Display experiences -->
+            <div *ngIf="profileData?.experience?.length === 0" class="text-gray-500 italic">
+              No work experience added yet. Click "Add Experience" to showcase your work history.
+            </div>
+            
+            <div *ngFor="let exp of profileData?.experience; let isLast = last" 
+                class="relative" [class.pb-6]="!isLast" [class.border-b]="!isLast" [class.border-gray-200]="!isLast">
+              <div class="flex mb-2">
+                <div class="w-10 h-10 rounded-md bg-gray-200 flex items-center justify-center text-gray-600 mr-4">
+                  <i class="fas fa-building"></i>
+                </div>
+                <div class="flex-grow">
+                  <h4 class="font-medium text-gray-900">{{ exp.position }}</h4>
+                  <p class="text-gray-600">{{ exp.company_name }}</p>
+                  <p class="text-gray-500 text-sm">
+                    {{ formatDate(exp.start_date) }} - {{ exp.is_current ? 'Present' : formatDate(exp.end_date) }}
+                    <span *ngIf="exp.location" class="mx-1">•</span>
+                    {{ exp.location }}
+                  </p>
+                  <p *ngIf="exp.description" class="text-gray-600 mt-2">{{ exp.description }}</p>
+                </div>
+                <div class="flex space-x-2">
+                  <button (click)="startEditingExperience(exp)" class="text-blue-500 hover:text-blue-700 text-sm">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button (click)="deleteExperience(exp.id)" class="text-red-500 hover:text-red-700 text-sm">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
               </div>
-              <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-green-100">
-                <div [style.width.%]="profileCompletion" 
-                    class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500 transition-all duration-500"></div>
-              </div>
+              
+              <!-- Timeline dot and line for visual connection -->
+              <div *ngIf="!isLast" class="absolute left-5 top-12 bottom-0 w-px bg-gray-300"></div>
             </div>
-          </section>
-  
-          <!-- CV & Documents -->
-          <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
-            <h3 class="text-lg font-semibold mb-4">CV & Documents</h3>
-            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <div class="flex flex-col items-center">
-                <i class="fas fa-file-upload text-gray-400 text-3xl mb-2"></i>
-                <p class="text-gray-600 mb-3">Drag & drop your CV here</p>
-                <label class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition-all duration-300 text-sm cursor-pointer">
-                  <input type="file" class="hidden" (change)="uploadCV($event)">
-                  Upload CV
-                </label>
-              </div>
+          </div>
+        </section>
+
+        <!-- Education section -->
+        <section class="bg-white rounded-lg shadow-sm mt-6" @fadeIn>
+          <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">Education</h3>
+              <button (click)="startAddingEducation()" class="text-blue-500 hover:text-blue-700 flex items-center text-sm transition-colors duration-200">
+                <i class="fas fa-plus mr-1"></i> Add Education
+              </button>
             </div>
-          </section>
-  
-          <!-- AI Career Recommendations -->
-          <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
-            <h3 class="text-lg font-semibold mb-4">AI Career Recommendations</h3>
-            <div class="space-y-3">
-              <div *ngFor="let rec of user.recommendations" 
-                  class="flex items-center p-3 rounded-lg" 
-                  [class.bg-blue-50]="rec.selected" 
-                  [class.border]="rec.selected"
-                  [class.border-blue-200]="rec.selected">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                    [class.bg-blue-100]="rec.selected"
-                    [class.text-blue-600]="rec.selected"
-                    [class.bg-gray-100]="!rec.selected"
-                    [class.text-gray-600]="!rec.selected">
-                  <i class="fas" [class.fa-check]="rec.selected" [class.fa-briefcase]="!rec.selected"></i>
+            
+            <!-- Education form (shown when isAddingEducation is true) -->
+            <div *ngIf="isAddingEducation" class="mb-4 p-4 border border-gray-200 rounded-lg">
+              <form [formGroup]="educationForm" (ngSubmit)="saveEducation()">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Institution</label>
+                    <input type="text" formControlName="institution" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Degree</label>
+                    <input type="text" formControlName="degree" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Field of Study</label>
+                    <input type="text" formControlName="field_of_study" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input type="date" formControlName="start_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input type="date" formControlName="end_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  
+                  <div class="form-group flex items-center">
+                    <input type="checkbox" formControlName="is_current" id="edu_is_current" class="mr-2">
+                    <label for="edu_is_current" class="text-sm font-medium text-gray-700">I'm currently studying here</label>
+                  </div>
+                  
+                  <div class="form-group col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea formControlName="description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                  </div>
                 </div>
-                <span [class.text-blue-700]="rec.selected" [class.font-medium]="rec.selected" [class.text-gray-600]="!rec.selected">
-                  {{ rec.role }}
+                
+                <div class="flex justify-end mt-4 space-x-2">
+                  <button type="button" (click)="cancelAddingEducation()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Cancel
+                  </button>
+                  <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Display education -->
+            <div *ngIf="profileData?.education?.length === 0" class="text-gray-500 italic">
+              No education history added yet. Click "Add Education" to showcase your academic background.
+            </div>
+            
+            <div *ngFor="let edu of profileData?.education; let isLast = last" 
+                class="relative" [class.pb-6]="!isLast" [class.border-b]="!isLast" [class.border-gray-200]="!isLast">
+              <div class="flex mb-2">
+                <div class="w-10 h-10 rounded-md bg-gray-200 flex items-center justify-center text-gray-600 mr-4">
+                  <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="flex-grow">
+                  <h4 class="font-medium text-gray-900">{{ edu.degree }} {{ edu.field_of_study ? 'in ' + edu.field_of_study : '' }}</h4>
+                  <p class="text-gray-600">{{ edu.institution }}</p>
+                  <p class="text-gray-500 text-sm">
+                    {{ formatDate(edu.start_date) }} - {{ edu.is_current ? 'Present' : formatDate(edu.end_date) }}
+                  </p>
+                  <p *ngIf="edu.description" class="text-gray-600 mt-2">{{ edu.description }}</p>
+                </div>
+                <div class="flex space-x-2">
+                  <button (click)="startEditingEducation(edu)" class="text-blue-500 hover:text-blue-700 text-sm">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button (click)="deleteEducation(edu.id)" class="text-red-500 hover:text-red-700 text-sm">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Timeline dot and line for visual connection -->
+              <div *ngIf="!isLast" class="absolute left-5 top-12 bottom-0 w-px bg-gray-300"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right column for sidebar widgets -->
+      <div class="lg:col-span-1 space-y-6">
+        <!-- Profile completion -->
+        <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
+          <h3 class="text-lg font-semibold mb-3">Profile Completion</h3>
+          <div class="relative pt-1">
+            <div class="flex mb-2 items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold inline-block text-emerald-600">
+                  {{ profileCompletion }}% complete
                 </span>
               </div>
             </div>
-          </section>
-        </div>
-      </div>
-    </main>
+            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-green-100">
+              <div [style.width.%]="profileCompletion" 
+                  class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500 transition-all duration-500"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CV & Documents -->
+        <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
+          <h3 class="text-lg font-semibold mb-4">CV & Documents</h3>
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <div class="flex flex-col items-center">
+              <i class="fas fa-file-upload text-gray-400 text-3xl mb-2"></i>
+              <p class="text-gray-600 mb-3">Drag & drop your CV here</p>
+              <label class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition-all duration-300 text-sm cursor-pointer">
+                <input type="file" class="hidden" (change)="onFileSelected($event)">
+                Upload CV
+              </label>
+            </div>
+          </div>
+          
+         <!-- Display uploaded documents -->
+<div *ngIf="profileData && profileData.documents && profileData.documents.length > 0" class="mt-4">
+  <h4 class="text-sm font-medium text-gray-700 mb-2">Your Documents</h4>
+  <div *ngFor="let doc of profileData.documents" class="flex items-center justify-between py-2 border-b border-gray-100">
+    <div class="flex items-center">
+      <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+      <span class="text-sm">{{ doc.filename }}</span>
+    </div>
+    <div class="flex space-x-2">
+      <a [href]="doc.document_url" target="_blank" class="text-blue-500 hover:text-blue-700 text-sm">
+        <i class="fas fa-download"></i>
+      </a>
+      <button (click)="deleteDocument(doc.id)" class="text-red-500 hover:text-red-700 text-sm">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
   </div>
+</div>
+          
+          <!-- Upload progress bar -->
+          <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="mt-4">
+            <div class="flex justify-between text-xs text-gray-600 mb-1">
+              <span>Uploading...</span>
+              <span>{{ uploadProgress }}%</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full">
+              <div class="h-full bg-blue-500 rounded-full" [style.width.%]="uploadProgress"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- AI Career Recommendations -->
+        <section class="bg-white rounded-lg shadow-sm p-6" @fadeIn>
+          <h3 class="text-lg font-semibold mb-4">AI Career Recommendations</h3>
+          <div class="space-y-3">
+            <div *ngFor="let rec of [
+                {role: 'Web Developer', selected: true},
+                {role: 'Frontend Engineer', selected: false}, 
+                {role: 'UX Developer', selected: false}
+              ]" 
+                class="flex items-center p-3 rounded-lg" 
+                [class.bg-blue-50]="rec.selected" 
+                [class.border]="rec.selected"
+                [class.border-blue-200]="rec.selected">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                  [class.bg-blue-100]="rec.selected"
+                  [class.text-blue-600]="rec.selected"
+                  [class.bg-gray-100]="!rec.selected"
+                  [class.text-gray-600]="!rec.selected">
+                <i class="fas" [class.fa-check]="rec.selected" [class.fa-briefcase]="!rec.selected"></i>
+              </div>
+              <span [class.text-blue-700]="rec.selected" [class.font-medium]="rec.selected" [class.text-gray-600]="!rec.selected">
+                {{ rec.role }}
+              </span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>

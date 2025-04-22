@@ -55,6 +55,17 @@ export class JobseekerProfileComponent implements OnInit, OnDestroy {
   // Handle file uploads
   selectedFile: File | null = null;
   uploadProgress = 0;
+
+  avatars = [
+    'https://avatar.iran.liara.run/public/boy',
+    'https://avatar.iran.liara.run/public/girl',
+    'https://avatar.iran.liara.run/public/boy?username=Scott',
+    'https://avatar.iran.liara.run/public/girl?username=Maria',
+    'https://avatar.iran.liara.run/public/job/doctor/male',
+    'https://avatar.iran.liara.run/public/job/doctor/female',
+    'https://avatar.iran.liara.run/public/2',
+    'https://avatar.iran.liara.run/public'
+  ];
   
   // Subscription to clean up on destroy
   private subscriptions = new Subscription();
@@ -175,6 +186,15 @@ export class JobseekerProfileComponent implements OnInit, OnDestroy {
   
   onToggleSidebar(collapsed: boolean): void {
     this.sidebarCollapsed = collapsed;
+  }
+  selectProfilePhoto(photoUrl: string): void {
+    // Update profile photo in form
+    this.profileForm.patchValue({
+      profile_photo_url: photoUrl
+    });
+    
+    // Optionally save immediately if desired
+    // this.profileService.uploadProfilePhoto(photoUrl).subscribe();
   }
   
   // Profile editing
