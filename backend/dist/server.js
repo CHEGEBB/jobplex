@@ -16,6 +16,7 @@ const job_routes_1 = __importDefault(require("./routes/job.routes"));
 const skill_routes_1 = __importDefault(require("./routes/skill.routes"));
 const portfolio_routes_1 = __importDefault(require("./routes/portfolio.routes"));
 const cv_routes_1 = __importDefault(require("./routes/cv.routes"));
+const profile_routes_1 = __importDefault(require("./routes/profile.routes"));
 const db_config_1 = __importDefault(require("./config/db.config"));
 // Load environment variables
 dotenv_1.default.config();
@@ -64,6 +65,7 @@ app.use('/api/jobs', job_routes_1.default);
 app.use('/api/skills', skill_routes_1.default);
 app.use('/api/portfolio', portfolio_routes_1.default);
 app.use('/api/cvs', cv_routes_1.default);
+app.use('/api/profile', profile_routes_1.default);
 app.get('/api/health', async (req, res) => {
     try {
         // Quick db connection check
