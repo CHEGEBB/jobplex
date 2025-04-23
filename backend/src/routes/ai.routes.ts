@@ -11,7 +11,7 @@ import { isJobSeeker, isEmployer } from '../middleware/role.middleware';
 const router = express.Router();
 
 // Job seeker routes
-router.get('/career-path', verifyToken, isJobSeeker, getCareerPathRecommendations);
+router.get('/career-path', verifyToken, getCareerPathRecommendations);
 // router.post('/analyze-resume', verifyToken, isJobSeeker, analyzeResume);
 
 // // Employer routes
