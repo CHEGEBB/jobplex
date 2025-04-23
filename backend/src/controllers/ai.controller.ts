@@ -13,7 +13,7 @@ const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
  */
 export const getCareerPathRecommendations = async (req: Request, res: Response) => {
   try {
-    const userId = req.user.id; // From JWT token
+    const userId = req.user!.id;
 
     // Fetch user's skills from database
     const skillsResult = await pool.query(
@@ -111,7 +111,7 @@ export const getCareerPathRecommendations = async (req: Request, res: Response) 
  */
 export const matchCandidates = async (req: Request, res: Response) => {
   try {
-    const employerId = req.user.id; // From JWT token
+    const employerId = req.user!.id; // From JWT token
     const { jobId } = req.params;
     
     if (!jobId) {

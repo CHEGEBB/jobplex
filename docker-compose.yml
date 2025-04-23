@@ -18,6 +18,8 @@ services:
       DB_NAME: jobplex
       DB_SSL: "false"  # Add this to explicitly disable SSL requirement
       JWT_SECRET: your_secret_key_here
+      GEMINI_API_KEY: AIzaSyDuwW0mf5lgpHg9zBvwiM69AQhYeQyEOjg
+
     volumes:
       - ./backend/src:/usr/src/app/src
       - ./backend/package.json:/usr/src/app/package.json
