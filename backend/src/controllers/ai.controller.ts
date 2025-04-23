@@ -120,6 +120,9 @@ export const getCareerPathRecommendations = async (req: Request, res: Response) 
         
         const parsedResponse: JobSeekerCareerPathResponse = JSON.parse(jsonStr);
         
+        // Save the career path recommendation to the database
+        await saveCareerPath(userId, parsedResponse);
+        
         return res.json(parsedResponse);
       } catch (parseError) {
         console.error('Error parsing Gemini response:', parseError);
@@ -138,6 +141,196 @@ export const getCareerPathRecommendations = async (req: Request, res: Response) 
   } catch (error) {
     console.error('Error in career path recommendations:', error);
     return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Save career path recommendation to database
+ */
+const saveCareerPath = async (userId: number, careerPath: JobSeekerCareerPathResponse) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    // Insert main career path record
+    const careerPathResult = await client.query(
+      `INSERT INTO user_career_paths (user_id, analysis, created_at)
+       VALUES ($1, $2, NOW())
+       RETURNING id`,
+      [userId, careerPath.analysis]
+    );
+    
+    const careerPathId = careerPathResult.rows[0].id;
+    
+    // Insert each career path option
+    for (const path of careerPath.careerPaths) {
+      const pathResult = await client.query(
+        `INSERT INTO career_path_options (career_path_id, title, description, match_percentage)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id`,
+        [careerPathId, path.title, path.description, path.matchPercentage]
+      );
+      
+      const pathOptionId = pathResult.rows[0].id;
+      
+      // Insert skill gaps
+      if (path.skillGaps && path.skillGaps.length > 0) {
+        for (const skill of path.skillGaps) {
+          await client.query(
+            `INSERT INTO career_path_skill_gaps (career_path_option_id, skill_name)
+             VALUES ($1, $2)`,
+            [pathOptionId, skill]
+          );
+        }
+      }
+      
+      // Insert learning resources
+      if (path.learningResources && path.learningResources.length > 0) {
+        for (const resource of path.learningResources) {
+          await client.query(
+            `INSERT INTO career_path_learning_resources (career_path_option_id, name, type, description)
+             VALUES ($1, $2, $3, $4)`,
+            [pathOptionId, resource.name, resource.type, resource.description]
+          );
+        }
+      }
+    }
+    
+    await client.query('COMMIT');
+    console.log(`Career path saved successfully for user ${userId}`);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error saving career path:', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+/**
+ * Get saved career paths for a user
+ */
+export const getSavedCareerPaths = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    
+    // Query to get all career paths with their options, skill gaps, and learning resources
+    const result = await pool.query(`
+      WITH career_paths AS (
+        SELECT 
+          ucp.id, 
+          ucp.analysis, 
+          ucp.created_at
+        FROM user_career_paths ucp
+        WHERE ucp.user_id = $1
+        ORDER BY ucp.created_at DESC
+      ),
+      path_options AS (
+        SELECT 
+          cpo.id as option_id,
+          cpo.career_path_id,
+          cpo.title,
+          cpo.description,
+          cpo.match_percentage,
+          json_agg(DISTINCT cpsg.skill_name) FILTER (WHERE cpsg.skill_name IS NOT NULL) as skill_gaps,
+          json_agg(
+            json_build_object(
+              'name', cplr.name,
+              'type', cplr.type,
+              'description', cplr.description
+            )
+          ) FILTER (WHERE cplr.name IS NOT NULL) as learning_resources
+        FROM career_path_options cpo
+        LEFT JOIN career_path_skill_gaps cpsg ON cpo.id = cpsg.career_path_option_id
+        LEFT JOIN career_path_learning_resources cplr ON cpo.id = cplr.career_path_option_id
+        WHERE cpo.career_path_id IN (SELECT id FROM career_paths)
+        GROUP BY cpo.id, cpo.career_path_id
+      )
+      SELECT 
+        cp.id,
+        cp.analysis,
+        cp.created_at,
+        json_agg(
+          json_build_object(
+            'title', po.title,
+            'description', po.description,
+            'matchPercentage', po.match_percentage,
+            'skillGaps', COALESCE(po.skill_gaps, '[]'::json),
+            'learningResources', COALESCE(po.learning_resources, '[]'::json)
+          )
+        ) as career_paths
+      FROM career_paths cp
+      JOIN path_options po ON cp.id = po.career_path_id
+      GROUP BY cp.id, cp.analysis, cp.created_at
+      ORDER BY cp.created_at DESC
+    `, [userId]);
+    
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching saved career paths:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Delete a saved career path
+ */
+export const deleteCareerPath = async (req: Request, res: Response) => {
+  const client = await pool.connect();
+  try {
+    const userId = req.user!.id;
+    const { careerPathId } = req.params;
+    
+    // First, check if the career path exists and belongs to the user
+    const checkResult = await client.query(
+      'SELECT id FROM user_career_paths WHERE id = $1 AND user_id = $2',
+      [careerPathId, userId]
+    );
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Career path not found or you do not have permission to delete it' });
+    }
+    
+    await client.query('BEGIN');
+    
+    // Delete all related learning resources
+    await client.query(`
+      DELETE FROM career_path_learning_resources
+      WHERE career_path_option_id IN (
+        SELECT id FROM career_path_options WHERE career_path_id = $1
+      )
+    `, [careerPathId]);
+    
+    // Delete all related skill gaps
+    await client.query(`
+      DELETE FROM career_path_skill_gaps
+      WHERE career_path_option_id IN (
+        SELECT id FROM career_path_options WHERE career_path_id = $1
+      )
+    `, [careerPathId]);
+    
+    // Delete all career path options
+    await client.query(
+      'DELETE FROM career_path_options WHERE career_path_id = $1',
+      [careerPathId]
+    );
+    
+    // Finally, delete the career path itself
+    await client.query(
+      'DELETE FROM user_career_paths WHERE id = $1',
+      [careerPathId]
+    );
+    
+    await client.query('COMMIT');
+    
+    console.log(`Career path ${careerPathId} deleted successfully for user ${userId}`);
+    return res.json({ message: 'Career path deleted successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting career path:', error);
+    return res.status(500).json({ message: 'Server error' });
+  } finally {
+    client.release();
   }
 };
 
