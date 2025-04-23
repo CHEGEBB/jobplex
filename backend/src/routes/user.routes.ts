@@ -28,6 +28,5 @@ router.put('/users/:id', verifyToken, updateUserById);
 router.delete('/users/:id', verifyToken,deleteUserById);
 router.patch('/users/:id/role', verifyToken,changeUserRole);
 router.patch('/users/:id/ban', verifyToken,toggleUserBanStatus);
-router.get('/users/:id/activity', verifyToken,getUserActivityLog);
 
 export default router;

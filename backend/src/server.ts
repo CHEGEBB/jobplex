@@ -14,6 +14,7 @@ import portfolioRoutes from './routes/portfolio.routes';
 import cvRoutes from './routes/cv.routes'
 import profileRoutes from './routes/profile.routes';
 import employerProfileRoutes from './routes/employer-profile.routes';
+import aiRoutes from './routes/ai.routes';
 import pool from './config/db.config';
 
 // Load environment variables
@@ -71,6 +72,8 @@ app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/cvs', cvRoutes)
 app.use('/api/profile', profileRoutes);
 app.use('/api/employer', employerProfileRoutes);
+app.use('/api/ai', aiRoutes);
+
 
 app.get('/api/health', async (req, res) => {
   try {
