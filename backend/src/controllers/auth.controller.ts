@@ -12,7 +12,7 @@ dotenv.config();
 // Get JWT configuration with fallbacks
 const JWT_SECRET = process.env.JWT_SECRET || 'jGa2XvR7bP9cQzT5mWkE3sD8fLpH6yN4';
 // Define the JWT expiration value properly typed for SignOptions
-const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '24h';
+const JWT_EXPIRATION = parseInt(process.env.JWT_EXPIRATION || '86400', 10);
 
 // Register new user
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -69,7 +69,7 @@ if (!email || !password || !role || !['jobseeker', 'employer', 'admin'].includes
       const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRATION as any } 
+        { expiresIn: JWT_EXPIRATION }  // Use the number directly
       );
       
       res.status(201).json({
@@ -130,7 +130,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRATION as any }  // Force type casting
+      { expiresIn: JWT_EXPIRATION }
     );
     
     res.json({
@@ -177,7 +177,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       JWT_SECRET,
       { expiresIn: '5h' as any }  // Type casting for consistency
     );
-    
+
     // Store token in database (in a real app, you would have a password_resets table)
     // For now, just return the token in the response (in a real app, send via email)
     res.status(200).json({
