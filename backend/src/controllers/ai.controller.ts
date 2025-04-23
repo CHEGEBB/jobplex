@@ -495,7 +495,6 @@ export const matchCandidates = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
-
 /**
  * Process employer AI chat query to find candidates
  */
@@ -536,7 +535,7 @@ export const employerChatQuery = async (req: Request, res: Response) => {
       `SELECT 
         ja.id, 
         ja.job_id,
-        ja.applicant_id as applicant_id,  // Changed from ja.user_id
+        ja.applicant_id,
         u.first_name,
         u.last_name,
         u.email,
@@ -547,7 +546,7 @@ export const employerChatQuery = async (req: Request, res: Response) => {
         array_agg(DISTINCT s.proficiency) as proficiencies,
         array_agg(DISTINCT s.years_experience) as experiences
        FROM job_applications ja
-       JOIN users u ON ja.applicant_id = u.id  // Changed from ja.user_id
+       JOIN users u ON ja.applicant_id = u.id
        JOIN job_seeker_profiles jsp ON u.id = jsp.user_id
        JOIN skills s ON u.id = s.user_id
        WHERE ja.job_id IN (SELECT id FROM jobs WHERE employer_id = $1)
@@ -627,6 +626,7 @@ export const employerChatQuery = async (req: Request, res: Response) => {
         appliedJobs: appliedJobs.length > 0 ? appliedJobs : []
       };
     });
+
 
     // Create prompt for AI
     const prompt = `
