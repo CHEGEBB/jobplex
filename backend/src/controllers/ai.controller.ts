@@ -536,7 +536,7 @@ export const employerChatQuery = async (req: Request, res: Response) => {
       `SELECT 
         ja.id, 
         ja.job_id,
-        ja.user_id as applicant_id,
+        ja.applicant_id as applicant_id,  // Changed from ja.user_id
         u.first_name,
         u.last_name,
         u.email,
@@ -547,11 +547,11 @@ export const employerChatQuery = async (req: Request, res: Response) => {
         array_agg(DISTINCT s.proficiency) as proficiencies,
         array_agg(DISTINCT s.years_experience) as experiences
        FROM job_applications ja
-       JOIN users u ON ja.user_id = u.id
+       JOIN users u ON ja.applicant_id = u.id  // Changed from ja.user_id
        JOIN job_seeker_profiles jsp ON u.id = jsp.user_id
        JOIN skills s ON u.id = s.user_id
        WHERE ja.job_id IN (SELECT id FROM jobs WHERE employer_id = $1)
-       GROUP BY ja.id, ja.job_id, ja.user_id, u.first_name, u.last_name, u.email, jsp.title, jsp.bio, jsp.location`,
+       GROUP BY ja.id, ja.job_id, ja.applicant_id, u.first_name, u.last_name, u.email, jsp.title, jsp.bio, jsp.location`,
       [employerId]
     );
 
