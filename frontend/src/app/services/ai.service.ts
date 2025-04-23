@@ -47,6 +47,37 @@ export interface CandidateMatchResponse {
   candidates: CandidateMatch[];
 }
 
+// Employer Chat Interfaces
+export interface MatchedCandidate {
+  id: number;
+  name: string;
+  matchPercentage: number;
+  relevantSkills: string[];
+  experience: string;
+  appliedToJobs?: string[];
+}
+
+export interface EmployerChatResponse {
+  message: string;
+  matchedCandidates: MatchedCandidate[];
+  suggestedFollowup: string[];
+}
+
+export interface SavedChatQuery {
+  id: number;
+  query: string;
+  response: EmployerChatResponse;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  type: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+  candidates?: MatchedCandidate[];
+  suggestedFollowup?: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -113,6 +144,47 @@ export class AiService {
   }
 
   /**
+   * Process employer chat query to find matching candidates
+   * @param query The text query from the employer
+   */
+  employerChatQuery(query: string): Observable<EmployerChatResponse> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.post<EmployerChatResponse>(`${this.API_URL}/employer-chat`, { query }, { headers })
+      .pipe(
+        tap(response => console.log('Employer chat response:', response)),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Get saved chat queries for the employer
+   */
+  getSavedChatQueries(): Observable<SavedChatQuery[]> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.get<SavedChatQuery[]>(`${this.API_URL}/saved-queries`, { headers })
+      .pipe(
+        tap(queries => console.log(`Retrieved ${queries.length} saved chat queries`)),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Delete a saved chat query
+   * @param queryId The ID of the chat query to delete
+   */
+  deleteChatQuery(queryId: number): Observable<{ message: string }> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.delete<{ message: string }>(`${this.API_URL}/saved-query/${queryId}`, { headers })
+      .pipe(
+        tap(response => console.log(`Chat query deleted: ${response.message}`)),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
    * Get authentication headers with the token
    */
   private getAuthHeaders(): HttpHeaders {
@@ -140,7 +212,6 @@ export class AiService {
         errorMessage = 'Unable to connect to the server. Please check your internet connection.';
       } else if (error.status === 401) {
         errorMessage = 'Authentication required. Please log in again.';
-        this.authService.logout(); // Important: logout on 401 unauthorized
       } else if (error.status === 403) {
         errorMessage = 'You do not have permission to perform this action.';
       } else if (error.error && error.error.message) {

@@ -1,4 +1,5 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+// src/app/employer/pages/chat-interface/chat-interface.component.ts
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,12 +11,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { SidebarEmployerComponent } from '../../../components/sidebar-employer/sidebar-employer.component';
 import { animate, style, transition, trigger } from '@angular/animations';
-
-interface ChatMessage {
-  type: 'user' | 'ai';
-  content: string;
-  timestamp: Date;
-}
+import { AiService, ChatMessage, MatchedCandidate, SavedChatQuery } from '../../../services/ai.service';
+import { JobService } from '../../../services/job.service';
+import { Subject, takeUntil } from 'rxjs';
+import { ProfileService } from '../../../services/profile.service';
 
 interface Candidate {
   id: number;
@@ -27,13 +26,6 @@ interface Candidate {
   matchScore: number;
   location: string;
   availability: string;
-}
-
-interface SavedSearch {
-  id: number;
-  query: string;
-  date: Date;
-  results: number;
 }
 
 @Component({
@@ -62,7 +54,7 @@ interface SavedSearch {
     ])
   ]
 })
-export class ChatInterfaceComponent implements OnInit, AfterViewInit {
+export class ChatInterfaceComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('chatContainer') chatContainer!: ElementRef;
   
   // Icons
@@ -97,7 +89,7 @@ export class ChatInterfaceComponent implements OnInit, AfterViewInit {
   showWelcomeOverlay: boolean = true;
 
   // Skills filter
-  availableSkills: string[] = ['Angular', 'React', 'Vue', 'TypeScript', 'JavaScript', 'Python', 'Java', 'C#', 'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin', 'SQL', 'MongoDB', 'Firebase', 'AWS', 'Azure', 'Docker', 'Kubernetes', 'CI/CD', 'Git', 'Figma', 'Adobe XD', 'Sketch'];
+  availableSkills: string[] = [];
   selectedSkills: string[] = [];
   minExperience: number = 0;
   maxExperience: number = 15;
@@ -105,9 +97,20 @@ export class ChatInterfaceComponent implements OnInit, AfterViewInit {
 
   // Candidates and saved searches
   matchedCandidates: Candidate[] = [];
-  savedSearches: SavedSearch[] = [];
+  savedSearches: SavedChatQuery[] = [];
+  
+  // Current employer jobs
+  employerJobs: any[] = [];
+  
+  // Cleanup subscription
+  private destroy$ = new Subject<void>();
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private aiService: AiService,
+    private jobService: JobService,
+    private profileService: ProfileService
+  ) {}
 
   ngOnInit(): void {
     // Initialize with welcome message
@@ -117,11 +120,14 @@ export class ChatInterfaceComponent implements OnInit, AfterViewInit {
       timestamp: new Date()
     });
 
-    // Generate sample candidates
-    this.generateSampleCandidates();
+    // Load skills for filter
+    this.loadAvailableSkills();
     
-    // Generate sample saved searches
-    this.generateSampleSavedSearches();
+    // Load employer's jobs
+    this.loadEmployerJobs();
+    
+    // Load saved chat queries
+    this.loadSavedChatQueries();
 
     // Simulate a short delay before hiding welcome overlay
     setTimeout(() => {
@@ -131,6 +137,49 @@ export class ChatInterfaceComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.scrollToBottom();
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
+  loadAvailableSkills(): void {
+    // This would typically come from a service
+    this.availableSkills = [
+      'Angular', 'React', 'Vue', 'TypeScript', 'JavaScript', 'Python', 'Java', 
+      'C#', 'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin', 'SQL', 'MongoDB', 'Firebase', 
+      'AWS', 'Azure', 'Docker', 'Kubernetes', 'CI/CD', 'Git', 'Figma', 'Adobe XD', 
+      'Sketch', 'Node.js', 'Express', 'Django', 'Flask', 'Spring Boot', 'TensorFlow'
+    ];
+  }
+  
+  loadEmployerJobs(): void {
+    this.jobService.getEmployerJobs()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (jobs) => {
+          this.employerJobs = jobs;
+          console.log('Employer jobs loaded:', jobs);
+        },
+        error: (error) => {
+          console.error('Error loading employer jobs:', error);
+        }
+      });
+  }
+  
+  loadSavedChatQueries(): void {
+    this.aiService.getSavedChatQueries()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (queries) => {
+          this.savedSearches = queries;
+          console.log('Saved chat queries loaded:', queries);
+        },
+        error: (error) => {
+          console.error('Error loading saved chat queries:', error);
+        }
+      });
   }
 
   sendMessage(): void {
@@ -151,48 +200,72 @@ export class ChatInterfaceComponent implements OnInit, AfterViewInit {
     // Scroll to bottom to show user message
     setTimeout(() => this.scrollToBottom(), 100);
 
-    // Simulate AI processing
-    setTimeout(() => {
-      this.isLoading = false;
-      
-      // Add AI response
-      if (userQuery.toLowerCase().includes('developer') || 
-          userQuery.toLowerCase().includes('programmer') ||
-          userQuery.toLowerCase().includes('engineer')) {
-        this.chatMessages.push({
-          type: 'ai',
-          content: `I've found several candidates matching your search for "${userQuery}". Would you like to see the best matches?`,
-          timestamp: new Date()
-        });
-        
-        // Show matched candidates section after a response that likely requires showing candidates
-        setTimeout(() => this.activeSection = 'candidates', 500);
-      } else if (userQuery.toLowerCase().includes('trends') || 
-                userQuery.toLowerCase().includes('market') || 
-                userQuery.toLowerCase().includes('salary')) {
-        this.chatMessages.push({
-          type: 'ai',
-          content: `Based on current market data, I can provide insights about "${userQuery}". Would you like me to show the detailed analysis?`,
-          timestamp: new Date()
-        });
-        
-        // Show insights section
-        setTimeout(() => this.activeSection = 'insights', 500);
-      } else {
-        this.chatMessages.push({
-          type: 'ai',
-          content: `I'm analyzing your request about "${userQuery}". Can you provide more details about the specific skills or experience level you're looking for?`,
-          timestamp: new Date()
-        });
-      }
-      
-      // Scroll to show AI response
-      setTimeout(() => this.scrollToBottom(), 100);
-    }, 1500);
+    // Use actual AI service to process query
+    this.aiService.employerChatQuery(userQuery)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          
+          // Add AI response
+          this.chatMessages.push({
+            type: 'ai',
+            content: response.message,
+            timestamp: new Date(),
+            candidates: response.matchedCandidates,
+            suggestedFollowup: response.suggestedFollowup
+          });
+          
+          // Convert matched candidates to our UI format
+          if (response.matchedCandidates && response.matchedCandidates.length > 0) {
+            this.matchedCandidates = response.matchedCandidates.map(candidate => this.convertToUiCandidate(candidate));
+            
+            // Show candidates section if there are matches
+            setTimeout(() => this.activeSection = 'candidates', 500);
+          }
+          
+          // Scroll to show AI response
+          setTimeout(() => this.scrollToBottom(), 100);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Error processing chat query:', error);
+          
+          // Add error message
+          this.chatMessages.push({
+            type: 'ai',
+            content: `I'm sorry, I encountered an error processing your request: ${error.message}`,
+            timestamp: new Date()
+          });
+          
+          // Scroll to show error message
+          setTimeout(() => this.scrollToBottom(), 100);
+        }
+      });
+  }
+  
+  // Convert API candidate to UI candidate format
+  convertToUiCandidate(apiCandidate: MatchedCandidate): Candidate {
+    return {
+      id: apiCandidate.id,
+      name: apiCandidate.name,
+      avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 30) + 1}.jpg`,
+      title: apiCandidate.experience.split(' ')[0], // Extract job title from experience description
+      skills: apiCandidate.relevantSkills,
+      experience: parseInt(apiCandidate.experience.match(/\d+/) ? apiCandidate.experience.match(/\d+/)![0] : '3'), // Extract years from experience
+      matchScore: apiCandidate.matchPercentage,
+      location: 'Location data pending', // This would come from a profile service
+      availability: apiCandidate.appliedToJobs && apiCandidate.appliedToJobs.length > 0 ? 'Applied to your jobs' : 'Available now'
+    };
   }
 
   useSuggestedQuery(query: string): void {
     this.currentMessage = query;
+    this.sendMessage();
+  }
+  
+  useSuggestedFollowup(followup: string): void {
+    this.currentMessage = followup;
     this.sendMessage();
   }
 
@@ -227,14 +300,15 @@ export class ChatInterfaceComponent implements OnInit, AfterViewInit {
   }
 
   filterCandidates(): void {
-    // This would actually make an API call in a real application
-    // For now we'll just filter our sample data
-    this.generateSampleCandidates();
+    // Filter the already matched candidates based on selected criteria
+    const originalCandidates = [...this.matchedCandidates];
     
     if (this.selectedSkills.length > 0) {
-      this.matchedCandidates = this.matchedCandidates.filter(candidate => 
+      this.matchedCandidates = originalCandidates.filter(candidate => 
         this.selectedSkills.every(skill => candidate.skills.includes(skill))
       );
+    } else {
+      this.matchedCandidates = originalCandidates;
     }
     
     if (this.experienceFilterValue > 0) {
@@ -245,110 +319,76 @@ export class ChatInterfaceComponent implements OnInit, AfterViewInit {
   }
 
   saveCurrentSearch(): void {
-    // In a real app, this would save to a database
-    const newSavedSearch: SavedSearch = {
-      id: this.savedSearches.length + 1,
-      query: this.chatMessages[this.chatMessages.length - 2]?.content || "Recent search",
-      date: new Date(),
-      results: this.matchedCandidates.length
-    };
-    
-    this.savedSearches.unshift(newSavedSearch);
+    // We don't need to explicitly save since the backend saves all queries automatically
+    // Just reload the saved queries
+    this.loadSavedChatQueries();
     
     // Show confirmation
     alert("Search saved successfully!");
+    
+    // Switch to saved tab
+    this.activeSection = 'saved';
   }
 
-  loadSavedSearch(search: SavedSearch): void {
-    this.currentMessage = search.query;
-    this.sendMessage();
+  loadSavedSearch(search: SavedChatQuery): void {
+    // Add the saved query to the chat as a user message
+    this.chatMessages.push({
+      type: 'user',
+      content: search.query,
+      timestamp: new Date(search.created_at)
+    });
+    
+    // Add the saved response as an AI message
+    this.chatMessages.push({
+      type: 'ai',
+      content: search.response.message,
+      timestamp: new Date(search.created_at),
+      candidates: search.response.matchedCandidates,
+      suggestedFollowup: search.response.suggestedFollowup
+    });
+    
+    // Convert the matched candidates for the UI
+    if (search.response.matchedCandidates && search.response.matchedCandidates.length > 0) {
+      this.matchedCandidates = search.response.matchedCandidates.map(candidate => this.convertToUiCandidate(candidate));
+    }
+    
+    // Switch back to chat or candidates section
+    if (this.matchedCandidates.length > 0) {
+      this.activeSection = 'candidates';
+    } else {
+      this.activeSection = 'chat';
+    }
+    
+    // Scroll to the bottom of the chat
+    setTimeout(() => this.scrollToBottom(), 100);
   }
 
   deleteSavedSearch(id: number): void {
-    this.savedSearches = this.savedSearches.filter(search => search.id !== id);
+    this.aiService.deleteChatQuery(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.savedSearches = this.savedSearches.filter(search => search.id !== id);
+        },
+        error: (error) => {
+          console.error('Error deleting saved search:', error);
+          alert('Error deleting saved search. Please try again.');
+        }
+      });
   }
 
   dismissWelcomeOverlay(): void {
     this.showWelcomeOverlay = false;
   }
-
-  // Sample data generation
-  private generateSampleCandidates(): void {
-    const names = [
-      "Emily Johnson", "Michael Chen", "Sophia Rodriguez", "David Kim", 
-      "Olivia Williams", "James Smith", "Ava Martinez", "Liam Wilson",
-      "Isabella Davis", "Noah Brown", "Mia Taylor", "Ethan Anderson"
-    ];
-    
-    const titles = [
-      "Frontend Developer", "Backend Engineer", "Full Stack Developer", 
-      "UX/UI Designer", "DevOps Engineer", "Data Scientist", 
-      "Machine Learning Engineer", "Mobile App Developer"
-    ];
-    
-    const allSkills = [
-      "JavaScript", "TypeScript", "React", "Angular", "Vue", "Node.js", "Python", 
-      "Java", "C#", ".NET", "PHP", "Ruby", "Go", "Kotlin", "Swift", "SQL", 
-      "MongoDB", "PostgreSQL", "AWS", "Azure", "GCP", "Docker", "Kubernetes",
-      "CI/CD", "Git", "Figma", "Sketch", "Adobe XD", "TensorFlow", "PyTorch"
-    ];
-    
-    const locations = [
-      "New York, NY", "San Francisco, CA", "Austin, TX", "Seattle, WA",
-      "Boston, MA", "Chicago, IL", "Los Angeles, CA", "Denver, CO",
-      "Atlanta, GA", "Remote"
-    ];
-    
-    const availabilities = [
-      "Immediately", "2 weeks notice", "1 month notice", "Available now",
-      "Currently interviewing", "Open to offers"
-    ];
-
-    this.matchedCandidates = Array(12).fill(0).map((_, i) => {
-      const skillCount = 4 + Math.floor(Math.random() * 5); // 4-8 skills
-      const randomSkills = new Set<string>();
-      
-      while (randomSkills.size < skillCount) {
-        randomSkills.add(allSkills[Math.floor(Math.random() * allSkills.length)]);
-      }
-      
-      return {
-        id: i + 1,
-        name: names[i % names.length],
-        avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${i + 1}.jpg`,
-        title: titles[Math.floor(Math.random() * titles.length)],
-        skills: Array.from(randomSkills),
-        experience: 1 + Math.floor(Math.random() * 10),
-        matchScore: 70 + Math.floor(Math.random() * 30),
-        location: locations[Math.floor(Math.random() * locations.length)],
-        availability: availabilities[Math.floor(Math.random() * availabilities.length)]
-      };
-    });
-    
-    // Sort by match score (highest first)
-    this.matchedCandidates.sort((a, b) => b.matchScore - a.matchScore);
+  
+  viewCandidateProfile(candidateId: number): void {
+    // This would navigate to the candidate profile page
+    // In a real application, this might be a modal or a separate page
+    this.router.navigate(['/employer/candidates', candidateId]);
   }
-
-  private generateSampleSavedSearches(): void {
-    this.savedSearches = [
-      {
-        id: 1,
-        query: "React developers with TypeScript experience",
-        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-        results: 15
-      },
-      {
-        id: 2,
-        query: "Senior DevOps engineers with Kubernetes",
-        date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-        results: 8
-      },
-      {
-        id: 3,
-        query: "UI/UX designers with Figma skills",
-        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-        results: 12
-      }
-    ];
+  
+  contactCandidate(candidateId: number): void {
+    // This would open a contact form or messaging interface
+    alert(`Contact functionality for candidate ${candidateId} would open here.`);
   }
 }

@@ -1,687 +1,703 @@
 <div class="flex h-screen w-full overflow-hidden bg-gray-50">
-    <!-- Employer Sidebar -->
-    <app-sidebar-employer></app-sidebar-employer>
-  
-    <!-- Main Content -->
-    <main class="flex-grow overflow-y-auto w-full content-container">
-      <!-- Header -->
-      <header class="bg-white border-b border-gray-200 py-4 px-6 flex justify-between items-center w-full">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-800">AI Talent Match</h1>
-          <p class="text-sm text-gray-500">
-            Find the best candidates based on skills and experience
-          </p>
-        </div>
-        <div class="flex items-center space-x-3">
-          <button class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition-all">
-            <fa-icon [icon]="faCog"></fa-icon>
-            <span>Settings</span>
-          </button>
-        </div>
-      </header>
-  
-      <!-- Navigation Tabs -->
-      <div class="bg-white px-6 border-b border-gray-200 w-full">
-        <div class="flex space-x-1">
-          <button
-            (click)="setActiveSection('chat')"
-            class="py-4 px-6 font-medium text-sm transition-all relative"
-            [ngClass]="
-              activeSection === 'chat'
-                ? 'text-employer-color'
-                : 'text-gray-500 hover:text-gray-700'
-            "
-          >
-            <div class="flex items-center gap-2">
-              <fa-icon [icon]="faSearch"></fa-icon>
-              <span>AI Chat</span>
-            </div>
-            <div
-              *ngIf="activeSection === 'chat'"
-              class="absolute bottom-0 left-0 w-full h-0.5 bg-employer-color"
-            ></div>
-          </button>
-  
-          <button
-            (click)="setActiveSection('candidates')"
-            class="py-4 px-6 font-medium text-sm transition-all relative"
-            [ngClass]="
-              activeSection === 'candidates'
-                ? 'text-employer-color'
-                : 'text-gray-500 hover:text-gray-700'
-            "
-          >
-            <div class="flex items-center gap-2">
-              <fa-icon [icon]="faUserTie"></fa-icon>
-              <span>Matches</span>
-            </div>
-            <div
-              *ngIf="activeSection === 'candidates'"
-              class="absolute bottom-0 left-0 w-full h-0.5 bg-employer-color"
-            ></div>
-          </button>
-  
-          <button
-            (click)="setActiveSection('insights')"
-            class="py-4 px-6 font-medium text-sm transition-all relative"
-            [ngClass]="
-              activeSection === 'insights'
-                ? 'text-employer-color'
-                : 'text-gray-500 hover:text-gray-700'
-            "
-          >
-            <div class="flex items-center gap-2">
-              <fa-icon [icon]="faChartLine"></fa-icon>
-              <span>Insights</span>
-            </div>
-            <div
-              *ngIf="activeSection === 'insights'"
-              class="absolute bottom-0 left-0 w-full h-0.5 bg-employer-color"
-            ></div>
-          </button>
-  
-          <button
-            (click)="setActiveSection('saved')"
-            class="py-4 px-6 font-medium text-sm transition-all relative"
-            [ngClass]="
-              activeSection === 'saved'
-                ? 'text-employer-color'
-                : 'text-gray-500 hover:text-gray-700'
-            "
-          >
-            <div class="flex items-center gap-2">
-              <fa-icon [icon]="faBookmark"></fa-icon>
-              <span>Saved</span>
-            </div>
-            <div
-              *ngIf="activeSection === 'saved'"
-              class="absolute bottom-0 left-0 w-full h-0.5 bg-employer-color"
-            ></div>
-          </button>
-        </div>
+  <!-- Employer Sidebar -->
+  <app-sidebar-employer></app-sidebar-employer>
+
+  <!-- Main Content -->
+  <main class="flex-grow overflow-y-auto w-full content-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 py-4 px-6 flex justify-between items-center w-full">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">AI Talent Match</h1>
+        <p class="text-sm text-gray-500">
+          Find the best candidates based on skills and experience
+        </p>
       </div>
-  
-      <!-- Main Content Area -->
-      <div class="flex w-full h-[calc(100vh-8.5rem)]">
-        <!-- Left column content (chat and filters) -->
-        <div
-          class="w-full flex flex-col border-r border-gray-200 bg-slate-100"
-          [ngClass]="{
-            'hidden': activeSection !== 'chat' && activeSection !== 'saved',
-            'flex': activeSection === 'chat' || activeSection === 'saved'
-          }"
+      <div class="flex items-center space-x-3">
+        <button class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition-all">
+          <fa-icon [icon]="faCog"></fa-icon>
+          <span>Settings</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white px-6 border-b border-gray-200 w-full">
+      <div class="flex space-x-1">
+        <button
+          (click)="setActiveSection('chat')"
+          class="py-4 px-6 font-medium text-sm transition-all relative"
+          [ngClass]="
+            activeSection === 'chat'
+              ? 'text-employer-color'
+              : 'text-gray-500 hover:text-gray-700'
+          "
         >
-          <!-- Chat Section -->
-          <div *ngIf="activeSection === 'chat'" class="flex-1 flex flex-col">
-            <!-- Chat messages -->
-            <div #chatContainer class="flex-grow overflow-y-auto p-4 space-y-4">
-              <div
-                *ngFor="let message of chatMessages"
-                [ngClass]="
-                  message.type === 'user'
-                    ? 'ml-auto max-w-[80%]'
-                    : 'mr-auto max-w-[80%]'
-                "
-                @fadeIn
-              >
-                <div
-                  class="flex items-start gap-2"
-                  [ngClass]="{ 'flex-row-reverse': message.type === 'user' }"
-                >
-                  <div
-                    [ngClass]="
-                      message.type === 'user'
-                        ? 'bg-employer-color text-white'
-                        : 'bg-gray-200 text-gray-800'
-                    "
-                    class="rounded-xl p-3 shadow-sm"
-                  >
-                    <p>{{ message.content }}</p>
-                    <p class="text-xs mt-1 opacity-70">
-                      {{ message.timestamp | date : "shortTime" }}
-                    </p>
-                  </div>
-                  <div
-                    class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
-                    [ngClass]="
-                      message.type === 'user' ? 'bg-blue-600' : 'bg-gray-300'
-                    "
-                  >
-                    <fa-icon
-                      *ngIf="message.type === 'user'"
-                      [icon]="faUser"
-                      class="text-white text-sm"
-                    ></fa-icon>
-                    <i
-                      *ngIf="message.type === 'ai'"
-                      class="fas fa-robot text-gray-600 text-sm"
-                    ></i>
-                  </div>
-                </div>
-              </div>
-  
-              <!-- Loading indicator -->
-              <div *ngIf="isLoading" class="flex items-center mr-auto" @fadeIn>
-                <div class="bg-gray-200 rounded-xl p-3 text-gray-800">
-                  <span>AI is thinking<span class="loading-dots">...</span></span>
-                </div>
-              </div>
-            </div>
-  
-            <!-- Suggested queries -->
-            <div
-              *ngIf="chatMessages.length < 3"
-              class="p-4 border-t border-gray-200"
-            >
-              <p class="text-sm font-medium text-gray-500 mb-3">Try asking:</p>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  *ngFor="let query of suggestedQueries"
-                  (click)="useSuggestedQuery(query)"
-                  class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm px-3 py-2 rounded-lg transition-all"
-                >
-                  {{ query }}
-                </button>
-              </div>
-            </div>
-  
-            <!-- Input area -->
-            <div class="p-4 border-t border-gray-200">
-              <div class="flex items-center">
-                <input
-                  [(ngModel)]="currentMessage"
-                  (keyup.enter)="sendMessage()"
-                  placeholder="Ask about skills, experience, or candidates..."
-                  class="flex-grow py-3 px-4 bg-white border-2 border-blue-300 rounded-xl focus:outline-none focus:border-blue-500 h-24"
-                />
-                <button
-                  (click)="sendMessage()"
-                  [disabled]="!currentMessage.trim() || isLoading"
-                  class="bg-employer-color hover:bg-indigo-700 text-white p-3 rounded-xl ml-2 transition-all"
-                  [ngClass]="{
-                    'opacity-50 cursor-not-allowed':
-                      !currentMessage.trim() || isLoading
-                  }"
-                >
-                  <fa-icon [icon]="faPaperPlane"></fa-icon>
-                </button>
-              </div>
-              <p class="text-xs text-gray-500 mt-2">
-                AI helps find candidates based on skills, not just job titles
-              </p>
-            </div>
+          <div class="flex items-center gap-2">
+            <fa-icon [icon]="faSearch"></fa-icon>
+            <span>AI Chat</span>
           </div>
-  
-          <!-- Saved Searches Section -->
           <div
-            *ngIf="activeSection === 'saved'"
-            class="flex-grow overflow-y-auto p-4 w-full"
-            @fadeIn
-          >
-            <div class="mb-4 flex justify-between items-center">
-              <h2 class="text-xl font-bold text-gray-800">Saved Searches</h2>
-              <!-- If the button should appear in the "saved" section instead -->
-              <button
-                (click)="saveCurrentSearch()"
-                class="bg-employer-color hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all"
-              >
-                <fa-icon [icon]="faSave"></fa-icon>
-                <span>Save Current Search</span>
-              </button>
-            </div>
-  
-            <div *ngIf="savedSearches.length === 0" class="text-center py-10">
-              <div class="text-gray-400 text-5xl mb-4">
-                <fa-icon [icon]="faBookmark"></fa-icon>
-              </div>
-              <p class="text-gray-500">No saved searches yet</p>
-              <p class="text-sm text-gray-400 mt-2">
-                Your saved searches will appear here
-              </p>
-            </div>
-  
-            <div *ngIf="savedSearches.length > 0" class="space-y-3">
-              <div
-                *ngFor="let search of savedSearches"
-                class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all"
-                @slideIn
-              >
-                <div class="flex justify-between">
-                  <div class="flex-grow">
-                    <h3 class="font-medium text-gray-800 mb-1">
-                      {{ search.query }}
-                    </h3>
-                    <div class="flex items-center text-sm text-gray-500">
-                      <span>{{ search.date | date }}</span>
-                      <span class="mx-2">•</span>
-                      <span>{{ search.results }} results</span>
-                    </div>
-                  </div>
-                  <div class="flex items-start space-x-2">
-                    <button
-                      (click)="loadSavedSearch(search)"
-                      class="text-employer-color hover:text-indigo-700 transition-all"
-                    >
-                      <fa-icon [icon]="faSearch"></fa-icon>
-                    </button>
-                    <button
-                      (click)="deleteSavedSearch(search.id)"
-                      class="text-gray-400 hover:text-red-500 transition-all"
-                    >
-                      <fa-icon [icon]="faTimes"></fa-icon>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Right column content (candidates, filters, insights) -->
-        <div
-          class="w-full flex flex-col bg-gray-50"
-          [ngClass]="{
-            'hidden': activeSection === 'chat' || activeSection === 'saved',
-            'flex': activeSection === 'candidates' || activeSection === 'insights'
-          }"
+            *ngIf="activeSection === 'chat'"
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-employer-color"
+          ></div>
+        </button>
+
+        <button
+          (click)="setActiveSection('candidates')"
+          class="py-4 px-6 font-medium text-sm transition-all relative"
+          [ngClass]="
+            activeSection === 'candidates'
+              ? 'text-employer-color'
+              : 'text-gray-500 hover:text-gray-700'
+          "
         >
-          <!-- Candidates Section -->
+          <div class="flex items-center gap-2">
+            <fa-icon [icon]="faUserTie"></fa-icon>
+            <span>Matches</span>
+          </div>
           <div
             *ngIf="activeSection === 'candidates'"
-            class="flex-grow overflow-y-auto w-full"
-            @fadeIn
-          >
-            <!-- Filters Bar -->
-            <div class="border-b border-gray-200 bg-white p-4 sticky top-0 z-10">
-              <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-800">
-                  Matched Candidates
-                  <span class="text-sm font-normal text-gray-500"
-                    >({{ matchedCandidates.length }} results)</span
-                  >
-                </h2>
-                <div class="flex gap-2">
-                  <button
-                    (click)="saveCurrentSearch()"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm flex items-center gap-1 transition-all"
-                  >
-                    <fa-icon [icon]="faSave"></fa-icon>
-                    <span>Save</span>
-                  </button>
-                  <button
-                    (click)="toggleFilterPanel()"
-                    class="bg-employer-color hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 transition-all"
-                  >
-                    <fa-icon [icon]="faFilter"></fa-icon>
-                    <span>Filter</span>
-                  </button>
-                </div>
-              </div>
-  
-              <!-- Filter Panel -->
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-employer-color"
+          ></div>
+        </button>
+
+        <button
+          (click)="setActiveSection('insights')"
+          class="py-4 px-6 font-medium text-sm transition-all relative"
+          [ngClass]="
+            activeSection === 'insights'
+              ? 'text-employer-color'
+              : 'text-gray-500 hover:text-gray-700'
+          "
+        >
+          <div class="flex items-center gap-2">
+            <fa-icon [icon]="faChartLine"></fa-icon>
+            <span>Insights</span>
+          </div>
+          <div
+            *ngIf="activeSection === 'insights'"
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-employer-color"
+          ></div>
+        </button>
+
+        <button
+          (click)="setActiveSection('saved')"
+          class="py-4 px-6 font-medium text-sm transition-all relative"
+          [ngClass]="
+            activeSection === 'saved'
+              ? 'text-employer-color'
+              : 'text-gray-500 hover:text-gray-700'
+          "
+        >
+          <div class="flex items-center gap-2">
+            <fa-icon [icon]="faBookmark"></fa-icon>
+            <span>Saved</span>
+          </div>
+          <div
+            *ngIf="activeSection === 'saved'"
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-employer-color"
+          ></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex w-full h-[calc(100vh-8.5rem)]">
+      <!-- Left column content (chat and filters) -->
+      <div
+        class="w-full flex flex-col border-r border-gray-200 bg-slate-100"
+        [ngClass]="{
+          'hidden': activeSection !== 'chat' && activeSection !== 'saved',
+          'flex': activeSection === 'chat' || activeSection === 'saved'
+        }"
+      >
+        <!-- Chat Section -->
+        <div *ngIf="activeSection === 'chat'" class="flex-1 flex flex-col">
+          <!-- Chat messages -->
+          <div #chatContainer class="flex-grow overflow-y-auto p-4 space-y-4">
+            <div
+              *ngFor="let message of chatMessages"
+              [ngClass]="
+                message.type === 'user'
+                  ? 'ml-auto max-w-[80%]'
+                  : 'mr-auto max-w-[80%]'
+              "
+              @fadeIn
+            >
               <div
-                *ngIf="showFilterPanel"
-                class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
-                @fadeIn
+                class="flex items-start gap-2"
+                [ngClass]="{ 'flex-row-reverse': message.type === 'user' }"
               >
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 class="font-medium text-gray-700 mb-3">Skills</h3>
+                <div
+                  [ngClass]="
+                    message.type === 'user'
+                      ? 'bg-employer-color text-white'
+                      : 'bg-gray-200 text-gray-800'
+                  "
+                  class="rounded-xl p-3 shadow-sm"
+                >
+                  <p>{{ message.content }}</p>
+                  <p class="text-xs mt-1 opacity-70">
+                    {{ message.timestamp | date : "shortTime" }}
+                  </p>
+
+                  <!-- Suggested followup questions (only for AI messages) -->
+                  <div *ngIf="message.type === 'ai' && message.suggestedFollowup && message.suggestedFollowup.length > 0" class="mt-3 pt-2 border-t border-gray-300">
+                    <p class="text-xs text-gray-600 mb-2">Suggested follow-up questions:</p>
                     <div class="flex flex-wrap gap-2">
                       <button
-                        *ngFor="let skill of availableSkills"
-                        (click)="toggleSkill(skill)"
-                        class="px-3 py-1 text-sm rounded-full transition-all"
-                        [ngClass]="
-                          selectedSkills.includes(skill)
-                            ? 'bg-employer-color text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        "
+                        *ngFor="let followup of message.suggestedFollowup"
+                        (click)="useSuggestedFollowup(followup)"
+                        class="text-xs bg-white hover:bg-gray-100 text-blue-600 px-2 py-1 rounded-lg transition-all"
                       >
-                        {{ skill }}
+                        {{ followup }}
                       </button>
                     </div>
                   </div>
-                  <div>
-                    <h3 class="font-medium text-gray-700 mb-3">
-                      Experience ({{ experienceFilterValue }}+ years)
-                    </h3>
-                    <input
-                      type="range"
-                      [min]="minExperience"
-                      [max]="maxExperience"
-                      [value]="experienceFilterValue"
-                      (input)="updateExperienceFilter($event)"
-                      class="w-full accent-employer-color"
-                    />
-                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>{{ minExperience }} years</span>
-                      <span>{{ maxExperience }} years</span>
-                    </div>
-                  </div>
                 </div>
-  
-                <div class="flex justify-end mt-4">
-                  <button
-                    (click)="toggleFilterPanel()"
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm transition-all"
-                  >
-                    Close
-                  </button>
+                <div
+                  class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
+                  [ngClass]="
+                    message.type === 'user' ? 'bg-blue-600' : 'bg-gray-300'
+                  "
+                >
+                  <fa-icon
+                    *ngIf="message.type === 'user'"
+                    [icon]="faUser"
+                    class="text-white text-sm"
+                  ></fa-icon>
+                  <i
+                    *ngIf="message.type === 'ai'"
+                    class="fas fa-robot text-gray-600 text-sm"
+                  ></i>
                 </div>
               </div>
             </div>
-  
-            <!-- Candidates List -->
-            <div class="p-4 grid grid-cols-1 gap-4 bg-gray-50 w-full">
-              <div
-                *ngIf="matchedCandidates.length === 0"
-                class="text-center py-10"
-              >
-                <p class="text-gray-500">
-                  No candidates match your current filters
-                </p>
-                <button
-                  (click)="filterCandidates()"
-                  class="mt-4 text-employer-color hover:underline"
-                >
-                  Reset filters
-                </button>
-              </div>
-  
-              <div
-                *ngFor="let candidate of matchedCandidates"
-                class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all"
-                @slideIn
-              >
-                <div class="flex">
-                  <!-- Left: Avatar and match score -->
-                  <div class="mr-4 text-center">
-                    <div
-                      class="w-16 h-16 rounded-full overflow-hidden bg-gray-200 mb-2"
-                    >
-                      <img
-                        [src]="candidate.avatar"
-                        alt="Profile"
-                        class="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div
-                      class="bg-employer-color text-white text-sm font-bold px-2 py-1 rounded-full"
-                    >
-                      {{ candidate.matchScore }}%
-                    </div>
-                  </div>
-  
-                  <!-- Right: Candidate details -->
-                  <div class="flex-grow">
-                    <div class="flex justify-between items-start">
-                      <div>
-                        <h3 class="font-bold text-gray-800">
-                          {{ candidate.name }}
-                        </h3>
-                        <p class="text-gray-600">{{ candidate.title }}</p>
-                      </div>
-                      <button
-                        class="text-gray-400 hover:text-yellow-500 transition-all"
-                      >
-                        <fa-icon [icon]="faStar"></fa-icon>
-                      </button>
-                    </div>
-  
-                    <div
-                      class="mt-2 flex items-center gap-2 text-sm text-gray-500"
-                    >
-                      <span>{{ candidate.experience }} years experience</span>
-                      <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                      <span>{{ candidate.location }}</span>
-                    </div>
-  
-                    <div class="mt-2">
-                      <p class="text-sm text-gray-500 mb-1">Skills:</p>
-                      <div class="flex flex-wrap gap-2">
-                        <span
-                          *ngFor="let skill of candidate.skills"
-                          class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs"
-                        >
-                          {{ skill }}
-                        </span>
-                      </div>
-                    </div>
-  
-                    <div
-                      class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center"
-                    >
-                      <div class="text-sm">
-                        <span class="text-green-600 font-medium">{{
-                          candidate.availability
-                        }}</span>
-                      </div>
-                      <div class="flex gap-2">
-                        <button
-                          class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-all"
-                        >
-                          Profile
-                        </button>
-                        <button
-                          class="bg-employer-color hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm transition-all"
-                        >
-                          Contact
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
+            <!-- Loading indicator -->
+            <div *ngIf="isLoading" class="flex items-center mr-auto" @fadeIn>
+              <div class="bg-gray-200 rounded-xl p-3 text-gray-800">
+                <span>AI is thinking<span class="loading-dots">...</span></span>
               </div>
             </div>
           </div>
-  
-          <!-- Market Insights Section -->
+
+          <!-- Suggested queries -->
           <div
-            *ngIf="activeSection === 'insights'"
-            class="flex-grow overflow-y-auto p-6 w-full"
-            @fadeIn
+            *ngIf="chatMessages.length < 3"
+            class="p-4 border-t border-gray-200"
           >
-            <h2 class="text-xl font-bold text-gray-800 mb-6">
-              Market Insights & Recruitment Strategy
-            </h2>
-  
-            <!-- Market Overview -->
-            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <h3 class="text-lg font-bold text-gray-800 mb-4">
-                Developer Market Overview
-              </h3>
-  
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-gray-50 rounded-lg p-4 text-center">
-                  <div class="text-employer-color text-2xl font-bold mb-1">
-                    $105K
-                  </div>
-                  <div class="text-sm text-gray-500">Average Salary</div>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4 text-center">
-                  <div class="text-employer-color text-2xl font-bold mb-1">
-                    45 days
-                  </div>
-                  <div class="text-sm text-gray-500">Avg. Time to Hire</div>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4 text-center">
-                  <div class="text-employer-color text-2xl font-bold mb-1">
-                    3.5:1
-                  </div>
-                  <div class="text-sm text-gray-500">Candidate-to-Job Ratio</div>
-                </div>
-              </div>
-  
-              <!-- Skills Demand Chart (visual placeholder) -->
-              <div class="mb-6">
-                <h4 class="font-medium text-gray-700 mb-3">
-                  Skills in Highest Demand
-                </h4>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <div class="space-y-3">
-                    <div class="flex items-center">
-                      <div class="w-24 text-sm text-gray-600">React</div>
-                      <div
-                        class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
-                      >
-                        <div
-                          class="h-full bg-employer-color rounded-full"
-                          style="width: 85%"
-                        ></div>
-                      </div>
-                      <div class="w-12 text-right text-sm text-gray-600">85%</div>
-                    </div>
-                    <div class="flex items-center">
-                      <div class="w-24 text-sm text-gray-600">TypeScript</div>
-                      <div
-                        class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
-                      >
-                        <div
-                          class="h-full bg-employer-color rounded-full"
-                          style="width: 78%"
-                        ></div>
-                      </div>
-                      <div class="w-12 text-right text-sm text-gray-600">78%</div>
-                    </div>
-                    <div class="flex items-center">
-                      <div class="w-24 text-sm text-gray-600">Node.js</div>
-                      <div
-                        class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
-                      >
-                        <div
-                          class="h-full bg-employer-color rounded-full"
-                          style="width: 72%"
-                        ></div>
-                      </div>
-                      <div class="w-12 text-right text-sm text-gray-600">72%</div>
-                    </div>
-                    <div class="flex items-center">
-                      <div class="w-24 text-sm text-gray-600">AWS</div>
-                      <div
-                        class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
-                      >
-                        <div
-                          class="h-full bg-employer-color rounded-full"
-                          style="width: 67%"
-                        ></div>
-                      </div>
-                      <div class="w-12 text-right text-sm text-gray-600">67%</div>
-                    </div>
-                    <div class="flex items-center">
-                      <div class="w-24 text-sm text-gray-600">Python</div>
-                      <div
-                        class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
-                      >
-                        <div
-                          class="h-full bg-employer-color rounded-full"
-                          style="width: 65%"
-                        ></div>
-                      </div>
-                      <div class="w-12 text-right text-sm text-gray-600">65%</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-  
-              <!-- Trend Analysis -->
-              <div>
-                <h4 class="font-medium text-gray-700 mb-2">Key Observations</h4>
-                <ul class="list-disc list-inside text-gray-600 space-y-2">
-                  <li>
-                    Demand for React and TypeScript skills continues to rise (↑
-                    12% YoY)
-                  </li>
-                  <li>
-                    AWS knowledge increasingly required for full-stack positions
-                  </li>
-                  <li>
-                    Candidates with multiple backend technologies have 35% more
-                    interviews
-                  </li>
-                  <li>Remote work flexibility increases applicant pool by 65%</li>
-                </ul>
-              </div>
+            <p class="text-sm font-medium text-gray-500 mb-3">Try asking:</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                *ngFor="let query of suggestedQueries"
+                (click)="useSuggestedQuery(query)"
+                class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm px-3 py-2 rounded-lg transition-all"
+              >
+                {{ query }}
+              </button>
             </div>
-  
-            <!-- Recruitment Strategy -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-              <h3 class="text-lg font-bold text-gray-800 mb-4">
-                AI-Generated Recruitment Strategy
-              </h3>
-  
-              <div class="space-y-4">
-                <div class="rounded-lg border border-gray-200 p-4">
-                  <h4
-                    class="font-medium text-gray-800 flex items-center gap-2 mb-2"
-                  >
-                    <fa-icon
-                      [icon]="faLightbulb"
-                      class="text-yellow-500"
-                    ></fa-icon>
-                    <span>Skill-Based Hiring</span>
-                  </h4>
-                  <p class="text-gray-600">
-                    Focus on specific skills rather than job titles. A candidate
-                    with the right skill set but a different job title could be an
-                    excellent fit for your development team.
-                  </p>
+          </div>
+
+          <!-- Input area -->
+          <div class="p-4 border-t border-gray-200">
+            <div class="flex items-center">
+              <input
+                [(ngModel)]="currentMessage"
+                (keyup.enter)="sendMessage()"
+                placeholder="Ask about skills, experience, or candidates..."
+                class="flex-grow py-3 px-4 bg-white border-2 border-blue-300 rounded-xl focus:outline-none focus:border-blue-500"
+              />
+              <button
+                (click)="sendMessage()"
+                [disabled]="!currentMessage.trim() || isLoading"
+                class="bg-employer-color hover:bg-indigo-700 text-white p-3 rounded-xl ml-2 transition-all"
+                [ngClass]="{
+                  'opacity-50 cursor-not-allowed':
+                    !currentMessage.trim() || isLoading
+                }"
+              >
+                <fa-icon [icon]="faPaperPlane"></fa-icon>
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+              AI helps find candidates based on skills, not just job titles
+            </p>
+          </div>
+        </div>
+
+        <!-- Saved Searches Section -->
+        <div
+          *ngIf="activeSection === 'saved'"
+          class="flex-grow overflow-y-auto p-4 w-full"
+          @fadeIn
+        >
+          <div class="mb-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800">Saved Searches</h2>
+            <!-- If the button should appear in the "saved" section instead -->
+            <button
+              (click)="saveCurrentSearch()"
+              class="bg-employer-color hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all"
+            >
+              <fa-icon [icon]="faSave"></fa-icon>
+              <span>Save Current Search</span>
+            </button>
+          </div>
+
+          <div *ngIf="savedSearches.length === 0" class="text-center py-10">
+            <div class="text-gray-400 text-5xl mb-4">
+              <fa-icon [icon]="faBookmark"></fa-icon>
+            </div>
+            <p class="text-gray-500">No saved searches yet</p>
+            <p class="text-sm text-gray-400 mt-2">
+              Your saved searches will appear here
+            </p>
+          </div>
+
+          <div *ngIf="savedSearches.length > 0" class="space-y-3">
+            <div
+              *ngFor="let search of savedSearches"
+              class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all"
+              @slideIn
+            >
+              <div class="flex justify-between">
+                <div class="flex-grow">
+                  <h3 class="font-medium text-gray-800 mb-1">
+                    {{ search.query }}
+                  </h3>
+                  <div class="flex items-center text-sm text-gray-500">
+                    <span>{{ search.created_at | date }}</span>
+                    <span class="mx-2">•</span>
+                    <span>{{ search.response.matchedCandidates.length || 0 }} results</span>
+                  </div>
                 </div>
-  
-                <div class="rounded-lg border border-gray-200 p-4">
-                  <h4
-                    class="font-medium text-gray-800 flex items-center gap-2 mb-2"
+                <div class="flex items-start space-x-2">
+                  <button
+                    (click)="loadSavedSearch(search)"
+                    class="text-employer-color hover:text-indigo-700 transition-all"
                   >
-                    <fa-icon
-                      [icon]="faLightbulb"
-                      class="text-yellow-500"
-                    ></fa-icon>
-                    <span>Competitive Compensation Strategy</span>
-                  </h4>
-                  <p class="text-gray-600">
-                    Offer salaries at the 75th percentile of the market rate to
-                    attract top talent. Remote work options can offset slightly
-                    lower compensation in some cases.
-                  </p>
-                </div>
-  
-                <div class="rounded-lg border border-gray-200 p-4">
-                  <h4
-                    class="font-medium text-gray-800 flex items-center gap-2 mb-2"
+                    <fa-icon [icon]="faSearch"></fa-icon>
+                  </button>
+                  <button
+                    (click)="deleteSavedSearch(search.id)"
+                    class="text-gray-400 hover:text-red-500 transition-all"
                   >
-                    <fa-icon
-                      [icon]="faLightbulb"
-                      class="text-yellow-500"
-                    ></fa-icon>
-                    <span>Interview Process Optimization</span>
-                  </h4>
-                  <p class="text-gray-600">
-                    Implement practical skills assessments rather than algorithmic
-                    problems. Candidates report higher satisfaction with realistic
-                    work scenarios.
-                  </p>
-                </div>
-  
-                <div class="rounded-lg border border-gray-200 p-4">
-                  <h4
-                    class="font-medium text-gray-800 flex items-center gap-2 mb-2"
-                  >
-                    <fa-icon
-                      [icon]="faLightbulb"
-                      class="text-yellow-500"
-                    ></fa-icon>
-                    <span>Diversity & Inclusion</span>
-                  </h4>
-                  <p class="text-gray-600">
-                    Companies with diverse tech teams report 35% higher
-                    productivity and innovation. Use AI matching to reduce
-                    unconscious bias in your hiring process.
-                  </p>
+                    <fa-icon [icon]="faTimes"></fa-icon>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </main>
-  </div>
+
+      <!-- Right column content (candidates, filters, insights) -->
+      <div
+        class="w-full flex flex-col bg-gray-50"
+        [ngClass]="{
+          'hidden': activeSection === 'chat' || activeSection === 'saved',
+          'flex': activeSection === 'candidates' || activeSection === 'insights'
+        }"
+      >
+        <!-- Candidates Section -->
+        <div
+          *ngIf="activeSection === 'candidates'"
+          class="flex-grow overflow-y-auto w-full"
+          @fadeIn
+        >
+          <!-- Filters Bar -->
+          <div class="border-b border-gray-200 bg-white p-4 sticky top-0 z-10">
+            <div class="flex justify-between items-center">
+              <h2 class="text-xl font-bold text-gray-800">
+                Matched Candidates
+                <span class="text-sm font-normal text-gray-500"
+                  >({{ matchedCandidates.length }} results)</span
+                >
+              </h2>
+              <div class="flex gap-2">
+                <button
+                  (click)="saveCurrentSearch()"
+                  class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm flex items-center gap-1 transition-all"
+                >
+                  <fa-icon [icon]="faSave"></fa-icon>
+                  <span>Save</span>
+                </button>
+                <button
+                  (click)="toggleFilterPanel()"
+                  class="bg-employer-color hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 transition-all"
+                >
+                  <fa-icon [icon]="faFilter"></fa-icon>
+                  <span>Filter</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div
+              *ngIf="showFilterPanel"
+              class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+              @fadeIn
+            >
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="font-medium text-gray-700 mb-3">Skills</h3>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      *ngFor="let skill of availableSkills"
+                      (click)="toggleSkill(skill)"
+                      class="px-3 py-1 text-sm rounded-full transition-all"
+                      [ngClass]="
+                        selectedSkills.includes(skill)
+                          ? 'bg-employer-color text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      "
+                    >
+                      {{ skill }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <h3 class="font-medium text-gray-700 mb-3">
+                    Experience ({{ experienceFilterValue }}+ years)
+                  </h3>
+                  <input
+                    type="range"
+                    [min]="minExperience"
+                    [max]="maxExperience"
+                    [value]="experienceFilterValue"
+                    (input)="updateExperienceFilter($event)"
+                    class="w-full accent-employer-color"
+                  />
+                  <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>{{ minExperience }} years</span>
+                    <span>{{ maxExperience }} years</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-4">
+                <button
+                  (click)="toggleFilterPanel()"
+                  class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Candidates List -->
+          <div class="p-4 grid grid-cols-1 gap-4 bg-gray-50 w-full">
+            <div
+              *ngIf="matchedCandidates.length === 0"
+              class="text-center py-10"
+            >
+              <p class="text-gray-500">
+                No candidates match your current filters
+              </p>
+              <button
+                (click)="filterCandidates()"
+                class="mt-4 text-employer-color hover:underline"
+              >
+                Reset filters
+              </button>
+            </div>
+
+            <div
+              *ngFor="let candidate of matchedCandidates"
+              class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all"
+              @slideIn
+            >
+              <div class="flex">
+                <!-- Left: Avatar and match score -->
+                <div class="mr-4 text-center">
+                  <div
+                    class="w-16 h-16 rounded-full overflow-hidden bg-gray-200 mb-2"
+                  >
+                    <img
+                      [src]="candidate.avatar"
+                      alt="Profile"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div
+                    class="bg-employer-color text-white text-sm font-bold px-2 py-1 rounded-full"
+                  >
+                    {{ candidate.matchScore }}%
+                  </div>
+                </div>
+
+                <!-- Right: Candidate details -->
+                <div class="flex-grow">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-bold text-gray-800">
+                        {{ candidate.name }}
+                      </h3>
+                      <p class="text-gray-600">{{ candidate.title }}</p>
+                    </div>
+                    <button
+                      class="text-gray-400 hover:text-yellow-500 transition-all"
+                    >
+                      <fa-icon [icon]="faStar"></fa-icon>
+                    </button>
+                  </div>
+
+                  <div
+                    class="mt-2 flex items-center gap-2 text-sm text-gray-500"
+                  >
+                    <span>{{ candidate.experience }} years experience</span>
+                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span>{{ candidate.location }}</span>
+                  </div>
+
+                  <div class="mt-2">
+                    <p class="text-sm text-gray-500 mb-1">Skills:</p>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        *ngFor="let skill of candidate.skills"
+                        class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs"
+                      >
+                        {{ skill }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center"
+                  >
+                    <div class="text-sm">
+                      <span class="text-green-600 font-medium">{{
+                        candidate.availability
+                      }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <button
+                        (click)="viewCandidateProfile(candidate.id)"
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-all"
+                      >
+                        Profile
+                      </button>
+                      <button
+                        (click)="contactCandidate(candidate.id)"
+                        class="bg-employer-color hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm transition-all"
+                      >
+                        Contact
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Market Insights Section -->
+        <div
+          *ngIf="activeSection === 'insights'"
+          class="flex-grow overflow-y-auto p-6 w-full"
+          @fadeIn
+        >
+          <h2 class="text-xl font-bold text-gray-800 mb-6">
+            Market Insights & Recruitment Strategy
+          </h2>
+
+          <!-- Market Overview -->
+          <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">
+              Developer Market Overview
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="bg-gray-50 rounded-lg p-4 text-center">
+                <div class="text-employer-color text-2xl font-bold mb-1">
+                  $105K
+                </div>
+                <div class="text-sm text-gray-500">Average Salary</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-4 text-center">
+                <div class="text-employer-color text-2xl font-bold mb-1">
+                  45 days
+                </div>
+                <div class="text-sm text-gray-500">Avg. Time to Hire</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-4 text-center">
+                <div class="text-employer-color text-2xl font-bold mb-1">
+                  3.5:1
+                </div>
+                <div class="text-sm text-gray-500">Candidate-to-Job Ratio</div>
+              </div>
+            </div>
+
+            <!-- Skills Demand Chart (visual placeholder) -->
+            <div class="mb-6">
+              <h4 class="font-medium text-gray-700 mb-3">
+                Skills in Highest Demand
+              </h4>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="space-y-3">
+                  <div class="flex items-center">
+                    <div class="w-24 text-sm text-gray-600">React</div>
+                    <div
+                      class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-employer-color rounded-full"
+                        style="width: 85%"
+                      ></div>
+                    </div>
+                    <div class="w-12 text-right text-sm text-gray-600">85%</div>
+                  </div>
+                  <div class="flex items-center">
+                    <div class="w-24 text-sm text-gray-600">TypeScript</div>
+                    <div
+                      class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-employer-color rounded-full"
+                        style="width: 78%"
+                      ></div>
+                    </div>
+                    <div class="w-12 text-right text-sm text-gray-600">78%</div>
+                  </div>
+                  <div class="flex items-center">
+                    <div class="w-24 text-sm text-gray-600">Node.js</div>
+                    <div
+                      class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-employer-color rounded-full"
+                        style="width: 72%"
+                      ></div>
+                    </div>
+                    <div class="w-12 text-right text-sm text-gray-600">72%</div>
+                  </div>
+                  <div class="flex items-center">
+                    <div class="w-24 text-sm text-gray-600">AWS</div>
+                    <div
+                      class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-employer-color rounded-full"
+                        style="width: 67%"
+                      ></div>
+                    </div>
+                    <div class="w-12 text-right text-sm text-gray-600">67%</div>
+                  </div>
+                  <div class="flex items-center">
+                    <div class="w-24 text-sm text-gray-600">Python</div>
+                    <div
+                      class="flex-grow h-4 bg-gray-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-employer-color rounded-full"
+                        style="width: 65%"
+                      ></div>
+                    </div>
+                    <div class="w-12 text-right text-sm text-gray-600">65%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trend Analysis -->
+            <div>
+              <h4 class="font-medium text-gray-700 mb-2">Key Observations</h4>
+              <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li>
+                  Demand for React and TypeScript skills continues to rise (↑
+                  12% YoY)
+                </li>
+                <li>
+                  AWS knowledge increasingly required for full-stack positions
+                </li>
+                <li>
+                  Candidates with multiple backend technologies have 35% more
+                  interviews
+                </li>
+                <li>Remote work flexibility increases applicant pool by 65%</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Recruitment Strategy -->
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">
+              AI-Generated Recruitment Strategy
+            </h3>
+
+            <div class="space-y-4">
+              <div class="rounded-lg border border-gray-200 p-4">
+                <h4
+                  class="font-medium text-gray-800 flex items-center gap-2 mb-2"
+                >
+                  <fa-icon
+                    [icon]="faLightbulb"
+                    class="text-yellow-500"
+                  ></fa-icon>
+                  <span>Skill-Based Hiring</span>
+                </h4>
+                <p class="text-gray-600">
+                  Focus on specific skills rather than job titles. A candidate
+                  with the right skill set but a different job title could be an
+                  excellent fit for your development team.
+                </p>
+              </div>
+
+              <div class="rounded-lg border border-gray-200 p-4">
+                <h4
+                  class="font-medium text-gray-800 flex items-center gap-2 mb-2"
+                >
+                  <fa-icon
+                    [icon]="faLightbulb"
+                    class="text-yellow-500"
+                  ></fa-icon>
+                  <span>Competitive Compensation Strategy</span>
+                </h4>
+                <p class="text-gray-600">
+                  Offer salaries at the 75th percentile of the market rate to
+                  attract top talent. Remote work options can offset slightly
+                  lower compensation in some cases.
+                </p>
+              </div>
+
+              <div class="rounded-lg border border-gray-200 p-4">
+                <h4
+                  class="font-medium text-gray-800 flex items-center gap-2 mb-2"
+                >
+                  <fa-icon
+                    [icon]="faLightbulb"
+                    class="text-yellow-500"
+                  ></fa-icon>
+                  <span>Interview Process Optimization</span>
+                </h4>
+                <p class="text-gray-600">
+                  Implement practical skills assessments rather than algorithmic
+                  problems. Candidates report higher satisfaction with realistic
+                  work scenarios.
+                </p>
+              </div>
+
+              <div class="rounded-lg border border-gray-200 p-4">
+                <h4
+                  class="font-medium text-gray-800 flex items-center gap-2 mb-2"
+                >
+                  <fa-icon
+                    [icon]="faLightbulb"
+                    class="text-yellow-500"
+                  ></fa-icon>
+                  <span>Diversity & Inclusion</span>
+                </h4>
+                <p class="text-gray-600">
+                  Companies with diverse tech teams report 35% higher
+                  productivity and innovation. Use AI matching to reduce
+                  unconscious bias in your hiring process.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

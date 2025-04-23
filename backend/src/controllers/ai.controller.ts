@@ -495,3 +495,316 @@ export const matchCandidates = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
+
+/**
+ * Process employer AI chat query to find candidates
+ */
+export const employerChatQuery = async (req: Request, res: Response) => {
+  try {
+    // Check if Gemini is properly initialized
+    if (!genAI || !model) {
+      console.error('Gemini AI not initialized. API key missing or invalid.');
+      return res.status(500).json({ 
+        message: 'AI service is not available. API key missing or invalid.' 
+      });
+    }
+    
+    const employerId = req.user!.id; // From JWT token
+    const { query } = req.body;
+    
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ message: 'Query is required' });
+    }
+
+    console.log(`Processing employer chat query: "${query}"`);
+
+    // Get all the jobs posted by this employer (for context)
+    const employerJobsResult = await pool.query(
+      `SELECT j.id, j.title, j.description, 
+       array_agg(DISTINCT js.skill_name) as required_skills
+       FROM jobs j
+       LEFT JOIN job_skills js ON j.id = js.job_id AND js.importance = 'required'
+       WHERE j.employer_id = $1
+       GROUP BY j.id, j.title, j.description`,
+      [employerId]
+    );
+
+    const employerJobs = employerJobsResult.rows;
+
+    // Get all job applications for this employer's jobs
+    const applicationsResult = await pool.query(
+      `SELECT 
+        ja.id, 
+        ja.job_id,
+        ja.user_id as applicant_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        jsp.title as job_title,
+        jsp.bio,
+        jsp.location,
+        array_agg(DISTINCT s.name) as skills,
+        array_agg(DISTINCT s.proficiency) as proficiencies,
+        array_agg(DISTINCT s.years_experience) as experiences
+       FROM job_applications ja
+       JOIN users u ON ja.user_id = u.id
+       JOIN job_seeker_profiles jsp ON u.id = jsp.user_id
+       JOIN skills s ON u.id = s.user_id
+       WHERE ja.job_id IN (SELECT id FROM jobs WHERE employer_id = $1)
+       GROUP BY ja.id, ja.job_id, ja.user_id, u.first_name, u.last_name, u.email, jsp.title, jsp.bio, jsp.location`,
+      [employerId]
+    );
+
+    const applications = applicationsResult.rows;
+
+    // Now find all candidates (job seekers) with relevant skills
+    // Extract potential skills from the query using basic keyword extraction
+    const possibleSkills = extractSkillsFromQuery(query);
+    
+    let candidatesQuery = `
+      SELECT 
+        u.id AS user_id,
+        u.email,
+        u.first_name,
+        u.last_name,
+        jsp.title,
+        jsp.bio,
+        jsp.location,
+        array_agg(DISTINCT s.name) AS skills,
+        array_agg(DISTINCT s.proficiency) AS proficiencies,
+        array_agg(DISTINCT s.years_experience) AS experiences
+      FROM users u
+      JOIN job_seeker_profiles jsp ON u.id = jsp.user_id
+      JOIN skills s ON u.id = s.user_id
+      WHERE u.role = 'job_seeker'
+    `;
+    
+    // If we extracted specific skills, filter by them
+    if (possibleSkills.length > 0) {
+      candidatesQuery += `
+        AND EXISTS (
+          SELECT 1 FROM skills s2 
+          WHERE s2.user_id = u.id 
+          AND LOWER(s2.name) IN (${possibleSkills.map((_, i) => `$${i+1}`).join(',')})
+        )
+      `;
+    }
+    
+    candidatesQuery += `
+      GROUP BY u.id, u.email, u.first_name, u.last_name, jsp.title, jsp.bio, jsp.location
+    `;
+
+    const candidatesResult = await pool.query(
+      candidatesQuery,
+      possibleSkills.length > 0 ? possibleSkills.map(s => s.toLowerCase()) : []
+    );
+
+    const allCandidates = candidatesResult.rows;
+
+    // Format the candidates for the AI
+    const candidatesForAI = allCandidates.map(candidate => {
+      // Create a skills string with proficiency and experience
+      const skillDetails = candidate.skills.map((skill: string, index: number) => {
+        return `${skill} (${candidate.proficiencies[index]}, ${candidate.experiences[index]} years)`;
+      }).join(', ');
+      
+      // Check if this candidate has applied to any of the employer's jobs
+      const appliedJobs = applications
+        .filter(app => app.applicant_id === candidate.user_id)
+        .map(app => {
+          const job = employerJobs.find(j => j.id === app.job_id);
+          return job ? job.title : 'Unknown job';
+        });
+      
+      return {
+        id: candidate.user_id,
+        name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim(),
+        email: candidate.email,
+        title: candidate.title || 'Not specified',
+        bio: candidate.bio || 'Not specified',
+        location: candidate.location || 'Not specified',
+        skills: skillDetails,
+        appliedJobs: appliedJobs.length > 0 ? appliedJobs : []
+      };
+    });
+
+    // Create prompt for AI
+    const prompt = `
+    You are an AI assistant for JobPlex, a skills-based job matching platform. You help employers find suitable candidates
+    based on their skills and requirements. The employer has asked: "${query}"
+    
+    Here are candidates in the system that might match what the employer is looking for:
+    ${JSON.stringify(candidatesForAI, null, 2)}
+    
+    The employer has posted these jobs:
+    ${JSON.stringify(employerJobs.map(job => ({
+      id: job.id,
+      title: job.title,
+      requiredSkills: job.required_skills
+    })), null, 2)}
+    
+    Instructions:
+    1. Analyze the employer's query to understand what skills or requirements they're looking for
+    2. Find candidates whose skills best match the query
+    3. Provide a clear, conversational response that presents the best matching candidates
+    4. Focus on actual skills rather than just job titles
+    5. If the query is not about finding candidates with specific skills, provide a helpful response explaining how the system works
+    
+    Provide a JSON response with the following structure:
+    {
+      "message": "Your conversational response to the employer",
+      "matchedCandidates": [
+        {
+          "id": candidate_id,
+          "name": "Candidate Name",
+          "matchPercentage": 85,
+          "relevantSkills": ["Skill 1", "Skill 2"],
+          "experience": "Brief description of experience",
+          "appliedToJobs": ["Job title 1", "Job title 2"] // only if they applied to employer's jobs
+        }
+      ],
+      "suggestedFollowup": ["Suggested followup question 1", "Suggested followup question 2"]
+    }
+    
+    If no candidates match the query, return an empty matchedCandidates array and explain why in the message.
+    Sort matched candidates by relevance to the query.
+    Limit to the most relevant 5 candidates maximum.
+    `;
+
+    // Call Gemini API
+    console.log('Sending request to Gemini API for employer chat...');
+    try {
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+      
+      // Parse the JSON response
+      try {
+        // Extract JSON from possible text
+        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/) || [null, text];
+        const jsonStr = jsonMatch[1] || text;
+        
+        const parsedResponse = JSON.parse(jsonStr);
+        
+        // Save this chat query to the database
+        await saveEmployerChatQuery(employerId, query, parsedResponse);
+        
+        return res.json(parsedResponse);
+      } catch (parseError) {
+        console.error('Error parsing Gemini response:', parseError);
+        return res.status(500).json({ 
+          message: 'Error processing AI response',
+          rawResponse: text
+        });
+      }
+    } catch (aiError) {
+      console.error('Error processing employer chat query:', aiError);
+      return res.status(500).json({ 
+        message: 'Error connecting to AI service',
+        error: aiError instanceof Error ? aiError.message : 'Unknown error'
+      });
+    }
+  } catch (error) {
+    console.error('Error in employer chat query:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Helper function to extract potential skills from a query
+ */
+function extractSkillsFromQuery(query: string): string[] {
+  // List of common programming languages, frameworks, and technologies
+  const commonSkills = [
+    'javascript', 'typescript', 'python', 'java', 'c#', 'php', 'ruby', 'go', 'swift', 'kotlin',
+    'react', 'angular', 'vue', 'node', 'express', 'django', 'flask', 'spring', 'laravel', 'rails',
+    'html', 'css', 'sass', 'less', 'bootstrap', 'tailwind', 'jquery', 'mongodb', 'mysql', 'postgresql',
+    'sql', 'nosql', 'firebase', 'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'git',
+    'rest', 'graphql', 'redux', 'next.js', 'nuxt.js', 'gatsby', 'webpack', 'babel', 'cypress', 'jest',
+    'mocha', 'chai', 'tdd', 'agile', 'scrum', 'kanban', 'ci/cd', 'devops', 'figma', 'sketch',
+    'photoshop', 'illustrator', 'ux', 'ui', 'product', 'nginx', 'apache', 'linux', 'windows', 'macos'
+  ];
+  
+  // Convert query to lowercase for case-insensitive matching
+  const lowerQuery = query.toLowerCase();
+  
+  // Check for each skill in the query
+  return commonSkills.filter(skill => {
+    // Create a regex pattern that matches the skill as a whole word
+    const pattern = new RegExp(`\\b${skill}\\b`, 'i');
+    return pattern.test(lowerQuery);
+  });
+}
+
+/**
+ * Save employer chat query to database
+ */
+const saveEmployerChatQuery = async (employerId: number, query: string, response: any) => {
+  try {
+    const result = await pool.query(
+      `INSERT INTO employer_chat_queries (employer_id, query, response, created_at)
+       VALUES ($1, $2, $3, NOW())
+       RETURNING id`,
+      [employerId, query, JSON.stringify(response)]
+    );
+    
+    console.log(`Saved employer chat query with ID ${result.rows[0].id}`);
+    return result.rows[0].id;
+  } catch (error) {
+    console.error('Error saving employer chat query:', error);
+    // Just log the error, don't fail the main request if this fails
+  }
+};
+
+/**
+ * Get saved chat queries for an employer
+ */
+export const getSavedChatQueries = async (req: Request, res: Response) => {
+  try {
+    const employerId = req.user!.id;
+    
+    const result = await pool.query(
+      `SELECT id, query, response, created_at
+       FROM employer_chat_queries
+       WHERE employer_id = $1
+       ORDER BY created_at DESC
+       LIMIT 20`,
+      [employerId]
+    );
+    
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching saved chat queries:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Delete a saved chat query
+ */
+export const deleteChatQuery = async (req: Request, res: Response) => {
+  try {
+    const employerId = req.user!.id;
+    const { queryId } = req.params;
+    
+    // First, check if the query exists and belongs to the employer
+    const checkResult = await pool.query(
+      'SELECT id FROM employer_chat_queries WHERE id = $1 AND employer_id = $2',
+      [queryId, employerId]
+    );
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Chat query not found or you do not have permission to delete it' });
+    }
+    
+    await pool.query(
+      'DELETE FROM employer_chat_queries WHERE id = $1',
+      [queryId]
+    );
+    
+    return res.json({ message: 'Chat query deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting chat query:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
