@@ -18,7 +18,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-philgabby2003}
       DB_NAME: ${DB_NAME:-jobplex}
       DB_SSL: ${DB_SSL:-"false"}
-      JWT_SECRET: ${JWT_SECRET:-your_secret_key_here}
+      JWT_SECRET: ${JWT_SECRET:-jGa2XvR7bP9cQzT5mWkE3sD8fLpH6yN4}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400}
       APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-https://fra.cloud.appwrite.io/v1}
       APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID:-680525ad0013e557a3eb}

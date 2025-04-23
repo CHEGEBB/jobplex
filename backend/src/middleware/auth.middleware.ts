@@ -58,7 +58,7 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
     }
     
     // Verify token
-    const secret = process.env.JWT_SECRET || 'your_secret_key_here';
+    const secret = process.env.JWT_SECRET || 'jGa2XvR7bP9cQzT5mWkE3sD8fLpH6yN4';
     console.log('Using JWT secret:', secret ? '[SECRET MASKED]' : 'Default fallback secret');
     
     let decoded: DecodedToken;

@@ -10,7 +10,7 @@ import { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequ
 dotenv.config();
 
 // Get JWT configuration with fallbacks
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_here';
+const JWT_SECRET = process.env.JWT_SECRET || 'jGa2XvR7bP9cQzT5mWkE3sD8fLpH6yN4';
 // Define the JWT expiration value properly typed for SignOptions
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '24h';
 
@@ -69,7 +69,7 @@ if (!email || !password || !role || !['jobseeker', 'employer', 'admin'].includes
       const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRATION as any }  // Force type casting to resolve the type issue
+        { expiresIn: JWT_EXPIRATION as any } 
       );
       
       res.status(201).json({
@@ -175,7 +175,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const resetToken = jwt.sign(
       { id: user.id, email: user.email, purpose: 'reset_password' },
       JWT_SECRET,
-      { expiresIn: '1h' as any }  // Type casting for consistency
+      { expiresIn: '5h' as any }  // Type casting for consistency
     );
     
     // Store token in database (in a real app, you would have a password_resets table)
