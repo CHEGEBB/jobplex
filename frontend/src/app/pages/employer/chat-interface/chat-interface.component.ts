@@ -7,7 +7,8 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { 
   faPaperPlane, faSearch, faFilter, faStar, faSave, 
   faLightbulb, faChartLine, faBriefcase, faUserTie, 
-  faSpinner, faTimes, faUser, faBookmark, faCog
+  faSpinner, faTimes, faUser, faBookmark, faCog,
+  faUserCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { SidebarEmployerComponent } from '../../../components/sidebar-employer/sidebar-employer.component';
 import { animate, style, transition, trigger } from '@angular/animations';
@@ -66,10 +67,10 @@ export class ChatInterfaceComponent implements OnInit, AfterViewInit, OnDestroy 
   faLightbulb = faLightbulb;
   faChartLine = faChartLine;
   faBriefcase = faBriefcase;
-  faUserTie = faUserTie;
+  faUserTie = faUserCircle;
   faSpinner = faSpinner;
   faTimes = faTimes;
-  faUser = faUser;
+  faUser = faUserCircle;
   faBookmark = faBookmark;
   faCog = faCog;
 

@@ -194,7 +194,16 @@ export const getJobById = async (req: Request, res: Response) => {
       GROUP BY j.id, u.email
     `;
     
-    const result = await pool.query(jobQuery, [id]);
+    const result = await pool.query(
+      'SELECT * FROM apply_for_job($1, $2)',
+      [req.params.jobId, req.user!.id]
+    );
+    
+    if (result.rows[0].success) {
+      res.status(200).json({ message: result.rows[0].message });
+    } else {
+      res.status(400).json({ message: result.rows[0].message });
+    }
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Job not found' });
