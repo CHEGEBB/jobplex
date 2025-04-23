@@ -6,33 +6,37 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: backend_users
     ports:
       - "80:80"
     environment:
-      NODE_ENV: development
-      PORT: 80
-      DB_HOST: jobplex1.cixko6g8cczy.us-east-1.rds.amazonaws.com
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: philgabby2003
-      DB_NAME: jobplex
-      DB_SSL: "false"  # Add this to explicitly disable SSL requirement
-      JWT_SECRET: your_secret_key_here
-      GEMINI_API_KEY: AIzaSyDuwW0mf5lgpHg9zBvwiM69AQhYeQyEOjg
-
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-80}
+      DB_HOST: ${DB_HOST:-jobplex1.cixko6g8cczy.us-east-1.rds.amazonaws.com}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-philgabby2003}
+      DB_NAME: ${DB_NAME:-jobplex}
+      DB_SSL: ${DB_SSL:-"false"}
+      JWT_SECRET: ${JWT_SECRET:-your_secret_key_here}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400}
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-https://fra.cloud.appwrite.io/v1}
+      APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID:-680525ad0013e557a3eb}
+      APPWRITE_BUCKET_ID: ${APPWRITE_BUCKET_ID:-68052646000a993ccf3f}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-AIzaSyDuwW0mf5lgpHg9zBvwiM69AQhYeQyEOjg}
     volumes:
       - ./backend/src:/usr/src/app/src
       - ./backend/package.json:/usr/src/app/package.json
       - ./backend/tsconfig.json:/usr/src/app/tsconfig.json
-      - /usrsrc/app/node_modules
+      - /usr/src/app/node_modules
     restart: unless-stopped
 
   # PgAdmin (optional - for database management)
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@jobplex.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@jobplex.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
     ports:
       - "5050:80"
     restart: unless-stopped
