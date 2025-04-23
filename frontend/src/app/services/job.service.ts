@@ -245,18 +245,14 @@ export class JobService {
     );
   }
 
-  // Apply for a job (for job seekers)
-  applyForJob(jobId: number): Observable<any> {
-    const applicationData = {}; // Define or replace with the actual data structure
-    return this.http.post<any>(`${this.apiUrl}/jobs/apply`, applicationData, {
-      headers: this.getAuthHeaders()
-    });
-    // return this.http.post<any>(`${this.apiUrl}/${jobId}/apply`, {}, {
-    //   headers: this.getAuthHeaders()
-    // }).pipe(
-    //   catchError(this.handleError('applyForJob'))
-    // );
-  }
+// Apply for a job (for job seekers)
+applyForJob(jobId: number): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/${jobId}/apply`, {}, {
+    headers: this.getAuthHeaders()
+  }).pipe(
+    catchError(this.handleError('applyForJob'))
+  );
+}  
 
   // Refresh job statistics
   refreshJobStats(): void {
