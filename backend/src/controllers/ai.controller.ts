@@ -706,7 +706,7 @@ export const employerChatQuery = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error('Error in employer chat query:', error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error😭' });
   }
 };
 
