@@ -64,18 +64,7 @@ To set up the Gemini API:
 3. Install the Gemini API client:
    ```
    npm install @google/generative-ai
-   ```
-
-## Implementation Steps
-
-1. Get the Gemini API key
-2. Create the AI controller with career path and matching functions
-3. Create routes for the AI endpoints
-4. Update server.ts to include the new routes
-5. Test the endpoints with Postman
-
-## Career Path Recommendations
-
+   ``` 
 For job seekers, the AI will:
 - Analyze the user's current skills from the database
 - Generate recommended career paths

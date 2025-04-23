@@ -1,105 +1,252 @@
+// src/controllers/ai.controller.ts
 import { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import pool from '../config/db.config';
-import dotenv from 'dotenv';
+import { JobSeekerCareerPathResponse, EmployerCandidateMatchResponse } from '../types/ai.types';
 
-dotenv.config();
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-// Initialize Gemini AI with API key from environment variables
-const API_KEY = process.env.GEMINI_API_KEY || '';
-console.log("Using Gemini API Key:", API_KEY ? `${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}` : 'MISSING API KEY');
-
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-pro" });
-
-// For Job Seekers: Get career path recommendations
+/**
+ * Get AI-recommended career paths for job seekers based on their skills
+ */
 export const getCareerPathRecommendations = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    
-    if (!userId) {
-      return res.status(401).json({ message: 'User not authenticated' });
-    }
+    const userId = req.user.id; // From JWT token
 
-    console.log(`Getting career recommendations for user ${userId}`);
-
-    // Get user skills from database
-    const userSkillsResult = await pool.query(
-      'SELECT name, proficiency, years_experience FROM skills WHERE user_id = $1',
+    // Fetch user's skills from database
+    const skillsResult = await pool.query(
+      `SELECT name, proficiency, years_experience 
+       FROM skills 
+       WHERE user_id = $1`, 
       [userId]
     );
+
+    const skills = skillsResult.rows;
     
-    if (userSkillsResult.rows.length === 0) {
+    if (skills.length === 0) {
       return res.status(400).json({ 
-        message: 'Please add skills to your profile to get career recommendations' 
+        message: 'You need to add skills to your profile before getting career recommendations' 
       });
     }
 
-    const userSkills = userSkillsResult.rows;
-    console.log(`Found ${userSkills.length} skills for user`);
-    
-    // Get user profile information
-    const userProfileResult = await pool.query(
-      'SELECT title, bio FROM job_seeker_profiles WHERE user_id = $1',
+    // Fetch user profile for more context
+    const profileResult = await pool.query(
+      `SELECT jsp.title, jsp.bio, jsp.location
+       FROM job_seeker_profiles jsp
+       WHERE jsp.user_id = $1`,
       [userId]
     );
-    
-    const userProfile = userProfileResult.rows[0] || { title: '', bio: '' };
-    
-    // Format prompt for Gemini
+
+    const profile = profileResult.rows[0] || {};
+
+    // Format skills for AI prompt
+    const skillsFormatted = skills.map(skill => 
+      `${skill.name} (${skill.proficiency}, ${skill.years_experience} years)`
+    ).join(', ');
+
+    // Create prompt for AI
     const prompt = `
-      As a career advisor, recommend 3 potential career paths for a professional with the following skills and background:
-      
-      Current Title: ${userProfile.title || 'Not specified'}
-      Bio: ${userProfile.bio || 'Not specified'}
-      Skills:
-      ${userSkills.map(skill => `- ${skill.name} (${skill.proficiency}, ${skill.years_experience} years)`).join('\n')}
-      
-      For each career path, provide:
-      1. Job title
-      2. Brief job description
-      3. Match percentage based on current skills
-      4. List of skill gaps that need to be filled
-      5. Learning resources to acquire those skills
-      
-      Format the response as a JSON array with the structure:
-      [
+    You are a career advisor AI for JobPlex, a skills-based job matching platform. 
+    Please analyze the following job seeker's skills and provide personalized career path recommendations.
+    
+    User Skills: ${skillsFormatted}
+    ${profile.title ? `Current Title: ${profile.title}` : ''}
+    ${profile.bio ? `Bio: ${profile.bio}` : ''}
+    ${profile.location ? `Location: ${profile.location}` : ''}
+    
+    Provide a JSON response with the following structure:
+    {
+      "careerPaths": [
         {
-          "title": "Job Title",
-          "description": "Job description",
-          "matchPercentage": number from 0-100,
-          "skillGaps": ["skill1", "skill2"],
-          "learningResources": ["resource1", "resource2"]
+          "title": "Career path title",
+          "description": "Brief description of this career path",
+          "matchPercentage": 85, // how well their current skills match this path
+          "skillGaps": ["Skill 1", "Skill 2"], // skills they should develop
+          "learningResources": [
+            {
+              "name": "Resource name",
+              "type": "course/book/certification",
+              "description": "Brief description"
+            }
+          ]
         }
-      ]
-      
-      Provide only the JSON array with no additional text.
+      ],
+      "analysis": "Brief personalized analysis of their skills and potential"
+    }
+    
+    Provide 3 career paths maximum, focused on quality recommendations. Each path should be realistic based on their current skills.
     `;
 
-    console.log("Sending request to Gemini API...");
-    
-    // Generate content with Gemini
+    // Call Gemini API
     const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response = result.response;
     const text = response.text();
-    
-    console.log("Received response from Gemini API");
     
     // Parse the JSON response
     try {
-      const recommendations = JSON.parse(text);
-      return res.json({ recommendations });
-    } catch (error) {
-      console.error('Error parsing AI response:', error);
-      console.log('Raw AI response:', text);
+      // Extract JSON from possible text
+      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/) || [null, text];
+      const jsonStr = jsonMatch[1] || text;
+      
+      const parsedResponse: JobSeekerCareerPathResponse = JSON.parse(jsonStr);
+      
+      return res.json(parsedResponse);
+    } catch (parseError) {
+      console.error('Error parsing Gemini response:', parseError);
       return res.status(500).json({ 
-        message: 'Error processing AI recommendations',
-        aiResponse: text
+        message: 'Error processing AI response',
+        rawResponse: text
       });
     }
-    
   } catch (error) {
-    console.error('Error generating career recommendations:', error);
-    return res.status(500).json({ message: 'Server error generating recommendations' });
+    console.error('Error in career path recommendations:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Match candidates to a job posting based on skills
+ */
+export const matchCandidates = async (req: Request, res: Response) => {
+  try {
+    const employerId = req.user.id; // From JWT token
+    const { jobId } = req.params;
+    
+    if (!jobId) {
+      return res.status(400).json({ message: 'Job ID is required' });
+    }
+
+    // Verify the job belongs to this employer
+    const jobResult = await pool.query(
+      'SELECT * FROM jobs WHERE id = $1 AND employer_id = $2',
+      [jobId, employerId]
+    );
+
+    if (jobResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Job not found or you do not have permission to access it' });
+    }
+
+    const job = jobResult.rows[0];
+
+    // Get job skills
+    const jobSkillsResult = await pool.query(
+      'SELECT skill_name, importance FROM job_skills WHERE job_id = $1',
+      [jobId]
+    );
+
+    const jobSkills = jobSkillsResult.rows;
+    
+    // First, let's get all job seekers with matching skills
+    // More complex database query to find candidates with matching skills
+    const candidatesResult = await pool.query(`
+      SELECT 
+        u.id AS user_id,
+        u.email,
+        u.first_name,
+        u.last_name,
+        jsp.title,
+        jsp.bio,
+        jsp.location,
+        array_agg(DISTINCT s.name) AS skills,
+        array_agg(DISTINCT s.proficiency) AS proficiencies,
+        array_agg(DISTINCT s.years_experience) AS experiences
+      FROM users u
+      JOIN job_seeker_profiles jsp ON u.id = jsp.user_id
+      JOIN skills s ON u.id = s.user_id
+      WHERE u.role = 'job_seeker'
+      GROUP BY u.id, u.email, u.first_name, u.last_name, jsp.title, jsp.bio, jsp.location
+    `);
+
+    // Now we'll perform a more advanced match using Gemini AI
+    const jobDescription = `
+      Job Title: ${job.title}
+      Description: ${job.description}
+      Location: ${job.location || 'Not specified'}
+      Job Type: ${job.job_type || 'Not specified'}
+      Required Skills: ${jobSkills
+        .filter(s => s.importance === 'required')
+        .map(s => s.skill_name)
+        .join(', ')}
+      Preferred Skills: ${jobSkills
+        .filter(s => s.importance === 'preferred' || s.importance === 'nice-to-have')
+        .map(s => s.skill_name)
+        .join(', ')}
+    `;
+
+    // Format candidates for AI prompt
+    const candidatesForAI = candidatesResult.rows.map(candidate => {
+      // Create a skills string with proficiency and experience
+      const skillDetails = candidate.skills.map((skill: string, index: number) => {
+        return `${skill} (${candidate.proficiencies[index]}, ${candidate.experiences[index]} years)`;
+      }).join(', ');
+      
+      return {
+        id: candidate.user_id,
+        name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim(),
+        title: candidate.title || 'Not specified',
+        bio: candidate.bio || 'Not specified',
+        skills: skillDetails
+      };
+    });
+
+    // Create prompt for AI
+    const prompt = `
+    You are an AI-powered candidate matching system for JobPlex, a skills-based job matching platform.
+    Please analyze the following job posting and potential candidates to determine the best matches based primarily on skills.
+    
+    JOB POSTING:
+    ${jobDescription}
+    
+    CANDIDATES:
+    ${JSON.stringify(candidatesForAI, null, 2)}
+    
+    Instructions:
+    1. Match candidates based primarily on their skills compared to required and preferred job skills
+    2. Consider experience level and proficiency in these skills
+    3. Provide a match percentage and short explanation for each candidate
+    4. Focus on actual skills rather than job titles
+    
+    Provide a JSON response with the following structure:
+    {
+      "candidates": [
+        {
+          "id": "candidate_id",
+          "name": "Candidate Name",
+          "matchPercentage": 85,
+          "matchReason": "Brief explanation of why this candidate is a good match",
+          "missingSkills": ["Skill 1", "Skill 2"]
+        }
+      ]
+    }
+    
+    Sort candidates by match percentage in descending order.
+    `;
+
+    // Call Gemini API
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+    
+    // Parse the JSON response
+    try {
+      // Extract JSON from possible text
+      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/) || [null, text];
+      const jsonStr = jsonMatch[1] || text;
+      
+      const parsedResponse: EmployerCandidateMatchResponse = JSON.parse(jsonStr);
+      
+      return res.json(parsedResponse);
+    } catch (parseError) {
+      console.error('Error parsing Gemini response:', parseError);
+      return res.status(500).json({ 
+        message: 'Error processing AI response',
+        rawResponse: text
+      });
+    }
+  } catch (error) {
+    console.error('Error in candidate matching:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
