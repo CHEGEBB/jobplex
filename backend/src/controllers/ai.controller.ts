@@ -10,7 +10,7 @@ const API_KEY = process.env.GEMINI_API_KEY || '';
 console.log("Using Gemini API Key:", API_KEY ? `${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}` : 'MISSING API KEY');
 
 const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-pro" });
 
 // For Job Seekers: Get career path recommendations
 export const getCareerPathRecommendations = async (req: Request, res: Response) => {
