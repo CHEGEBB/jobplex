@@ -58,6 +58,9 @@ export class AuthService {
     private router: Router
   ) {
     this.loadStoredUser();
+    if (this.getToken()) {
+      this.checkAuthStatus().subscribe();
+    }
   }
 
   private loadStoredUser(): void {
@@ -189,6 +192,9 @@ export class AuthService {
       
       if (error.status === 0) {
         errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+      } else if (error.status === 401) {
+        errorMessage = 'Unauthorized: Your session may have expired. Please log in again.';
+        this.logout(); // Logout on 401 errors
       } else if (error.error && error.error.message) {
         errorMessage = error.error.message;
       } else {
@@ -196,8 +202,8 @@ export class AuthService {
       }
     }
     
-    // Return an observable with a user-facing error message
-    return throwError(() => error);
+    // Return an observable with the user-facing error message
+    return throwError(() => new Error(errorMessage));
   }
 
   // Private helper methods

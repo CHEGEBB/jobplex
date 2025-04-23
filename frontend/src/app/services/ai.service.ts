@@ -134,18 +134,13 @@ export class AiService {
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `Error: ${error.error.message}`;
-      console.error('Client error:', errorMessage);
     } else {
       // Server-side error
-      console.error(
-        `Backend returned code ${error.status}, ` +
-        `body was: ${JSON.stringify(error.error)}`
-      );
-      
       if (error.status === 0) {
         errorMessage = 'Unable to connect to the server. Please check your internet connection.';
       } else if (error.status === 401) {
         errorMessage = 'Authentication required. Please log in again.';
+        this.authService.logout(); // Important: logout on 401 unauthorized
       } else if (error.status === 403) {
         errorMessage = 'You do not have permission to perform this action.';
       } else if (error.error && error.error.message) {
@@ -155,7 +150,6 @@ export class AiService {
       }
     }
     
-    // Return an observable with a user-facing error message
     return throwError(() => new Error(errorMessage));
   }
 }
