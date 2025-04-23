@@ -4,16 +4,41 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import pool from '../config/db.config';
 import { JobSeekerCareerPathResponse, EmployerCandidateMatchResponse } from '../types/ai.types';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+// Better logging for the API key status
+const apiKey = process.env.GEMINI_API_KEY || '';
+console.log(`Gemini API Key status: ${apiKey ? 'Present' : 'Missing'}`);
+console.log(`Gemini API Key value: ${apiKey ? apiKey.substring(0, 4) + '...' + apiKey.substring(apiKey.length - 4) : 'None'}`);
+
+// Initialize Gemini AI only if we have a key
+let genAI: any = null;
+let model: any = null;
+
+if (apiKey) {
+  try {
+    genAI = new GoogleGenerativeAI(apiKey);
+    model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    console.log('Gemini AI model initialized successfully');
+  } catch (error) {
+    console.error('Error initializing Gemini AI:', error);
+  }
+}
 
 /**
  * Get AI-recommended career paths for job seekers based on their skills
  */
 export const getCareerPathRecommendations = async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
+    console.log('Getting career recommendations for user', req.user!.id);
+    
+    // Check if Gemini is properly initialized
+    if (!genAI || !model) {
+      console.error('Gemini AI not initialized. API key missing or invalid.');
+      return res.status(500).json({ 
+        message: 'AI service is not available. API key missing or invalid.' 
+      });
+    }
+    
+    const userId = req.user!.id; // From JWT token
 
     // Fetch user's skills from database
     const skillsResult = await pool.query(
@@ -24,6 +49,7 @@ export const getCareerPathRecommendations = async (req: Request, res: Response) 
     );
 
     const skills = skillsResult.rows;
+    console.log(`Found ${skills.length} skills for user`);
     
     if (skills.length === 0) {
       return res.status(400).json({ 
@@ -80,24 +106,33 @@ export const getCareerPathRecommendations = async (req: Request, res: Response) 
     `;
 
     // Call Gemini API
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
-    
-    // Parse the JSON response
+    console.log('Sending request to Gemini API...');
     try {
-      // Extract JSON from possible text
-      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/) || [null, text];
-      const jsonStr = jsonMatch[1] || text;
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
       
-      const parsedResponse: JobSeekerCareerPathResponse = JSON.parse(jsonStr);
-      
-      return res.json(parsedResponse);
-    } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError);
+      // Parse the JSON response
+      try {
+        // Extract JSON from possible text
+        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/) || [null, text];
+        const jsonStr = jsonMatch[1] || text;
+        
+        const parsedResponse: JobSeekerCareerPathResponse = JSON.parse(jsonStr);
+        
+        return res.json(parsedResponse);
+      } catch (parseError) {
+        console.error('Error parsing Gemini response:', parseError);
+        return res.status(500).json({ 
+          message: 'Error processing AI response',
+          rawResponse: text
+        });
+      }
+    } catch (aiError) {
+      console.error('Error generating career recommendations:', aiError);
       return res.status(500).json({ 
-        message: 'Error processing AI response',
-        rawResponse: text
+        message: 'Error connecting to AI service',
+        error: aiError instanceof Error ? aiError.message : 'Unknown error'
       });
     }
   } catch (error) {
@@ -111,6 +146,14 @@ export const getCareerPathRecommendations = async (req: Request, res: Response) 
  */
 export const matchCandidates = async (req: Request, res: Response) => {
   try {
+    // Check if Gemini is properly initialized
+    if (!genAI || !model) {
+      console.error('Gemini AI not initialized. API key missing or invalid.');
+      return res.status(500).json({ 
+        message: 'AI service is not available. API key missing or invalid.' 
+      });
+    }
+    
     const employerId = req.user!.id; // From JWT token
     const { jobId } = req.params;
     
@@ -225,24 +268,33 @@ export const matchCandidates = async (req: Request, res: Response) => {
     `;
 
     // Call Gemini API
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
-    
-    // Parse the JSON response
+    console.log('Sending request to Gemini API for candidate matching...');
     try {
-      // Extract JSON from possible text
-      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/) || [null, text];
-      const jsonStr = jsonMatch[1] || text;
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
       
-      const parsedResponse: EmployerCandidateMatchResponse = JSON.parse(jsonStr);
-      
-      return res.json(parsedResponse);
-    } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError);
+      // Parse the JSON response
+      try {
+        // Extract JSON from possible text
+        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/) || [null, text];
+        const jsonStr = jsonMatch[1] || text;
+        
+        const parsedResponse: EmployerCandidateMatchResponse = JSON.parse(jsonStr);
+        
+        return res.json(parsedResponse);
+      } catch (parseError) {
+        console.error('Error parsing Gemini response:', parseError);
+        return res.status(500).json({ 
+          message: 'Error processing AI response',
+          rawResponse: text
+        });
+      }
+    } catch (aiError) {
+      console.error('Error matching candidates:', aiError);
       return res.status(500).json({ 
-        message: 'Error processing AI response',
-        rawResponse: text
+        message: 'Error connecting to AI service',
+        error: aiError instanceof Error ? aiError.message : 'Unknown error'
       });
     }
   } catch (error) {
