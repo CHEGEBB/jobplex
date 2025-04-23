@@ -1,51 +1,65 @@
-name: Events Demo 1
+name: Frontend Selective Deployment
 
-# 🟢 Trigger ONLY when frontend changes (avoids unnecessary S3 usage)
 on:
   push:
     branches:
       - main
     paths:
-      - 'frontend/**'        # only trigger on frontend file changes
-      - '.github/workflows/**' # allow updates to workflow file
+      - 'frontend/**' # Only trigger when frontend files change
   pull_request:
     types:
       - opened
-  workflow_dispatch:
+    paths:
+      - 'frontend/**' # Only trigger for PRs affecting frontend
+  workflow_dispatch: # Manual trigger option remains unchanged
 
 env:
   MyPAss: 1234
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend-changed: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for path filtering
+      
+      - name: Filter paths
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+  
   build:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.frontend-changed == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     environment: testing
-
     steps:
-      # ✅ Step 1: Checkout your code
       - name: Get Code
         uses: actions/checkout@v4
-
-      # ✅ Step 2: Cache node_modules to speed up build time
+      
       - name: Cache Dependencies
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
-
-      # ✅ Step 3: Install frontend dependencies
+          key: deps-node-modules-${{ hashFiles('frontend/package-lock.json')}}
+      
       - name: Install dependencies
         run: |
           cd frontend 
           npm install
-
-      # ✅ Step 4: Build Angular app
+      
       - name: Build Code
         run: |
           cd frontend 
           npm run build
-
-      # ✅ Step 5: Upload build artifacts for deployment
+      
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -55,39 +69,33 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-
     steps:
-      # ✅ Step 1: Checkout code
       - name: Get Code
         uses: actions/checkout@v4
-
-      # ✅ Step 2: Download build artifacts from previous job
+      
       - name: Get Build files
         uses: actions/download-artifact@v4
         with:
           name: dist-files
           path: ./dist
-
-      # ✅ Step 3: Log directory structure for debugging
+      
       - name: Output Contents
         run: |
           echo "Root directory:"
           ls -la
           echo "Dist directory:"
           ls -la ./dist
-
-      # ✅ Step 4: Deploy to S3 (only when frontend changes)
+      
       - name: Deploy
         id: deploy
         uses: ./.github/actions
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}} 
         with:
           bucket: jobplex-frontend
           dist-folder: ./dist/jobplex/browser
           bucket-region: us-east-1
-
-      # ✅ Step 5: Show the deployed URL
+      
       - name: Output URL
-        run: echo "Live URL: ${{ steps.deploy.outputs.website-url }}"
+        run: echo "Live URL:${{steps.deploy.outputs.website-url}}"
