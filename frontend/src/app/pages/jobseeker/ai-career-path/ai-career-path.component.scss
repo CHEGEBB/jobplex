@@ -1,5 +1,25 @@
 /* ai-career-path.component.scss */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
 
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 1.5rem;
+  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.expanded {
+    margin-left: 80px;
+  }
+  
+  @media (max-width: 767px) {
+    margin-left: 0 !important;
+    padding: 1rem;
+  }
+}
 // Career Path Timeline Styling
 .ai-container{
   overflow-x: hidden !important;

@@ -1,267 +1,277 @@
 <!-- ai-career-path.component.html -->
-<div class="ai-container flex h-screen bg-slate-50">
-    <!-- Sidebar Component -->
-    <app-sidebar 
-      [collapsed]="sidebarCollapsed" 
-      (toggleSidebar)="onToggleSidebar($event)">
-    </app-sidebar>  
+<div class="flex h-screen bg-gray-100 dashboard-container">
+  <!-- Sidebar -->
+  <app-sidebar [collapsed]="sidebarCollapsed" (toggleSidebar)="onToggleSidebar($event)"></app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden main-content">
+    <!-- Page Header -->
+    <header class="bg-white shadow-sm px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-800">AI Career Path Advisor</h1>
+        <div class="flex space-x-2">
+          <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            Save Path
+          </button>
+          <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+            Refresh Analysis
+          </button>
+        </div>
+      </div>
+    </header>
     
-    <!-- Main Content -->
-    <main class="main-content" [class.expanded]="sidebarCollapsed">
-    <div class=" flex-1 flex flex-col overflow-hidden">
-      <div class="container mx-auto p-4 lg:p-6">
-        <!-- Page Header -->
-        <div class="mb-6">
-          <h1 class="text-3xl font-bold text-gray-800">AI Career Path</h1>
-          <p class="text-gray-600 mt-2">Personalized career guidance and skill development recommendations</p>
-        </div>
-  
-        <!-- Chat with AI Section -->
-        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div class="flex items-center mb-4">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-500 text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h2 class="text-xl font-semibold ml-3">Chat with Career AI</h2>
-          </div>
-          
-          <div class="bg-gray-50 rounded-lg p-4 h-64 mb-4 overflow-y-auto" #chatContainer>
-            <div *ngFor="let message of chatMessages" 
-                [ngClass]="{'flex justify-end': message.sender === 'user', 'flex justify-start': message.sender === 'ai'}">
-              <div [ngClass]="{'bg-blue-500 text-white rounded-lg rounded-br-none': message.sender === 'user', 'bg-gray-200 text-gray-800 rounded-lg rounded-bl-none': message.sender === 'ai'}" 
-                  class="max-w-xs md:max-w-md p-3 my-2 shadow-sm">
-                <p>{{ message.text }}</p>
-                <span class="text-xs opacity-75 block mt-1 text-right">
-                  {{ message.timestamp | date:'shortTime' }}
+    <!-- Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 px-6 py-4">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="flex flex-col items-center justify-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p class="mt-4 text-gray-600">Loading your career path analysis...</p>
+      </div>
+      
+      <!-- Error State -->
+      <div *ngIf="loadingError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <p>{{ loadingError }}</p>
+        <button 
+          (click)="loadCareerPathRecommendations()" 
+          class="mt-2 px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
+        >
+          Retry
+        </button>
+      </div>
+      
+      <!-- Career Path Header -->
+      <div *ngIf="selectedCareerPath && !isLoading" class="mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-start justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-800">
+                {{ selectedCareerPath.title }}
+                <span class="ml-2 text-sm px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                  {{ selectedCareerPath.matchPercentage }}% Match
                 </span>
-              </div>
+              </h2>
+              <p class="mt-2 text-gray-600">{{ selectedCareerPath.description }}</p>
             </div>
-          </div>
-  
-          <div class="flex">
-            <input 
-              type="text" 
-              [(ngModel)]="userMessage"
-              (keyup.enter)="sendMessage()"
-              placeholder="Ask about your career path..." 
-              class="flex-grow border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button 
-              (click)="sendMessage()"
-              class="bg-emerald-500 hover:bg-emerald-600 text-white rounded-r-lg px-6 py-2 flex items-center transition duration-200">
-              <span>Send</span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-  
-        <!-- Two-Column Layout for Career Path and Skill Gap -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <!-- Career Path Visualization -->
-          <div class="bg-white rounded-lg shadow-md p-4">
-            <div class="flex items-center mb-4">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-purple-500 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h2 class="text-xl font-semibold ml-3">Career Path Progression</h2>
-            </div>
-            
-            <div class="relative py-4">
-              <div class="career-path-timeline">
-                <div *ngFor="let position of careerPath; let i = index" 
-                    class="career-node flex" 
-                    [ngClass]="{'current-position': i === 1}">
-                  <div class="career-node-indicator">
-                    <div class="node-circle"></div>
-                    <div class="node-line" *ngIf="i < careerPath.length - 1"></div>
-                  </div>
-                  <div class="career-node-content">
-                    <h3 class="text-lg font-medium">{{ position.title }}</h3>
-                    <p class="text-gray-600">{{ position.timeline }}</p>
-                    <p class="text-sm mt-1">{{ position.description }}</p>
+            <div class="flex space-x-2">
+              <div class="dropdown relative">
+                <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                  Switch Path
+                </button>
+                <div class="dropdown-menu absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md p-2 hidden">
+                  <div 
+                    *ngFor="let path of allCareerPaths" 
+                    (click)="selectCareerPath(path)"
+                    class="px-4 py-2 hover:bg-gray-100 rounded cursor-pointer"
+                  >
+                    {{ path.title }} ({{ path.matchPercentage }}%)
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-  
-          <!-- Skill Gap Analysis -->
-          <div class="bg-white rounded-lg shadow-md p-4">
-            <div class="flex items-center mb-4">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-green-500 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h2 class="text-xl font-semibold ml-3">Skill Gap Analysis</h2>
-            </div>
-            
-            <div class="skill-gap-container">
-              <div *ngFor="let skill of skillGapAnalysis" class="mb-4">
-                <div class="flex justify-between mb-1">
-                  <span class="text-sm font-medium">{{ skill.name }}</span>
-                  <span class="text-sm font-medium">{{ skill.current }}/{{ skill.required }}</span>
-                </div>
-                <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
-                  <div class="skill-progress-bar h-full rounded-full" 
-                      [ngClass]="getSkillBarClass(skill)" 
-                      [ngStyle]="{'width': (skill.current / skill.required * 100) + '%'}">
-                  </div>
-                </div>
-                <div class="flex justify-between mt-1 text-xs text-gray-500">
-                  <span>Current Level</span>
-                  <span>Required Level</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Growth Opportunities with Chart -->
-        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div class="flex items-center mb-4">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500 text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
-            <h2 class="text-xl font-semibold ml-3">Growth Opportunities</h2>
           </div>
           
-          <div class="chart-container" style="height: 300px;">
-            <canvas #growthChart></canvas>
+          <div class="mt-4">
+            <h3 class="text-lg font-medium text-gray-700">Analysis Summary</h3>
+            <p class="mt-1 text-gray-600">{{ analysisText }}</p>
           </div>
         </div>
-  
-        <!-- Three-Column Layout for Resources, Trends, and Salary -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <!-- Learning Resources -->
-          <div class="bg-white rounded-lg shadow-md p-4">
-            <div class="flex items-center mb-4">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-500 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
-                </svg>
+      </div>
+      
+      <!-- Content Grid -->
+      <div *ngIf="selectedCareerPath && !isLoading" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Career Path Progression -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Career Path Progression</h2>
+            <div class="space-y-6">
+              <div *ngFor="let position of careerPath" class="flex">
+                <div class="flex-none w-24">
+                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">{{ position.timeline }}</span>
+                </div>
+                <div class="flex-grow">
+                  <h3 class="font-medium text-gray-800">{{ position.title }}</h3>
+                  <p class="text-gray-600 text-sm">{{ position.description }}</p>
+                </div>
               </div>
-              <h2 class="text-xl font-semibold ml-3">Learning Resources</h2>
+            </div>
+          </div>
+          
+          <!-- Skill Gap Analysis -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Skill Gap Analysis</h2>
+            <div class="space-y-4">
+              <div *ngFor="let skill of skillGapAnalysis" class="space-y-1">
+                <div class="flex justify-between">
+                  <span class="text-gray-700">{{ skill.name }}</span>
+                  <span class="text-gray-500 text-sm">{{ skill.current }}/{{ skill.required }} Proficiency</span>
+                </div>
+                <div class="h-2 bg-gray-200 rounded-full">
+                  <div 
+                    [ngClass]="getSkillBarClass(skill)" 
+                    class="h-2 rounded-full skill-progress-bar" 
+                    [style.width.%]="(skill.current / skill.required) * 100"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Growth Opportunities Chart -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Skill Growth Opportunities</h2>
+            <div class="h-80 relative">
+              <canvas #growthChart></canvas>
+            </div>
+          </div>
+          
+          <!-- Career Timeline -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Career Timeline</h2>
+            <div class="relative">
+              <!-- Timeline Line -->
+              <div class="absolute left-12 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+              
+              <!-- Timeline Items -->
+              <div *ngFor="let milestone of careerTimeline" class="relative flex items-start mb-8">
+                <!-- Timeline Marker -->
+                <div class="absolute left-12 w-4 h-4 rounded-full -ml-2" [ngClass]="milestone.markerClass"></div>
+                
+                <!-- Timeline Content -->
+                <div class="flex flex-col ml-20">
+                  <span class="text-sm text-gray-500">{{ milestone.date }}</span>
+                  <h3 class="font-medium text-gray-800">{{ milestone.title }}</h3>
+                  <p class="text-gray-600 text-sm">{{ milestone.description }}</p>
+                  <div class="flex flex-wrap mt-2">
+                    <span *ngFor="let skill of milestone.skills" class="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full mr-2 mb-2">{{ skill }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="space-y-6">
+          <!-- Chat Box -->
+          <div class="bg-white rounded-lg shadow-md flex flex-col h-96">
+            <div class="p-4 border-b">
+              <h2 class="text-lg font-semibold text-gray-800">Ask Career Assistant</h2>
             </div>
             
+            <!-- Chat Messages -->
+            <div #chatContainer class="flex-1 overflow-y-auto p-4 space-y-3">
+              <div *ngFor="let message of chatMessages" 
+                [ngClass]="{'flex justify-end': message.sender === 'user', 'flex justify-start': message.sender === 'ai'}">
+                <div [ngClass]="{'bg-blue-500 text-white': message.sender === 'user', 'bg-gray-200 text-gray-800': message.sender === 'ai'}" 
+                  class="rounded-lg px-4 py-2 max-w-[80%]">
+                  {{ message.text }}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="p-4 border-t">
+              <form (submit)="$event.preventDefault(); sendMessage()" class="flex">
+                <input 
+                  type="text" 
+                  [(ngModel)]="userMessage" 
+                  name="userMessage"
+                  placeholder="Ask about your career path..." 
+                  class="flex-1 border rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                <button 
+                  type="submit" 
+                  class="bg-blue-500 text-white rounded-r-md px-4 py-2 hover:bg-blue-600"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Learning Resources -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h2>
             <div class="space-y-4">
-              <div *ngFor="let resource of learningResources" class="resource-card hover:bg-gray-50 p-3 rounded-lg transition duration-200 ease-in-out">
-                <h3 class="font-medium">{{ resource.title }}</h3>
-                <div class="flex items-center mt-1">
-                  <div [ngClass]="resource.typeClass" class="text-xs rounded-full px-2 py-1 mr-2">{{ resource.type }}</div>
-                  <div class="text-gray-500 text-xs">{{ resource.duration }}</div>
+              <div *ngFor="let resource of learningResources" class="border rounded-md p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <span [ngClass]="resource.typeClass" class="text-xs px-2 py-1 rounded-full">{{ resource.type }}</span>
+                    <h3 class="font-medium text-gray-800 mt-1">{{ resource.title }}</h3>
+                  </div>
+                  <span class="text-gray-500 text-sm">{{ resource.duration }}</span>
                 </div>
                 <p class="text-gray-600 text-sm mt-2">{{ resource.description }}</p>
-                <a href="#" class="text-blue-500 hover:text-blue-700 text-sm mt-2 inline-block">Learn More →</a>
+                <a 
+                  [href]="resource.link" 
+                  class="text-blue-600 hover:text-blue-800 text-sm inline-block mt-2"
+                >
+                  Learn more
+                </a>
               </div>
             </div>
-          </div>
-  
-          <!-- Industry Trends -->
-          <div class="bg-white rounded-lg shadow-md p-4">
-            <div class="flex items-center mb-4">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-500 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <h2 class="text-xl font-semibold ml-3">Industry Trends</h2>
-            </div>
-            
-            <div class="space-y-4">
-              <div *ngFor="let trend of industryTrends" class="trend-card p-3 rounded-lg bg-gradient-to-r from-gray-50 to-white">
-                <div class="flex justify-between items-start">
-                  <h3 class="font-medium">{{ trend.title }}</h3>
-                  <span [ngClass]="trend.trendClass" class="flex items-center text-sm">
-                    {{ trend.trendValue }}
-                    <svg *ngIf="trend.trendDirection === 'up'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    <svg *ngIf="trend.trendDirection === 'down'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                </div>
-                <p class="text-gray-600 text-sm mt-2">{{ trend.description }}</p>
-              </div>
-            </div>
-          </div>
-  
-          <!-- Salary Information -->
-          <div class="bg-white rounded-lg shadow-md p-4">
-            <div class="flex items-center mb-4">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-green-500 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h2 class="text-xl font-semibold ml-3">Salary Information</h2>
-            </div>
-            
-            <div class="overflow-x-auto">
-              <table class="min-w-full">
-                <thead>
-                  <tr>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Position</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Range</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Growth</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let salary of salaryInformation" class="border-b border-gray-100">
-                    <td class="py-3 text-sm">{{ salary.position }}</td>
-                    <td class="py-3 text-sm">{{ salary.range }}</td>
-                    <td class="py-3">
-                      <span [ngClass]="salary.growthClass" class="inline-flex items-center text-sm">
-                        {{ salary.growth }}
-                        <svg *ngIf="salary.growthIndicator === 'up'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
-                        <svg *ngIf="salary.growthIndicator === 'down'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Timeline Projections -->
-        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div class="flex items-center mb-4">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-red-500 text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h2 class="text-xl font-semibold ml-3">Career Timeline Projection</h2>
           </div>
           
-          <div class="timeline-container overflow-x-auto pb-2">
-            <div class="timeline-track flex min-w-max">
-              <div *ngFor="let milestone of careerTimeline" class="timeline-milestone flex flex-col items-center mx-6 relative">
-                <div class="milestone-date text-xs font-medium text-gray-600 mb-2">{{ milestone.date }}</div>
-                <div class="milestone-marker w-4 h-4 rounded-full" [ngClass]="milestone.markerClass"></div>
-                <div class="milestone-line absolute h-0.5 bg-gray-200" [ngStyle]="{'width': '100%', 'left': '50%'}"></div>
-                <div class="milestone-content bg-white border border-gray-200 p-3 rounded-lg mt-4 w-40">
-                  <h3 class="text-sm font-medium">{{ milestone.title }}</h3>
-                  <p class="text-xs text-gray-600 mt-1">{{ milestone.description }}</p>
-                  <div *ngIf="milestone.skills && milestone.skills.length > 0" class="mt-2">
-                    <div *ngFor="let skill of milestone.skills" class="inline-block bg-blue-100 text-blue-800 text-xs rounded px-2 py-0.5 mr-1 mb-1">
-                      {{ skill }}
-                    </div>
+          <!-- Industry Trends -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Industry Trends</h2>
+            <div class="space-y-4">
+              <div *ngFor="let trend of industryTrends" class="flex items-start">
+                <div class="flex-grow">
+                  <h3 class="font-medium text-gray-800">{{ trend.title }}</h3>
+                  <p class="text-gray-600 text-sm">{{ trend.description }}</p>
+                </div>
+                <div [ngClass]="trend.trendClass" class="text-lg font-semibold">
+                  {{ trend.trendValue }}
+                  <span *ngIf="trend.trendDirection === 'up'">↑</span>
+                  <span *ngIf="trend.trendDirection === 'down'">↓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Salary Information -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Salary Information</h2>
+            <div class="space-y-3">
+              <div *ngFor="let salary of salaryInformation" class="flex justify-between items-center py-2 border-b last:border-b-0">
+                <div>
+                  <h3 class="font-medium text-gray-800">{{ salary.position }}</h3>
+                  <span class="text-gray-600 text-sm">{{ salary.range }}</span>
+                </div>
+                <div [ngClass]="salary.growthClass" class="text-sm font-medium">
+                  {{ salary.growth }}
+                  <span *ngIf="salary.growthIndicator === 'up'">↑</span>
+                  <span *ngIf="salary.growthIndicator === 'down'">↓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Saved Career Paths -->
+          <div *ngIf="savedCareerPaths.length > 0" class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Saved Career Paths</h2>
+            <div class="space-y-3">
+              <div *ngFor="let path of savedCareerPaths" class="border rounded-md p-3">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="font-medium text-gray-800">{{ path.career_paths[0]?.title || 'Career Path' }}</h3>
+                    <span class="text-gray-500 text-xs">Saved on {{ path.created_at | date }}</span>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button 
+                      (click)="selectSavedCareerPath(path)" 
+                      class="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      View
+                    </button>
+                    <button 
+                      (click)="deleteCareerPath(path.id)" 
+                      class="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
@@ -269,6 +279,6 @@
           </div>
         </div>
       </div>
-    </div>
     </main>
   </div>
+</div>

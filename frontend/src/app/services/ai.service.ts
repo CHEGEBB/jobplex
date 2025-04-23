@@ -1,10 +1,12 @@
-// ai.service.ts
+// src/app/services/ai.service.ts
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../environments/environment';
+import { AuthService } from './auth.service';
 
-// Define interfaces for type safety
+// Career Path Interfaces
 export interface LearningResource {
   name: string;
   type: string;
@@ -24,8 +26,17 @@ export interface CareerPathResponse {
   analysis: string;
 }
 
+// Saved Career Path Interfaces
+export interface SavedCareerPath {
+  id: number;
+  analysis: string;
+  created_at: string;
+  career_paths: CareerPath[];
+}
+
+// Candidate Matching Interfaces
 export interface CandidateMatch {
-  id: string | number;
+  id: number;
   name: string;
   matchPercentage: number;
   matchReason: string;
@@ -40,22 +51,111 @@ export interface CandidateMatchResponse {
   providedIn: 'root'
 })
 export class AiService {
-  private apiUrl = `${environment.apiUrl}/ai`;
+  private readonly API_URL = `${environment.apiUrl}/ai`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) { }
 
   /**
-   * For Job Seekers: Get AI-recommended career paths based on user skills
+   * Get AI-generated career path recommendations based on user's profile and skills
    */
   getCareerPathRecommendations(): Observable<CareerPathResponse> {
-    return this.http.get<CareerPathResponse>(`${this.apiUrl}/career-path`);
+    const headers = this.getAuthHeaders();
+    
+    return this.http.get<CareerPathResponse>(`${this.API_URL}/career-path`, { headers })
+      .pipe(
+        tap(response => console.log('Received career path recommendations:', response)),
+        catchError(this.handleError)
+      );
   }
 
   /**
-   * For Employers: Match candidates to a job posting based on skills
-   * @param jobId - The ID of the job to match candidates for
+   * Get all saved career paths for the current user
    */
-  matchCandidatesForJob(jobId: number): Observable<CandidateMatchResponse> {
-    return this.http.get<CandidateMatchResponse>(`${this.apiUrl}/match-candidates/${jobId}`);
+  getSavedCareerPaths(): Observable<SavedCareerPath[]> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.get<SavedCareerPath[]>(`${this.API_URL}/career-paths`, { headers })
+      .pipe(
+        tap(paths => console.log(`Retrieved ${paths.length} saved career paths`)),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Delete a specific career path
+   * @param careerPathId The ID of the career path to delete
+   */
+  deleteCareerPath(careerPathId: number): Observable<{ message: string }> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.delete<{ message: string }>(`${this.API_URL}/career-path/${careerPathId}`, { headers })
+      .pipe(
+        tap(response => console.log(`Career path deleted: ${response.message}`)),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Match candidates to a specific job posting (for employers)
+   * @param jobId The ID of the job posting to match candidates for
+   */
+  matchCandidates(jobId: number): Observable<CandidateMatchResponse> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.get<CandidateMatchResponse>(`${this.API_URL}/match-candidates/${jobId}`, { headers })
+      .pipe(
+        tap(response => console.log(`Matched ${response.candidates.length} candidates for job ${jobId}`)),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Get authentication headers with the token
+   */
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  }
+
+  /**
+   * Error handling for HTTP requests
+   */
+  private handleError(error: HttpErrorResponse) {
+    console.error('AI Service Error:', error);
+    
+    let errorMessage = 'An error occurred with the AI service';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Error: ${error.error.message}`;
+      console.error('Client error:', errorMessage);
+    } else {
+      // Server-side error
+      console.error(
+        `Backend returned code ${error.status}, ` +
+        `body was: ${JSON.stringify(error.error)}`
+      );
+      
+      if (error.status === 0) {
+        errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+      } else if (error.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error.status === 403) {
+        errorMessage = 'You do not have permission to perform this action.';
+      } else if (error.error && error.error.message) {
+        errorMessage = error.error.message;
+      } else {
+        errorMessage = `AI Service error: ${error.status}`;
+      }
+    }
+    
+    // Return an observable with a user-facing error message
+    return throwError(() => new Error(errorMessage));
   }
 }

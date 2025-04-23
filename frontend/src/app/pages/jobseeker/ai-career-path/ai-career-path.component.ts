@@ -1,9 +1,13 @@
 // ai-career-path.component.ts
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
+import { AiService, CareerPath, CareerPathResponse, LearningResource as AILearningResource } from '../../../services/ai.service';
+import { Subscription } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -73,7 +77,7 @@ interface GrowthOpportunity {
   templateUrl: './ai-career-path.component.html',
   styleUrls: ['./ai-career-path.component.scss']
 })
-export class AiCareerPathComponent implements OnInit, AfterViewInit {
+export class AiCareerPathComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('chatContainer') chatContainer!: ElementRef;
   @ViewChild('growthChart') growthChartRef!: ElementRef;
   
@@ -94,207 +98,119 @@ export class AiCareerPathComponent implements OnInit, AfterViewInit {
   ];
   
   // Career Path data
-  careerPath: CareerPosition[] = [
-    {
-      title: 'Junior Developer',
-      timeline: 'Past',
-      description: 'Entry-level software development, focusing on bug fixes and small features.'
-    },
-    {
-      title: 'Full-Stack Developer',
-      timeline: 'Current',
-      description: 'Building complete features and handling both front-end and back-end tasks.'
-    },
-    {
-      title: 'Senior Developer',
-      timeline: 'Next 1-2 years',
-      description: 'Leading technical decisions and mentoring junior team members.'
-    },
-    {
-      title: 'Tech Lead',
-      timeline: '3-5 years',
-      description: 'Directing technical strategy and managing development teams.'
-    },
-    {
-      title: 'Engineering Manager',
-      timeline: '5+ years',
-      description: 'Overseeing multiple teams and driving organizational technical direction.'
-    }
-  ];
+  careerPath: CareerPosition[] = [];
   
   // Skill Gap Analysis data
-  skillGapAnalysis: SkillGap[] = [
-    { name: 'JavaScript/TypeScript', current: 7, required: 9 },
-    { name: 'Angular', current: 6, required: 8 },
-    { name: 'Node.js', current: 5, required: 7 },
-    { name: 'Database Design', current: 4, required: 8 },
-    { name: 'DevOps', current: 3, required: 6 },
-    { name: 'System Architecture', current: 3, required: 7 }
-  ];
+  skillGapAnalysis: SkillGap[] = [];
   
   // Growth Opportunities data
-  growthOpportunities: GrowthOpportunity[] = [
-    { skillName: 'AI/ML Integration', currentDemand: 65, projectedDemand: 95, industryAverage: 70 },
-    { skillName: 'Cloud Architecture', currentDemand: 75, projectedDemand: 90, industryAverage: 80 },
-    { skillName: 'DevOps', currentDemand: 70, projectedDemand: 85, industryAverage: 75 },
-    { skillName: 'Security', currentDemand: 50, projectedDemand: 80, industryAverage: 60 },
-    { skillName: 'API Design', currentDemand: 60, projectedDemand: 75, industryAverage: 65 }
-  ];
+  growthOpportunities: GrowthOpportunity[] = [];
   
   // Learning Resources data
-  learningResources: LearningResource[] = [
-    {
-      title: 'Advanced Angular Development',
-      type: 'Course',
-      typeClass: 'bg-blue-100 text-blue-800',
-      duration: '30 hours',
-      description: 'Master advanced Angular concepts including state management and optimization.',
-      link: '#'
-    },
-    {
-      title: 'System Design for Senior Developers',
-      type: 'Book',
-      typeClass: 'bg-green-100 text-green-800',
-      duration: '350 pages',
-      description: 'Learn how to design scalable systems with modern architectural patterns.',
-      link: '#'
-    },
-    {
-      title: 'Tech Leadership Workshop',
-      type: 'Workshop',
-      typeClass: 'bg-purple-100 text-purple-800',
-      duration: '2 days',
-      description: 'Develop the soft skills needed to lead technical teams effectively.',
-      link: '#'
-    }
-  ];
+  learningResources: LearningResource[] = [];
   
   // Industry Trends data
-  industryTrends: IndustryTrend[] = [
-    {
-      title: 'AI Integration',
-      description: 'Growing demand for developers who can integrate AI services into applications.',
-      trendValue: '+45%',
-      trendDirection: 'up',
-      trendClass: 'text-green-600'
-    },
-    {
-      title: 'Remote Work',
-      description: 'Continued shift towards fully remote development teams and practices.',
-      trendValue: '+30%',
-      trendDirection: 'up',
-      trendClass: 'text-green-600'
-    },
-    {
-      title: 'Monolithic Architectures',
-      description: 'Decreasing use of traditional monolithic application structures.',
-      trendValue: '-15%',
-      trendDirection: 'down',
-      trendClass: 'text-red-600'
-    }
-  ];
+  industryTrends: IndustryTrend[] = [];
   
   // Salary Information data
-  salaryInformation: SalaryInfo[] = [
-    {
-      position: 'Junior Developer',
-      range: '$60,000 - $80,000',
-      growth: '3%',
-      growthIndicator: 'up',
-      growthClass: 'text-green-600'
-    },
-    {
-      position: 'Full-Stack Developer',
-      range: '$80,000 - $120,000',
-      growth: '5%',
-      growthIndicator: 'up',
-      growthClass: 'text-green-600'
-    },
-    {
-      position: 'Senior Developer',
-      range: '$120,000 - $150,000',
-      growth: '7%',
-      growthIndicator: 'up',
-      growthClass: 'text-green-600'
-    },
-    {
-      position: 'Tech Lead',
-      range: '$140,000 - $180,000',
-      growth: '8%',
-      growthIndicator: 'up',
-      growthClass: 'text-green-600'
-    },
-    {
-      position: 'Engineering Manager',
-      range: '$150,000 - $220,000',
-      growth: '10%',
-      growthIndicator: 'up',
-      growthClass: 'text-green-600'
-    }
-  ];
+  salaryInformation: SalaryInfo[] = [];
   
   // Career Timeline data
-  careerTimeline: TimelineMilestone[] = [
-    {
-      date: 'Now',
-      title: 'Full-Stack Developer',
-      description: 'Continue building expertise in full-stack development.',
-      skills: ['Angular', 'Node.js', 'SQL'],
-      markerClass: 'bg-blue-500'
-    },
-    {
-      date: 'Q4 2025',
-      title: 'Advanced Certification',
-      description: 'Complete cloud certification to enhance technical profile.',
-      skills: ['Cloud', 'DevOps'],
-      markerClass: 'bg-gray-300'
-    },
-    {
-      date: 'Q1 2026',
-      title: 'Senior Developer',
-      description: 'Promotion to senior role with team leadership responsibilities.',
-      skills: ['Leadership', 'Architecture'],
-      markerClass: 'bg-gray-300'
-    },
-    {
-      date: 'Q3 2027',
-      title: 'Specialized Training',
-      description: 'Advanced training in AI/ML integration for web applications.',
-      skills: ['AI/ML', 'Data Science'],
-      markerClass: 'bg-gray-300'
-    },
-    {
-      date: 'Q1 2028',
-      title: 'Tech Lead',
-      description: 'Promotion to technical leadership role with expanded responsibilities.',
-      skills: ['Team Management', 'Technical Strategy'],
-      markerClass: 'bg-gray-300'
-    }
-  ];
+  careerTimeline: TimelineMilestone[] = [];
 
-  constructor() {}
+  // Loading states
+  isLoading = false;
+  loadingError = '';
+
+  // Subscriptions
+  private subscriptions: Subscription[] = [];
+
+  // AI Analysis data
+  analysisText = '';
+  selectedCareerPath: CareerPath | null = null;
+  allCareerPaths: CareerPath[] = [];
+  savedCareerPaths: any[] = [];
+
+  constructor(private aiService: AiService) {}
 
   ngOnInit(): void {
-    // Initialize any data or services here
     this.sidebarCollapsed = window.innerWidth < 768;
-
+    this.loadCareerPathRecommendations();
+    this.loadSavedCareerPaths();
   }
 
   ngAfterViewInit(): void {
-    this.initGrowthChart();
-    
-    // Add animation classes to skill bars after initial render
-    setTimeout(() => {
-      const skillBars = document.querySelectorAll('.skill-progress-bar');
-      skillBars.forEach(bar => {
-        bar.classList.add('animate-skill');
-      });
-    }, 300);
+    this.initGrowthChartIfDataAvailable();
   }
 
+  ngOnDestroy(): void {
+    // Clean up subscriptions to prevent memory leaks
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
+    
+    // Destroy chart
+    if (this.growthChart) {
+      this.growthChart.destroy();
+    }
+  }
   
-  onToggleSidebar(collapsed: boolean) {
+  onToggleSidebar(collapsed: boolean): void {
     this.sidebarCollapsed = collapsed;
+  }
+
+  loadCareerPathRecommendations(): void {
+    this.isLoading = true;
+    this.loadingError = '';
+    
+    const subscription = this.aiService.getCareerPathRecommendations()
+      .pipe(
+        catchError(error => {
+          this.loadingError = error.message || 'Failed to load career path recommendations';
+          console.error('Error loading career paths:', error);
+          this.isLoading = false;
+          return of(null);
+        })
+      )
+      .subscribe(response => {
+        this.isLoading = false;
+        if (response) {
+          this.processCareerPathResponse(response);
+        }
+      });
+      
+    this.subscriptions.push(subscription);
+  }
+
+  loadSavedCareerPaths(): void {
+    const subscription = this.aiService.getSavedCareerPaths()
+      .pipe(
+        catchError(error => {
+          console.error('Error loading saved career paths:', error);
+          return of([]);
+        })
+      )
+      .subscribe(paths => {
+        this.savedCareerPaths = paths;
+      });
+      
+    this.subscriptions.push(subscription);
+  }
+
+  deleteCareerPath(id: number): void {
+    const subscription = this.aiService.deleteCareerPath(id)
+      .pipe(
+        catchError(error => {
+          console.error('Error deleting career path:', error);
+          return of(null);
+        })
+      )
+      .subscribe(response => {
+        if (response) {
+          // Remove the deleted path from the local array
+          this.savedCareerPaths = this.savedCareerPaths.filter(path => path.id !== id);
+        }
+      });
+      
+    this.subscriptions.push(subscription);
   }
 
   sendMessage(): void {
@@ -316,20 +232,60 @@ export class AiCareerPathComponent implements OnInit, AfterViewInit {
       this.scrollChatToBottom();
     });
     
-    // Simulate AI thinking
+    // In a real implementation, you would send this query to an AI endpoint
+    // For now, we'll simulate responses based on our existing data
+    this.simulateResponse(userQuery);
+  }
+
+  private simulateResponse(query: string): void {
+    // Add loading indicator
+    this.chatMessages.push({
+      text: "Thinking...",
+      sender: 'ai',
+      timestamp: new Date()
+    });
+    
+    // Scroll to bottom
+    this.scrollChatToBottom();
+    
+    // Simulate API call delay
     setTimeout(() => {
-      // Add AI response (this would be replaced with actual API call in production)
+      // Remove loading message
+      this.chatMessages.pop();
+      
+      // Generate response based on context
+      let response = '';
+      
+      // Simple keyword matching for demo purposes
+      if (query.toLowerCase().includes('career') || query.toLowerCase().includes('path')) {
+        response = `Based on your profile, I recommend exploring the ${this.allCareerPaths.length > 0 ? this.allCareerPaths[0].title : 'software development'} path, which has a ${this.allCareerPaths.length > 0 ? this.allCareerPaths[0].matchPercentage : '75'}% match to your skills.`;
+      } else if (query.toLowerCase().includes('skill') || query.toLowerCase().includes('gap')) {
+        if (this.selectedCareerPath && this.selectedCareerPath.skillGaps.length > 0) {
+          response = `Your main skill gaps for the ${this.selectedCareerPath.title} path are: ${this.selectedCareerPath.skillGaps.join(', ')}.`;
+        } else {
+          response = "I recommend focusing on improving your technical architecture and leadership skills to advance to the next career level.";
+        }
+      } else if (query.toLowerCase().includes('learn') || query.toLowerCase().includes('resource')) {
+        if (this.selectedCareerPath && this.selectedCareerPath.learningResources.length > 0) {
+          const resource = this.selectedCareerPath.learningResources[0];
+          response = `I recommend checking out "${resource.name}" which is a ${resource.type} about ${resource.description}.`;
+        } else {
+          response = "I've curated some learning resources that would help you develop the skills needed for your career progression. Check the Learning Resources section.";
+        }
+      } else {
+        response = "I'm here to help with your career development. Feel free to ask about your recommended career paths, skill gaps, or learning resources.";
+      }
+      
+      // Add response to chat
       this.chatMessages.push({
-        text: this.generateAIResponse(userQuery),
+        text: response,
         sender: 'ai',
         timestamp: new Date()
       });
       
-      // Scroll to bottom again
-      setTimeout(() => {
-        this.scrollChatToBottom();
-      });
-    }, 1000);
+      // Scroll to bottom
+      this.scrollChatToBottom();
+    }, 1500);
   }
 
   private scrollChatToBottom(): void {
@@ -338,18 +294,267 @@ export class AiCareerPathComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private generateAIResponse(query: string): string {
-    // This is a simple simulation - in a real app, this would call an API
-    const responses = [
-      "Based on your current skills and career trajectory, focusing on cloud architecture would be beneficial for your next step toward becoming a Senior Developer.",
-      "I recommend exploring the System Design course I've listed in the learning resources section. It aligns perfectly with your career goals.",
-      "Your skill gap in DevOps is important to address as you move toward a Tech Lead position. Many organizations now expect technical leaders to have this knowledge.",
-      "Current industry trends show a significant increase in demand for AI integration skills. This could be a valuable specialization to pursue.",
-      "The timeline projection shows you could reach a Senior Developer role by early 2026 if you focus on the recommended learning path."
-    ];
+  // Converts the API career path data to our component format
+  private processCareerPathResponse(response: CareerPathResponse): void {
+    if (!response) return;
     
-    // Return a random response
-    return responses[Math.floor(Math.random() * responses.length)];
+    this.analysisText = response.analysis;
+    this.allCareerPaths = response.careerPaths;
+    
+    if (response.careerPaths.length > 0) {
+      this.selectedCareerPath = response.careerPaths[0];
+      this.updateUIFromSelectedCareerPath();
+    }
+  }
+
+  selectCareerPath(path: CareerPath): void {
+    this.selectedCareerPath = path;
+    this.updateUIFromSelectedCareerPath();
+  }
+
+  selectSavedCareerPath(savedPath: any): void {
+    this.analysisText = savedPath.analysis;
+    this.allCareerPaths = savedPath.career_paths;
+    
+    if (savedPath.career_paths.length > 0) {
+      this.selectedCareerPath = savedPath.career_paths[0];
+      this.updateUIFromSelectedCareerPath();
+    }
+  }
+
+  private updateUIFromSelectedCareerPath(): void {
+    if (!this.selectedCareerPath) return;
+    
+    // Update career path
+    this.careerPath = this.generateCareerPathFromAPI(this.selectedCareerPath);
+    
+    // Update skill gaps
+    this.skillGapAnalysis = this.generateSkillGapsFromAPI(this.selectedCareerPath);
+    
+    // Update learning resources
+    this.learningResources = this.generateLearningResourcesFromAPI(this.selectedCareerPath);
+    
+    // Generate other data based on the career path
+    this.generateGrowthOpportunities();
+    this.generateIndustryTrends();
+    this.generateSalaryInformation();
+    this.generateCareerTimeline();
+    
+    // Initialize or update the chart
+    setTimeout(() => {
+      this.initGrowthChartIfDataAvailable();
+      
+      // Add animation classes to skill bars after update
+      const skillBars = document.querySelectorAll('.skill-progress-bar');
+      skillBars.forEach(bar => {
+        bar.classList.remove('animate-skill');
+        setTimeout(() => {
+          bar.classList.add('animate-skill');
+        }, 10);
+      });
+    }, 300);
+  }
+
+  private generateCareerPathFromAPI(careerPath: CareerPath): CareerPosition[] {
+    // This is a simplified example - in a real app, you would map API data more comprehensively
+    const positions: CareerPosition[] = [];
+    
+    // Add current position
+    positions.push({
+      title: careerPath.title,
+      timeline: 'Current',
+      description: careerPath.description
+    });
+    
+    // Add future positions (these would come from the API in a real implementation)
+    positions.push({
+      title: `Senior ${careerPath.title}`,
+      timeline: 'Next 1-2 years',
+      description: `Advanced role with deeper expertise in ${careerPath.title} specialization.`
+    });
+    
+    positions.push({
+      title: `Lead ${careerPath.title}`,
+      timeline: '3-5 years',
+      description: 'Leading technical decisions and mentoring team members.'
+    });
+    
+    return positions;
+  }
+
+  private generateSkillGapsFromAPI(careerPath: CareerPath): SkillGap[] {
+    return careerPath.skillGaps.map(skill => {
+      // Calculate a mock current and required level
+      return {
+        name: skill,
+        current: Math.floor(Math.random() * 5) + 3, // Random number between 3-7
+        required: Math.floor(Math.random() * 3) + 7  // Random number between 7-9
+      };
+    });
+  }
+
+  private generateLearningResourcesFromAPI(careerPath: CareerPath): LearningResource[] {
+    return careerPath.learningResources.map(resource => {
+      let typeClass = 'bg-blue-100 text-blue-800';
+      
+      if (resource.type.toLowerCase().includes('book')) {
+        typeClass = 'bg-green-100 text-green-800';
+      } else if (resource.type.toLowerCase().includes('workshop')) {
+        typeClass = 'bg-purple-100 text-purple-800';
+      } else if (resource.type.toLowerCase().includes('certification')) {
+        typeClass = 'bg-yellow-100 text-yellow-800';
+      }
+      
+      return {
+        title: resource.name,
+        type: resource.type,
+        typeClass: typeClass,
+        duration: this.getDurationForResourceType(resource.type),
+        description: resource.description,
+        link: '#'
+      };
+    });
+  }
+
+  private getDurationForResourceType(type: string): string {
+    switch (type.toLowerCase()) {
+      case 'course':
+        return `${Math.floor(Math.random() * 30) + 10} hours`;
+      case 'book':
+        return `${Math.floor(Math.random() * 300) + 100} pages`;
+      case 'workshop':
+        return `${Math.floor(Math.random() * 3) + 1} days`;
+      case 'certification':
+        return `${Math.floor(Math.random() * 3) + 1} months prep`;
+      default:
+        return 'Varies';
+    }
+  }
+
+  private generateGrowthOpportunities(): void {
+    if (!this.selectedCareerPath) return;
+    
+    // Generate growth opportunities based on skill gaps
+    this.growthOpportunities = this.selectedCareerPath.skillGaps.slice(0, 5).map(skill => {
+      return {
+        skillName: skill,
+        currentDemand: Math.floor(Math.random() * 30) + 40,  // Random between 40-69
+        projectedDemand: Math.floor(Math.random() * 20) + 70, // Random between 70-89
+        industryAverage: Math.floor(Math.random() * 20) + 60  // Random between 60-79
+      };
+    });
+  }
+
+  private generateIndustryTrends(): void {
+    if (!this.selectedCareerPath) return;
+    
+    // In a real app, this would come from the API
+    this.industryTrends = [
+      {
+        title: `${this.selectedCareerPath.title} Specialists`,
+        description: `Growing demand for ${this.selectedCareerPath.title} specialists in the industry.`,
+        trendValue: '+38%',
+        trendDirection: 'up',
+        trendClass: 'text-green-600'
+      },
+      {
+        title: 'Remote Work',
+        description: 'Continued shift towards remote work in this field.',
+        trendValue: '+25%',
+        trendDirection: 'up',
+        trendClass: 'text-green-600'
+      },
+      {
+        title: 'Traditional Approaches',
+        description: 'Decreasing use of legacy systems and traditional methodologies.',
+        trendValue: '-12%',
+        trendDirection: 'down',
+        trendClass: 'text-red-600'
+      }
+    ];
+  }
+
+  private generateSalaryInformation(): void {
+    if (!this.selectedCareerPath) return;
+    
+    // In a real app, this would come from the API
+    const baseTitle = this.selectedCareerPath.title;
+    
+    this.salaryInformation = [
+      {
+        position: `Junior ${baseTitle}`,
+        range: '$60,000 - $80,000',
+        growth: '3%',
+        growthIndicator: 'up',
+        growthClass: 'text-green-600'
+      },
+      {
+        position: baseTitle,
+        range: '$80,000 - $120,000',
+        growth: '5%',
+        growthIndicator: 'up',
+        growthClass: 'text-green-600'
+      },
+      {
+        position: `Senior ${baseTitle}`,
+        range: '$120,000 - $150,000',
+        growth: '7%',
+        growthIndicator: 'up',
+        growthClass: 'text-green-600'
+      },
+      {
+        position: `Lead ${baseTitle}`,
+        range: '$140,000 - $180,000',
+        growth: '8%',
+        growthIndicator: 'up',
+        growthClass: 'text-green-600'
+      }
+    ];
+  }
+
+  private generateCareerTimeline(): void {
+    if (!this.selectedCareerPath) return;
+    
+    const baseTitle = this.selectedCareerPath.title;
+    const currentYear = new Date().getFullYear();
+    
+    this.careerTimeline = [
+      {
+        date: 'Now',
+        title: baseTitle,
+        description: `Continue building expertise as a ${baseTitle}.`,
+        skills: this.selectedCareerPath.skillGaps.slice(0, 2),
+        markerClass: 'bg-blue-500'
+      },
+      {
+        date: `Q4 ${currentYear}`,
+        title: 'Advanced Certification',
+        description: 'Complete certification to enhance technical profile.',
+        skills: this.selectedCareerPath.skillGaps.slice(2, 4),
+        markerClass: 'bg-gray-300'
+      },
+      {
+        date: `Q1 ${currentYear + 1}`,
+        title: `Senior ${baseTitle}`,
+        description: 'Promotion to senior role with more responsibilities.',
+        skills: ['Leadership', 'Architecture'],
+        markerClass: 'bg-gray-300'
+      },
+      {
+        date: `Q3 ${currentYear + 2}`,
+        title: 'Specialized Training',
+        description: 'Advanced training in emerging technologies.',
+        skills: ['Innovation', 'Modern Practices'],
+        markerClass: 'bg-gray-300'
+      },
+      {
+        date: `Q1 ${currentYear + 3}`,
+        title: `Lead ${baseTitle}`,
+        description: 'Promotion to leadership role with expanded responsibilities.',
+        skills: ['Team Management', 'Strategy'],
+        markerClass: 'bg-gray-300'
+      }
+    ];
   }
 
   getSkillBarClass(skill: SkillGap): string {
@@ -366,7 +571,9 @@ export class AiCareerPathComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private initGrowthChart(): void {
+  private initGrowthChartIfDataAvailable(): void {
+    if (!this.growthChartRef || !this.growthOpportunities.length) return;
+    
     if (this.growthChart) {
       this.growthChart.destroy();
     }
