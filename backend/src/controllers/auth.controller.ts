@@ -19,15 +19,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const { email, password, role, firstName, lastName }: RegisterRequest = req.body;
   
   // Validate input
-  // Validate input
-if (!email || !password || !role || !['jobseeker', 'employer', 'admin'].includes(role)) {
-  res.status(400).json({ message: 'Invalid input data' });
-  return;
-}
+  if (!email || !password || !role || !['jobseeker', 'employer', 'admin'].includes(role)) {
+    res.status(400).json({ message: 'Invalid input data' });
+    return;
+  }
 
   try {
-    // Check if user already exists
-    const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    // Check if user already exists - use lowercase for consistent email comparison
+    const normalizedEmail = email.toLowerCase().trim();
+    const userCheck = await pool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [normalizedEmail]);
     if (userCheck.rows.length > 0) {
       res.status(409).json({ message: 'User already exists with this email' });
       return;
@@ -42,10 +42,10 @@ if (!email || !password || !role || !['jobseeker', 'employer', 'admin'].includes
     try {
       await client.query('BEGIN');
       
-      // Insert user
+      // Insert user - store email in normalized form
       const userResult = await client.query(
         'INSERT INTO users (email, password, role, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, role, first_name, last_name',
-        [email, hashedPassword, role, firstName, lastName]
+        [normalizedEmail, hashedPassword, role, firstName, lastName]
       );
       
       const user = userResult.rows[0];
@@ -105,10 +105,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 
   try {
-    // Find user by email
+    // Normalize the email for consistent comparison
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Find user by email - case insensitive
     const result = await pool.query(
-      'SELECT id, email, password, role, first_name, last_name FROM users WHERE email = $1',
-      [email]
+      'SELECT id, email, password, role, first_name, last_name FROM users WHERE LOWER(email) = LOWER($1)',
+      [normalizedEmail]
     );
     
     if (result.rows.length === 0) {
@@ -118,8 +121,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     
     const user = result.rows[0];
     
+    // Add debug logging (remove in production)
+    console.log('Login attempt:', {
+      providedEmail: normalizedEmail,
+      foundEmail: user.email,
+      passwordLength: password.length,
+      hashedPasswordLength: user.password.length
+    });
+    
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    // Debug password comparison
+    console.log('Password comparison result:', isPasswordValid);
     
     if (!isPasswordValid) {
       res.status(401).json({ message: 'Invalid credentials' });
@@ -160,8 +174,11 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
   }
 
   try {
-    // Check if user exists
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Check if user exists - case insensitive
+    const result = await pool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [normalizedEmail]);
     
     if (result.rows.length === 0) {
       // For security reasons, don't reveal that the email doesn't exist

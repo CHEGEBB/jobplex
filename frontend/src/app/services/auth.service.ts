@@ -118,7 +118,6 @@ export class AuthService {
       catchError(this.handleError)
     );
   }
-
   login(credentials: LoginRequest): Observable<AuthResponse> {
     console.log('Login service called with:', credentials);
     
@@ -130,11 +129,26 @@ export class AuthService {
       .pipe(
         tap(response => {
           console.log('Login successful:', response);
-          // Verify that user can only log in with their actual role
+          
+          // Modified check for admin users
           if (response.user.role !== credentials.role) {
-            this.logout();
-            throw new Error(`Access denied. You cannot log in as ${credentials.role} with a ${response.user.role} account.`);
+            // If attempting to login as admin but account is not admin
+            if (credentials.role === 'admin' && response.user.role !== 'admin') {
+              this.logout();
+              throw new Error(`Access denied. Only admin accounts can log in as admin.`);
+            }
+            // If attempting to login as non-admin with admin account
+            else if (credentials.role !== 'admin' && response.user.role === 'admin') {
+              // Allow admin to login as other roles if needed
+              console.log('Admin logging in with a different role');
+            }
+            // For non-admin users trying to use a different role
+            else {
+              this.logout();
+              throw new Error(`Access denied. You cannot log in as ${credentials.role} with a ${response.user.role} account.`);
+            }
           }
+          
           this.handleAuthentication(response);
         }),
         catchError(this.handleError)
