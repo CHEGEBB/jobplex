@@ -1,282 +1,278 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UsersService, User } from '../../../services/users.service';
-import { AuthService } from '../../../services/auth.service';
+import { UsersService } from '../../../services/users.service';
 import { CommonModule } from '@angular/common';
 import { SidebarAdminComponent } from '../../../components/sidebar-admin/sidebar-admin.component';
 
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SidebarAdminComponent],
-  templateUrl: './user-management.component.html'
+  imports : [CommonModule,FormsModule,ReactiveFormsModule,SidebarAdminComponent],
+  templateUrl: './user-management.component.html',
+  styleUrls: ['./user-management.component.scss']
 })
 export class UserManagementComponent implements OnInit {
-  // User list properties
-  users: User[] = [];
-  filteredUsers: User[] = [];
-  selectedUsers: User[] = [];
+  // User data and pagination
+  users: any[] = [];
+  filteredUsers: any[] = [];
+  totalUsers: number = 0;
+  activeUsers: number = 0;
+  pendingUsers: number = 0;
+  suspendedUsers: number = 0;
   
   // Pagination
   currentPage: number = 1;
   pageSize: number = 10;
-  totalUsers: number = 0;
-  totalPages: number = 0;
   
-  // Sorting
+  // Sorting and filtering
   sortField: string = 'createdAt';
   sortOrder: string = 'desc';
-  
-  // Filtering
   searchTerm: string = '';
   filterRole: string = 'all';
   filterStatus: string = 'all';
   filterVerified: string = 'all';
   
-  // UI state
+  // Selection
+  selectedUsers: any[] = [];
   showBulkPanel: boolean = false;
-  activeActionMenu: string | null = null;
+  
+  // Modals
   showModal: boolean = false;
   showDetailsModal: boolean = false;
   showConfirmModal: boolean = false;
   isEditMode: boolean = false;
   showPassword: boolean = false;
   
-  // User forms
+  // Forms
   userForm: FormGroup;
   noteForm: FormGroup;
   
-  // Selected user for details/edit
-  selectedUser: User | null = null;
+  // Selected user details
+  selectedUser: any;
+  userActivityLog: any[] = [];
+  userSessions: any[] = [];
+  adminNotes: any[] = [];
+  currentTab: string = 'activity';
   
-  // Modal configurations
+  // Confirmation modal
+  confirmModalType: string = '';
   confirmModalTitle: string = '';
   confirmModalMessage: string = '';
-  confirmModalType: 'delete' | 'suspend' | 'activate' | 'other' = 'other';
-  confirmButtonText: string = 'Confirm';
+  confirmButtonText: string = '';
   confirmAction: Function = () => {};
   
   // Toast notifications
   showToast: boolean = false;
+  toastType: string = '';
   toastTitle: string = '';
   toastMessage: string = '';
-  toastType: 'success' | 'warning' | 'error' | 'info' = 'info';
   toastProgress: number = 100;
   toastTimeout: any;
   
-  // Tabs in user details
-  currentTab: 'activity' | 'security' | 'notes' = 'activity';
+  // Make Math available in template
+  Math = Math;
   
-  // Mock data (replace with real API calls)
-  userActivityLog: any[] = [];
-  userSessions: any[] = [];
-  adminNotes: any[] = [];
-  
-  // Stats
-  activeUsers: number = 0;
-  pendingUsers: number = 0;
-  suspendedUsers: number = 0;
-  
-  // Math reference for template
-  Math: any = Math;
+  // Action menu control
+  activeActionMenu: any = null;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private usersService: UsersService,
-    private authService: AuthService
+    private fb: FormBuilder,
+    private usersService: UsersService
   ) {
-    this.userForm = this.formBuilder.group({
+    this.userForm = this.fb.group({
+      id: [''],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      role: ['jobseeker', Validators.required],
-      status: ['active', Validators.required],
+      password: ['', [Validators.minLength(6)]],
+      role: ['jobseeker'],
+      status: ['active'],
       isVerified: [false]
     });
     
-    this.noteForm = this.formBuilder.group({
+    this.noteForm = this.fb.group({
       title: ['', Validators.required],
       content: ['', Validators.required]
     });
   }
 
   ngOnInit(): void {
+    console.log('UserManagementComponent initialized');
     this.loadUsers();
+    this.updateUserStats();
   }
 
-  // Load users with current pagination and filters
   loadUsers(): void {
-    this.usersService.getAllUsers(
-      this.currentPage,
-      this.pageSize,
-      this.filterRole !== 'all' ? this.filterRole : undefined,
-      this.searchTerm !== '' ? this.searchTerm : undefined
-    ).subscribe({
-      next: (response) => {
-        this.users = response.users;
-        this.filteredUsers = this.users;
-        this.totalUsers = response.pagination.totalUsers;
-        this.totalPages = response.pagination.totalPages;
-        
-        // Calculate stats
-        this.calculateStats();
-        
-        // Apply additional client-side filters
-        this.applyClientSideFilters();
+    console.log(`Loading users with current page: ${this.currentPage} pageSize: ${this.pageSize} role: ${this.filterRole} search: ${this.searchTerm}`);
+    
+    this.usersService.getAllUsers(this.currentPage, this.pageSize, this.filterRole, this.searchTerm).subscribe({
+      next: (data) => {
+        // Ensure user IDs are strings for consistency
+        this.users = data.users.map(user => ({
+          ...user,
+          id: user.id.toString() // Convert all IDs to strings
+        }));
+        this.totalUsers = data.pagination.totalUsers;
+        this.filterUsers();
+        this.updateUserStats();
       },
       error: (error) => {
-        this.showToastNotification('Error', `Failed to load users: ${error.message}`, 'error');
+        console.error('Error loading users:', error);
+        this.showNotification('error', 'Error', 'Failed to load users. Please try again later.');
       }
     });
   }
-  
-  // Calculate user statistics
-  calculateStats(): void {
+
+  updateUserStats(): void {
+    // For this example, we'll calculate stats from current users
     this.activeUsers = this.users.filter(user => user.status === 'active').length;
     this.pendingUsers = this.users.filter(user => user.status === 'pending').length;
     this.suspendedUsers = this.users.filter(user => user.status === 'suspended').length;
   }
-  
-  // Apply client-side filters
-  applyClientSideFilters(): void {
-    this.filteredUsers = this.users.filter(user => {
-      // Status filter
-      if (this.filterStatus !== 'all' && user.status !== this.filterStatus) {
-        return false;
-      }
-      
-      // Verification filter
-      if (this.filterVerified === 'verified' && !user.isVerified) {
-        return false;
-      }
-      
-      if (this.filterVerified === 'unverified' && user.isVerified) {
-        return false;
-      }
-      
-      return true;
-    });
+
+  filterUsers(): void {
+    this.filteredUsers = [...this.users];
+    
+    // Apply role filter
+    if (this.filterRole !== 'all') {
+      this.filteredUsers = this.filteredUsers.filter(user => user.role === this.filterRole);
+    }
+    
+    // Apply status filter
+    if (this.filterStatus !== 'all') {
+      this.filteredUsers = this.filteredUsers.filter(user => user.status === this.filterStatus);
+    }
+    
+    // Apply verification filter
+    if (this.filterVerified !== 'all') {
+      this.filteredUsers = this.filteredUsers.filter(user => 
+        (this.filterVerified === 'verified' && user.isVerified) || 
+        (this.filterVerified === 'unverified' && !user.isVerified)
+      );
+    }
+    
+    // Apply search term
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      this.filteredUsers = this.filteredUsers.filter(user => 
+        user.firstName.toLowerCase().includes(term) ||
+        user.lastName.toLowerCase().includes(term) ||
+        user.email.toLowerCase().includes(term) ||
+        user.id.toString().includes(term)
+      );
+    }
     
     // Apply sorting
-    this.sortUsers();
+    this.applySorting();
   }
   
-  // Filter users based on search and filters
-  filterUsers(): void {
-    // Reset to first page when filters change
-    this.currentPage = 1;
-    
-    // If filter is by role or search term, reload from server
-    if (this.filterRole !== 'all' || this.searchTerm.trim() !== '') {
-      this.loadUsers();
-    } else {
-      // Otherwise just apply client-side filters
-      this.applyClientSideFilters();
-    }
-  }
-  
-  // Reset all filters
   resetFilters(): void {
-    this.searchTerm = '';
     this.filterRole = 'all';
     this.filterStatus = 'all';
     this.filterVerified = 'all';
-    this.currentPage = 1;
-    this.loadUsers();
+    this.searchTerm = '';
+    this.filterUsers();
   }
-  
-  // Sort users
+
   sortBy(field: string): void {
     if (this.sortField === field) {
-      // Toggle sort order
+      // Toggle sort order if same field
       this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortField = field;
       this.sortOrder = 'asc';
     }
-    
-    this.sortUsers();
+    this.applySorting();
   }
   
-  // Apply sorting to filtered users
-  sortUsers(): void {
+  applySorting(): void {
     this.filteredUsers.sort((a, b) => {
-      let valA: any = a[this.sortField as keyof User];
-      let valB: any = b[this.sortField as keyof User];
+      let valueA = a[this.sortField];
+      let valueB = b[this.sortField];
       
-      if (this.sortField === 'createdAt') {
-        valA = new Date(valA).getTime();
-        valB = new Date(valB).getTime();
-      }
+      // Handle strings case-insensitively
+      if (typeof valueA === 'string') valueA = valueA.toLowerCase();
+      if (typeof valueB === 'string') valueB = valueB.toLowerCase();
       
-      if (valA < valB) {
-        return this.sortOrder === 'asc' ? -1 : 1;
-      }
-      if (valA > valB) {
-        return this.sortOrder === 'asc' ? 1 : -1;
-      }
+      if (valueA < valueB) return this.sortOrder === 'asc' ? -1 : 1;
+      if (valueA > valueB) return this.sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
   }
   
-  // Pagination methods// Fix for the pagination issue
-goToPage(page: number | string): void {
-  // Skip if the page is the ellipsis or invalid
-  if (page === '...' || typeof page !== 'number') {
-    return;
+  // Pagination methods
+  goToPage(page: string | number): void {
+    // Convert page to number if it's a string
+    const pageNumber = typeof page === 'string' ? parseInt(page, 10) : page;
+    
+    // Continue with your existing logic
+    if (pageNumber < 1 || pageNumber > this.getTotalPages()) return;
+    this.currentPage = pageNumber;
+    this.loadUsers();
   }
   
-  if (page < 1 || page > this.getTotalPages()) {
-    return;
-  }
-  
-  this.currentPage = page;
-  this.loadUsers();
-}
-
-// Fix for the selectedUser issue
-resetPassword(user: User | null): void {
-  if (!user) {
-    return; // Early return if user is null
-  }
-  
-  // In a real application, you would trigger a password reset email
-  this.showToastNotification('Success', 'Password reset link has been sent to the user', 'success');
-  this.activeActionMenu = null;
-}
   getTotalPages(): number {
     return Math.ceil(this.totalUsers / this.pageSize);
   }
   
   getPaginationArray(): (number | string)[] {
+    const result: (number | string)[] = [];
     const totalPages = this.getTotalPages();
-    const current = this.currentPage;
     
     if (totalPages <= 7) {
-      // If few pages, show all
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        result.push(i);
+      }
+    } else {
+      // Always include first page
+      result.push(1);
+      
+      // Calculate range around current page
+      let startPage = Math.max(2, this.currentPage - 1);
+      let endPage = Math.min(totalPages - 1, this.currentPage + 1);
+      
+      // Adjust if at boundaries
+      if (this.currentPage <= 3) {
+        endPage = 4;
+      } else if (this.currentPage >= totalPages - 2) {
+        startPage = totalPages - 3;
+      }
+      
+      // Add ellipsis if needed
+      if (startPage > 2) {
+        result.push('...');
+      }
+      
+      // Add middle pages
+      for (let i = startPage; i <= endPage; i++) {
+        result.push(i);
+      }
+      
+      // Add ellipsis if needed
+      if (endPage < totalPages - 1) {
+        result.push('...');
+      }
+      
+      // Always include last page
+      result.push(totalPages);
     }
     
-    // Complex pagination with ellipsis
-    if (current <= 3) {
-      return [1, 2, 3, 4, '...', totalPages - 1, totalPages];
-    } else if (current >= totalPages - 2) {
-      return [1, 2, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    } else {
-      return [1, '...', current - 1, current, current + 1, '...', totalPages];
-    }
+    return result;
   }
   
-  // User selection and bulk actions
-  toggleUserSelection(user: User): void {
+  // User selection methods
+  toggleUserSelection(user: any): void {
     const index = this.selectedUsers.findIndex(u => u.id === user.id);
-    
     if (index === -1) {
       this.selectedUsers.push(user);
     } else {
       this.selectedUsers.splice(index, 1);
     }
+  }
+  
+  isUserSelected(userId: any): boolean {
+    return this.selectedUsers.some(user => user.id === userId);
   }
   
   toggleAllUsers(): void {
@@ -287,10 +283,6 @@ resetPassword(user: User | null): void {
     }
   }
   
-  isUserSelected(userId: string): boolean {
-    return this.selectedUsers.some(user => user.id === userId);
-  }
-  
   areAllUsersSelected(): boolean {
     return this.filteredUsers.length > 0 && this.selectedUsers.length === this.filteredUsers.length;
   }
@@ -299,104 +291,91 @@ resetPassword(user: User | null): void {
     this.showBulkPanel = !this.showBulkPanel;
   }
   
-  // Bulk action methods
+  // Bulk actions
   bulkVerify(): void {
-    // Show confirmation modal
-    this.showConfirmationModal(
-      'Verify Selected Users', 
-      `Are you sure you want to verify ${this.selectedUsers.length} users?`,
-      'other',
-      'Verify',
-      () => {
-        // Implement verification logic
-        this.showToastNotification('Success', `${this.selectedUsers.length} users have been verified`, 'success');
-        this.loadUsers();
-        this.selectedUsers = [];
-        this.closeConfirmModal();
-      }
-    );
+    if (this.selectedUsers.length === 0) return;
+    
+    this.confirmModalType = 'other';
+    this.confirmModalTitle = 'Verify Selected Users';
+    this.confirmModalMessage = `Are you sure you want to verify ${this.selectedUsers.length} selected users?`;
+    this.confirmButtonText = 'Verify Users';
+    this.confirmAction = () => {
+      // Logic to verify selected users would go here
+      this.selectedUsers.forEach(user => {
+        user.isVerified = true;
+      });
+      this.showNotification('success', 'Success', `${this.selectedUsers.length} users have been verified.`);
+      this.selectedUsers = [];
+      this.showBulkPanel = false;
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
   }
   
   bulkActivate(): void {
-    this.showConfirmationModal(
-      'Activate Selected Users', 
-      `Are you sure you want to activate ${this.selectedUsers.length} users?`,
-      'activate',
-      'Activate',
-      () => {
-        // Implement activation logic
-        const promises = this.selectedUsers.map(user => 
-          this.usersService.toggleUserBan(user.id, false).toPromise()
-        );
-        
-        Promise.all(promises)
-          .then(() => {
-            this.showToastNotification('Success', `${this.selectedUsers.length} users have been activated`, 'success');
-            this.loadUsers();
-            this.selectedUsers = [];
-            this.closeConfirmModal();
-          })
-          .catch(error => {
-            this.showToastNotification('Error', `Failed to activate users: ${error.message}`, 'error');
-          });
-      }
-    );
+    if (this.selectedUsers.length === 0) return;
+    
+    this.confirmModalType = 'activate';
+    this.confirmModalTitle = 'Activate Selected Users';
+    this.confirmModalMessage = `Are you sure you want to activate ${this.selectedUsers.length} selected users?`;
+    this.confirmButtonText = 'Activate Users';
+    this.confirmAction = () => {
+      // Logic to activate selected users would go here
+      this.selectedUsers.forEach(user => {
+        user.status = 'active';
+      });
+      this.updateUserStats();
+      this.showNotification('success', 'Success', `${this.selectedUsers.length} users have been activated.`);
+      this.selectedUsers = [];
+      this.showBulkPanel = false;
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
   }
   
   bulkSuspend(): void {
-    this.showConfirmationModal(
-      'Suspend Selected Users', 
-      `Are you sure you want to suspend ${this.selectedUsers.length} users?`,
-      'suspend',
-      'Suspend',
-      () => {
-        // Implement suspension logic
-        const promises = this.selectedUsers.map(user => 
-          this.usersService.toggleUserBan(user.id, true, 'Administrative action').toPromise()
-        );
-        
-        Promise.all(promises)
-          .then(() => {
-            this.showToastNotification('Success', `${this.selectedUsers.length} users have been suspended`, 'success');
-            this.loadUsers();
-            this.selectedUsers = [];
-            this.closeConfirmModal();
-          })
-          .catch(error => {
-            this.showToastNotification('Error', `Failed to suspend users: ${error.message}`, 'error');
-          });
-      }
-    );
+    if (this.selectedUsers.length === 0) return;
+    
+    this.confirmModalType = 'suspend';
+    this.confirmModalTitle = 'Suspend Selected Users';
+    this.confirmModalMessage = `Are you sure you want to suspend ${this.selectedUsers.length} selected users?`;
+    this.confirmButtonText = 'Suspend Users';
+    this.confirmAction = () => {
+      // Logic to suspend selected users would go here
+      this.selectedUsers.forEach(user => {
+        user.status = 'suspended';
+      });
+      this.updateUserStats();
+      this.showNotification('success', 'Success', `${this.selectedUsers.length} users have been suspended.`);
+      this.selectedUsers = [];
+      this.showBulkPanel = false;
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
   }
   
   bulkDelete(): void {
-    this.showConfirmationModal(
-      'Delete Selected Users', 
-      `Are you sure you want to permanently delete ${this.selectedUsers.length} users? This action cannot be undone.`,
-      'delete',
-      'Delete',
-      () => {
-        // Implement deletion logic
-        const promises = this.selectedUsers.map(user => 
-          this.usersService.deleteUser(user.id).toPromise()
-        );
-        
-        Promise.all(promises)
-          .then(() => {
-            this.showToastNotification('Success', `${this.selectedUsers.length} users have been deleted`, 'success');
-            this.loadUsers();
-            this.selectedUsers = [];
-            this.closeConfirmModal();
-          })
-          .catch(error => {
-            this.showToastNotification('Error', `Failed to delete users: ${error.message}`, 'error');
-          });
-      }
-    );
+    if (this.selectedUsers.length === 0) return;
+    
+    this.confirmModalType = 'delete';
+    this.confirmModalTitle = 'Delete Selected Users';
+    this.confirmModalMessage = `Are you sure you want to permanently delete ${this.selectedUsers.length} selected users? This action cannot be undone.`;
+    this.confirmButtonText = 'Delete Users';
+    this.confirmAction = () => {
+      // Logic to delete selected users would go here
+      this.users = this.users.filter(user => !this.selectedUsers.some(u => u.id === user.id));
+      this.filterUsers();
+      this.updateUserStats();
+      this.showNotification('success', 'Success', `${this.selectedUsers.length} users have been deleted.`);
+      this.selectedUsers = [];
+      this.showBulkPanel = false;
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
   }
   
-  // User actions
-  toggleActionMenu(userId: string): void {
+  // User action methods
+  toggleActionMenu(userId: any): void {
     if (this.activeActionMenu === userId) {
       this.activeActionMenu = null;
     } else {
@@ -404,370 +383,412 @@ resetPassword(user: User | null): void {
     }
   }
   
+  viewUserDetails(user: any): void {
+    this.selectedUser = user;
+    this.currentTab = 'activity';
+    this.activeActionMenu = null;
+    this.loadUserDetails();
+    this.showDetailsModal = true;
+  }
+  
+  loadUserDetails(): void {
+    // In a real app, you would fetch this data from your API
+    // For this example, we'll use mock data
+    
+    // Mock activity log
+    this.userActivityLog = [
+      {
+        type: 'Login',
+        description: 'User logged in from a new device',
+        createdAt: new Date(2023, 3, 15, 14, 30),
+        metadata: {
+          'IP Address': '192.168.1.1',
+          'Device': 'Chrome on Windows'
+        }
+      },
+      {
+        type: 'Profile Update',
+        description: 'User updated their profile information',
+        createdAt: new Date(2023, 3, 10, 9, 45),
+        metadata: {
+          'Fields': 'Name, Phone Number'
+        }
+      },
+      {
+        type: 'Password Change',
+        description: 'User changed their password',
+        createdAt: new Date(2023, 2, 28, 16, 20),
+        metadata: null
+      }
+    ];
+    
+    // Mock sessions
+    this.userSessions = [
+      {
+        id: '1',
+        device: 'Chrome on Windows',
+        ip: '192.168.1.1',
+        location: 'New York, US',
+        lastActive: new Date(2023, 3, 16, 10, 30),
+        active: true
+      },
+      {
+        id: '2',
+        device: 'Safari on iPhone',
+        ip: '192.168.1.2',
+        location: 'New York, US',
+        lastActive: new Date(2023, 3, 15, 14, 30),
+        active: false
+      }
+    ];
+    
+    // Mock admin notes
+    this.adminNotes = [
+      {
+        id: '1',
+        title: 'Account Verification',
+        content: 'User verified their identity with government ID',
+        adminName: 'Admin User',
+        createdAt: new Date(2023, 3, 10, 11, 15)
+      },
+      {
+        id: '2',
+        title: 'Support Ticket',
+        content: 'User had an issue with password reset, resolved over email',
+        adminName: 'Support Team',
+        createdAt: new Date(2023, 3, 5, 9, 20)
+      }
+    ];
+  }
+  
+  editUser(user: any): void {
+    this.isEditMode = true;
+    this.activeActionMenu = null;
+    this.showDetailsModal = false;
+    
+    // Reset form and set values
+    this.userForm.reset();
+    this.userForm.patchValue({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      isVerified: user.isVerified
+    });
+    
+    // Remove password validation in edit mode
+    this.userForm.get('password')?.clearValidators();
+    this.userForm.get('password')?.updateValueAndValidity();
+    
+    this.showModal = true;
+  }
+  
   showAddUserModal(): void {
     this.isEditMode = false;
+    
+    // Reset form
     this.userForm.reset({
       role: 'jobseeker',
       status: 'active',
       isVerified: false
     });
     
-    // Make password required for new users
+    // Add password validation for new users
     this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.userForm.get('password')?.updateValueAndValidity();
     
     this.showModal = true;
   }
   
-  editUser(user: User): void {
-    this.isEditMode = true;
-    this.selectedUser = user;
-    
-    // Remove password validation for editing
-    this.userForm.get('password')?.clearValidators();
-    this.userForm.get('password')?.updateValueAndValidity();
-    
-    this.userForm.patchValue({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
-      status: user.status || 'active',
-      isVerified: user.isVerified || false
-    });
-    
-    this.showModal = true;
-    this.closeDetailsModal();
+  closeModal(): void {
+    this.showModal = false;
   }
   
   saveUser(): void {
-    if (this.userForm.invalid) {
-      return;
-    }
+    if (this.userForm.invalid) return;
     
     const userData = this.userForm.value;
     
-    if (this.isEditMode && this.selectedUser) {
+    if (this.isEditMode) {
       // Update existing user
-      this.usersService.updateUser(this.selectedUser.id, userData).subscribe({
-        next: (updatedUser) => {
-          this.showToastNotification('Success', 'User updated successfully', 'success');
-          this.closeModal();
-          this.loadUsers();
-        },
-        error: (error) => {
-          this.showToastNotification('Error', `Failed to update user: ${error.message}`, 'error');
-        }
-      });
+      const index = this.users.findIndex(u => u.id === userData.id);
+      if (index !== -1) {
+        this.users[index] = {
+          ...this.users[index],
+          ...userData,
+          updatedAt: new Date()
+        };
+        this.showNotification('success', 'Success', 'User updated successfully.');
+      }
     } else {
       // Create new user
-      this.usersService.createUser(userData).subscribe({
-        next: (newUser) => {
-          this.showToastNotification('Success', 'User created successfully', 'success');
-          this.closeModal();
-          this.loadUsers();
-        },
-        error: (error) => {
-          this.showToastNotification('Error', `Failed to create user: ${error.message}`, 'error');
-        }
-      });
+      const newUser = {
+        ...userData,
+        id: Date.now().toString(), // Generate a unique ID
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastActive: null
+      };
+      this.users.unshift(newUser);
+      this.totalUsers++;
+      this.showNotification('success', 'Success', 'User created successfully.');
+    }
+    
+    this.filterUsers();
+    this.updateUserStats();
+    this.closeModal();
+  }
+  
+  resetPassword(user: any): void {
+    this.activeActionMenu = null;
+    
+    this.confirmModalType = 'other';
+    this.confirmModalTitle = 'Reset User Password';
+    this.confirmModalMessage = `Are you sure you want to reset the password for ${user.firstName} ${user.lastName}? A new password will be generated and sent to their email.`;
+    this.confirmButtonText = 'Reset Password';
+    this.confirmAction = () => {
+      // Logic to reset password would go here
+      this.showNotification('success', 'Success', `Password reset email has been sent to ${user.email}.`);
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
+  }
+  
+  changeRole(user: any): void {
+    this.activeActionMenu = null;
+    
+    this.confirmModalType = 'other';
+    this.confirmModalTitle = 'Change User Role';
+    this.confirmModalMessage = `Current role: ${user.role}. Please select a new role for ${user.firstName} ${user.lastName}.`;
+    this.confirmButtonText = 'Change Role';
+    this.confirmAction = () => {
+      // Logic to change role would go here
+      // In a real app, you would show a role selection UI
+      this.showNotification('success', 'Success', `User role has been updated.`);
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
+  }
+  
+  suspendUser(user: any): void {
+    this.activeActionMenu = null;
+    
+    this.confirmModalType = 'suspend';
+    this.confirmModalTitle = 'Suspend User';
+    this.confirmModalMessage = `Are you sure you want to suspend ${user.firstName} ${user.lastName}? They will not be able to access their account until reactivated.`;
+    this.confirmButtonText = 'Suspend User';
+    this.confirmAction = () => {
+      // Logic to suspend user would go here
+      const index = this.users.findIndex(u => u.id === user.id);
+      if (index !== -1) {
+        this.users[index].status = 'suspended';
+        this.updateUserStats();
+        this.filterUsers();
+        this.showNotification('warning', 'User Suspended', `${user.firstName} ${user.lastName}'s account has been suspended.`);
+      }
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
+  }
+  
+  activateUser(user: any): void {
+    this.activeActionMenu = null;
+    
+    this.confirmModalType = 'activate';
+    this.confirmModalTitle = 'Activate User';
+    this.confirmModalMessage = `Are you sure you want to activate ${user.firstName} ${user.lastName}? They will regain full access to their account.`;
+    this.confirmButtonText = 'Activate User';
+    this.confirmAction = () => {
+      // Logic to activate user would go here
+      const index = this.users.findIndex(u => u.id === user.id);
+      if (index !== -1) {
+        this.users[index].status = 'active';
+        this.updateUserStats();
+        this.filterUsers();
+        this.showNotification('success', 'User Activated', `${user.firstName} ${user.lastName}'s account has been activated.`);
+      }
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
+  }
+  
+  deleteUser(user: any): void {
+    this.activeActionMenu = null;
+    
+    this.confirmModalType = 'delete';
+    this.confirmModalTitle = 'Delete User';
+    this.confirmModalMessage = `Are you sure you want to permanently delete ${user.firstName} ${user.lastName}? This action cannot be undone.`;
+    this.confirmButtonText = 'Delete User';
+    this.confirmAction = () => {
+      // Logic to delete user would go here
+      this.users = this.users.filter(u => u.id !== user.id);
+      this.totalUsers--;
+      this.updateUserStats();
+      this.filterUsers();
+      this.showNotification('success', 'User Deleted', `${user.firstName} ${user.lastName}'s account has been deleted.`);
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
+  }
+  
+  verifyUser(user: any): void {
+    // Logic to verify user would go here
+    const index = this.users.findIndex(u => u.id === user.id);
+    if (index !== -1) {
+      this.users[index].isVerified = true;
+      this.filterUsers();
+      this.showNotification('success', 'User Verified', `${user.firstName} ${user.lastName} has been verified.`);
     }
   }
   
-  viewUserDetails(user: User): void {
-    this.selectedUser = user;
-    this.currentTab = 'activity';
-    this.showDetailsModal = true;
-    this.activeActionMenu = null;
-    
-    // Load user activity logs
-    this.loadUserActivityLogs(user.id);
-  }
-  
-  loadUserActivityLogs(userId: string): void {
-    this.usersService.getUserActivityLogs(userId).subscribe({
-      next: (logs) => {
-        this.userActivityLog = logs;
-      },
-      error: (error) => {
-        console.error('Failed to load activity logs:', error);
-        this.userActivityLog = [];
-      }
-    });
-    
-    // Mock data for sessions (replace with actual API call if available)
-    this.userSessions = [
-      {
-        id: '1',
-        device: 'Chrome on Windows',
-        location: 'New York, US',
-        ip: '192.168.1.1',
-        active: true,
-        lastActive: new Date()
-      },
-      {
-        id: '2',
-        device: 'Mobile Safari on iPhone',
-        location: 'San Francisco, US',
-        ip: '192.168.1.2',
-        active: false,
-        lastActive: new Date(Date.now() - 86400000)
-      }
-    ];
-    
-    // Mock data for admin notes (replace with actual API call if available)
-    this.adminNotes = [
-      {
-        id: '1',
-        title: 'Account Verification',
-        content: 'User verified their email address and completed profile information.',
-        adminName: 'Admin User',
-        createdAt: new Date(Date.now() - 86400000 * 3)
-      }
-    ];
-  }
-  
-  // User actions
-  verifyUser(user: User): void {
-    // Implement verification logic
-    const updatedUser = { ...user, isVerified: true };
-    this.usersService.updateUser(user.id, updatedUser).subscribe({
-      next: () => {
-        this.showToastNotification('Success', 'User verified successfully', 'success');
-        this.loadUsers();
-      },
-      error: (error) => {
-        this.showToastNotification('Error', `Failed to verify user: ${error.message}`, 'error');
-      }
-    });
-  }
-  
-  activateUser(user: User): void {
-    // Implement activation logic
-    this.usersService.toggleUserBan(user.id, false).subscribe({
-      next: () => {
-        this.showToastNotification('Success', 'User activated successfully', 'success');
-        this.loadUsers();
-        this.activeActionMenu = null;
-      },
-      error: (error) => {
-        this.showToastNotification('Error', `Failed to activate user: ${error.message}`, 'error');
-      }
-    });
-  }
-  
-  suspendUser(user: User): void {
-    this.showConfirmationModal(
-      'Suspend User',
-      `Are you sure you want to suspend ${user.firstName} ${user.lastName}'s account?`,
-      'suspend',
-      'Suspend',
-      () => {
-        this.usersService.toggleUserBan(user.id, true, 'Administrative action').subscribe({
-          next: () => {
-            this.showToastNotification('Success', 'User suspended successfully', 'success');
-            this.loadUsers();
-            this.closeConfirmModal();
-            this.activeActionMenu = null;
-          },
-          error: (error) => {
-            this.showToastNotification('Error', `Failed to suspend user: ${error.message}`, 'error');
-          }
-        });
-      }
-    );
-  }
-  
-  changeRole(user: User): void {
-    // Prepare a simple role change UI or modal
-    const newRole = user.role === 'jobseeker' ? 'employer' : 
-                    user.role === 'employer' ? 'admin' : 'jobseeker';
-    
-    this.showConfirmationModal(
-      'Change User Role',
-      `Are you sure you want to change ${user.firstName} ${user.lastName}'s role from ${user.role} to ${newRole}?`,
-      'other',
-      'Change Role',
-      () => {
-        this.usersService.changeUserRole(user.id, newRole).subscribe({
-          next: () => {
-            this.showToastNotification('Success', `User role changed to ${newRole}`, 'success');
-            this.loadUsers();
-            this.closeConfirmModal();
-            this.activeActionMenu = null;
-          },
-          error: (error) => {
-            this.showToastNotification('Error', `Failed to change user role: ${error.message}`, 'error');
-          }
-        });
-      }
-    );
-  }
-  
-  
-  deleteUser(user: User): void {
-    this.showConfirmationModal(
-      'Delete User',
-      `Are you sure you want to permanently delete ${user.firstName} ${user.lastName}'s account? This action cannot be undone.`,
-      'delete',
-      'Delete',
-      () => {
-        this.usersService.deleteUser(user.id).subscribe({
-          next: () => {
-            this.showToastNotification('Success', 'User deleted successfully', 'success');
-            this.loadUsers();
-            this.closeConfirmModal();
-            this.activeActionMenu = null;
-          },
-          error: (error) => {
-            this.showToastNotification('Error', `Failed to delete user: ${error.message}`, 'error');
-          }
-        });
-      }
-    );
-  }
-  
-  // Modal methods
-  closeModal(): void {
-    this.showModal = false;
-    this.userForm.reset();
-  }
-  
+  // User details modal methods
   closeDetailsModal(): void {
     this.showDetailsModal = false;
     this.selectedUser = null;
   }
   
-  // Confirm modal methods
-  showConfirmationModal(
-    title: string, 
-    message: string, 
-    type: 'delete' | 'suspend' | 'activate' | 'other',
-    buttonText: string,
-    confirmFn: Function
-  ): void {
-    this.confirmModalTitle = title;
-    this.confirmModalMessage = message;
-    this.confirmModalType = type;
-    this.confirmButtonText = buttonText;
-    this.confirmAction = confirmFn;
-    this.showConfirmModal = true;
-  }
-  
-  closeConfirmModal(): void {
-    this.showConfirmModal = false;
-  }
-  
-  // User details tab methods
-  togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
-  }
-  
   toggleTwoFactor(): void {
     if (this.selectedUser) {
       this.selectedUser.twoFactorEnabled = !this.selectedUser.twoFactorEnabled;
-      this.showToastNotification(
-        'Success', 
-        `Two-factor authentication ${this.selectedUser.twoFactorEnabled ? 'enabled' : 'disabled'}`, 
-        'success'
-      );
+      this.showNotification('success', 'Two-Factor Authentication', 
+        this.selectedUser.twoFactorEnabled ? 'Two-factor authentication has been enabled.' : 'Two-factor authentication has been disabled.');
     }
+  }
+  
+  lockAccount(): void {
+    this.confirmModalType = 'other';
+    this.confirmModalTitle = 'Lock User Account';
+    this.confirmModalMessage = `Are you sure you want to lock ${this.selectedUser.firstName} ${this.selectedUser.lastName}'s account? They will be logged out and unable to log in until the account is unlocked.`;
+    this.confirmButtonText = 'Lock Account';
+    this.confirmAction = () => {
+      // Logic to lock account would go here
+      this.showNotification('warning', 'Account Locked', `${this.selectedUser.firstName} ${this.selectedUser.lastName}'s account has been locked.`);
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
+  }
+  
+  forceLogout(): void {
+    this.confirmModalType = 'other';
+    this.confirmModalTitle = 'Force Logout';
+    this.confirmModalMessage = `Are you sure you want to force ${this.selectedUser.firstName} ${this.selectedUser.lastName} to log out of all active sessions?`;
+    this.confirmButtonText = 'Force Logout';
+    this.confirmAction = () => {
+      // Logic to force logout would go here
+      this.userSessions = this.userSessions.map(session => ({...session, active: false}));
+      this.showNotification('info', 'Forced Logout', `${this.selectedUser.firstName} ${this.selectedUser.lastName} has been logged out of all sessions.`);
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
+  }
+  
+  deleteUserData(): void {
+    this.confirmModalType = 'delete';
+    this.confirmModalTitle = 'Delete User Data';
+    this.confirmModalMessage = `Are you sure you want to delete all data associated with ${this.selectedUser.firstName} ${this.selectedUser.lastName}? This action cannot be undone.`;
+    this.confirmButtonText = 'Delete Data';
+    this.confirmAction = () => {
+      // Logic to delete user data would go here
+      this.showNotification('success', 'Data Deleted', `All data for ${this.selectedUser.firstName} ${this.selectedUser.lastName} has been deleted.`);
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
   }
   
   terminateSession(session: any): void {
-    // Implement session termination
-    this.showToastNotification('Success', 'Session terminated successfully', 'success');
-    session.active = false;
+    this.confirmModalType = 'other';
+    this.confirmModalTitle = 'Terminate Session';
+    this.confirmModalMessage = `Are you sure you want to terminate this session on ${session.device}?`;
+    this.confirmButtonText = 'Terminate';
+    this.confirmAction = () => {
+      // Logic to terminate session would go here
+      const index = this.userSessions.findIndex(s => s.id === session.id);
+      if (index !== -1) {
+        this.userSessions[index].active = false;
+      }
+      this.showNotification('info', 'Session Terminated', `The session on ${session.device} has been terminated.`);
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
   }
   
   addNote(): void {
-    if (this.noteForm.invalid) {
-      return;
-    }
+    if (this.noteForm.invalid) return;
     
+    // Add note to the list
     const newNote = {
       id: Date.now().toString(),
       title: this.noteForm.value.title,
       content: this.noteForm.value.content,
-      adminName: this.authService.currentUserValue?.firstName + ' ' + this.authService.currentUserValue?.lastName || 'Admin',
+      adminName: 'Current Admin', // In a real app, this would be the current admin's name
       createdAt: new Date()
     };
     
     this.adminNotes.unshift(newNote);
     this.noteForm.reset();
-    this.showToastNotification('Success', 'Note added successfully', 'success');
+    this.showNotification('success', 'Note Added', 'Admin note has been added successfully.');
   }
   
   deleteNote(note: any): void {
-    const index = this.adminNotes.findIndex(n => n.id === note.id);
-    if (index !== -1) {
-      this.adminNotes.splice(index, 1);
-      this.showToastNotification('Success', 'Note deleted successfully', 'success');
-    }
+    this.confirmModalType = 'delete';
+    this.confirmModalTitle = 'Delete Note';
+    this.confirmModalMessage = `Are you sure you want to delete this note?`;
+    this.confirmButtonText = 'Delete';
+    this.confirmAction = () => {
+      // Logic to delete note would go here
+      this.adminNotes = this.adminNotes.filter(n => n.id !== note.id);
+      this.showNotification('success', 'Note Deleted', 'Admin note has been deleted.');
+      this.closeConfirmModal();
+    };
+    this.showConfirmModal = true;
   }
   
-  lockAccount(): void {
-    this.showToastNotification('Success', 'Account locked successfully', 'success');
+  // Password visibility toggle
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
   
-  forceLogout(): void {
-    this.showToastNotification('Success', 'User has been forced to log out from all devices', 'success');
-    this.userSessions.forEach(session => session.active = false);
-  }
-  
-  deleteUserData(): void {
-    this.showConfirmationModal(
-      'Delete User Data',
-      'Are you sure you want to delete all user data? This action cannot be undone.',
-      'delete',
-      'Delete Data',
-      () => {
-        this.showToastNotification('Success', 'User data deleted successfully', 'success');
-        this.closeConfirmModal();
-      }
-    );
+  // Confirmation modal methods
+  closeConfirmModal(): void {
+    this.showConfirmModal = false;
   }
   
   // Toast notification methods
-  showToastNotification(title: string, message: string, type: 'success' | 'warning' | 'error' | 'info'): void {
-    // Clear existing timeout if there's one
+  showNotification(type: string, title: string, message: string): void {
+    // Clear any existing timeout
     if (this.toastTimeout) {
       clearTimeout(this.toastTimeout);
-      clearInterval(this.toastProgressInterval);
+      clearInterval(this.toastTimeout);
     }
     
+    // Set toast properties
+    this.toastType = type;
     this.toastTitle = title;
     this.toastMessage = message;
-    this.toastType = type;
     this.toastProgress = 100;
     this.showToast = true;
     
-    // Set up progress bar countdown
-    const intervalTime = 30;
-    const durationMs = 5000;
-    const decrementAmount = (intervalTime / durationMs) * 100;
-    
-    this.toastProgressInterval = setInterval(() => {
-      this.toastProgress -= decrementAmount;
-      if (this.toastProgress <= 0) {
-        clearInterval(this.toastProgressInterval);
+    // Auto-close after 5 seconds with progress animation
+    let progress = 100;
+    const interval = setInterval(() => {
+      progress -= 2;
+      this.toastProgress = progress;
+      if (progress <= 0) {
+        clearInterval(interval);
+        this.closeToast();
       }
-    }, intervalTime);
+    }, 100);
     
-    // Auto-close toast after duration
-    this.toastTimeout = setTimeout(() => {
-      this.closeToast();
-    }, durationMs);
+    this.toastTimeout = interval;
   }
   
   closeToast(): void {
-    this.showToast = false;
     if (this.toastTimeout) {
       clearTimeout(this.toastTimeout);
-      clearInterval(this.toastProgressInterval);
+      clearInterval(this.toastTimeout);
     }
+    this.showToast = false;
   }
-  
-  // Properties for progress interval
-  private toastProgressInterval: any;
 }

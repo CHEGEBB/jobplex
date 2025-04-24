@@ -1,34 +1,35 @@
 <div class="flex h-screen overflow-hidden">
   <!-- Sidebar -->
-  <app-sidebar-admin class="w-64 flex-shrink-0 h-full z-10"></app-sidebar-admin>
+  <app-sidebar-admin class="w-64 flex-shrink-0 h-full z-10 hidden md:block"></app-sidebar-admin>
+  <app-sidebar-admin class="w-full flex-shrink-0 h-16 z-10 fixed top-0 left-0 md:hidden"></app-sidebar-admin>
 
   <!-- Main Content Area -->
-  <div class="flex-1 overflow-y-auto bg-slate-50 pb-8">
+  <div class="flex-1 overflow-y-auto bg-slate-50 pb-8 md:ml-0 mt-16 md:mt-0">
     <!-- Header Section -->
-    <div class="header-section p-5 mb-16 lg:p-6 sticky top-0 bg-white rounded-xl z-10 shadow-sm">
+    <div class="header-section p-4 lg:p-6 sticky top-0 bg-white shadow-sm z-10 rounded-b-xl">
       <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 class="text-2xl lg:text-3xl font-bold text-text-dark">User Management</h1>
-          <p class="text-text-medium mt-1">Manage platform users, roles, and permissions</p>
+          <h1 class="text-2xl lg:text-3xl font-bold text-gray-800">User Management</h1>
+          <p class="text-gray-600 mt-1">Manage platform users, roles, and permissions</p>
         </div>
         <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
           <div class="search-container relative flex-grow max-w-md">
             <input 
               type="text" 
               placeholder="Search users..." 
-              class="block w-full py-2.5 pl-10 pr-3 border-1 border-[#ccc] rounded-lg focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color"
+              class="block w-full py-2.5 pl-10 pr-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600"
               [(ngModel)]="searchTerm"
               (input)="filterUsers()">
-            <i class="fas fa-search absolute left-3 top-3 text-text-light"></i>
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
           </div>
           <button 
             (click)="toggleBulkActions()" 
-            class="bulk-action-btn py-2.5 px-4 bg-white border-1 border-[#ccc] rounded-lg text-text-dark hover:bg-gray-50 transition-colors duration-200">
+            class="bulk-action-btn py-2.5 px-4 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
             <i class="fas fa-tasks mr-2"></i>Bulk Actions
           </button>
           <button 
             (click)="showAddUserModal()" 
-            class="add-user-btn py-2.5 px-4 bg-admin-color text-white rounded-lg hover:bg-opacity-90 transition-colors duration-200 flex items-center justify-center">
+            class="add-user-btn py-2.5 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center">
             <i class="fas fa-user-plus mr-2"></i>Add User
           </button>
         </div>
@@ -39,7 +40,7 @@
         <select 
           [(ngModel)]="filterRole" 
           (change)="filterUsers()" 
-          class="filter-select py-2 px-3 border-1 border-[#ccc] rounded-lg focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color bg-white">
+          class="filter-select py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600 bg-white">
           <option value="all">All Roles</option>
           <option value="jobseeker">Job Seeker</option>
           <option value="employer">Employer</option>
@@ -48,7 +49,7 @@
         <select 
           [(ngModel)]="filterStatus" 
           (change)="filterUsers()" 
-          class="filter-select py-2 px-3 border-1 border-[#ccc] rounded-lg focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color bg-white">
+          class="filter-select py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600 bg-white">
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
@@ -58,22 +59,22 @@
         <select 
           [(ngModel)]="filterVerified" 
           (change)="filterUsers()" 
-          class="filter-select py-2 px-3 border-1 border-[#ccc] rounded-lg focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color bg-white">
+          class="filter-select py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600 bg-white">
           <option value="all">All Verification</option>
           <option value="verified">Verified</option>
           <option value="unverified">Unverified</option>
         </select>
         <button 
           (click)="resetFilters()" 
-          class="reset-filters-btn py-2 px-4 text-[#c026d3] hover:bg-purple-50 border-1 border-[#c026d3] rounded-lg transition-colors duration-200">
+          class="reset-filters-btn py-2 px-4 text-purple-600 hover:bg-purple-50 border border-purple-600 rounded-lg transition-colors duration-200">
           <i class="fas fa-sync-alt mr-2"></i>Reset
         </button>
       </div>
 
       <!-- Bulk Actions Panel (Conditional Display) -->
-      <div *ngIf="showBulkPanel" class="bulk-actions-panel mt-4 p-4 bg-white rounded-lg shadow-md animate-slideDown">
+      <div *ngIf="showBulkPanel" class="bulk-actions-panel mt-4 p-4 bg-white rounded-lg shadow-md animate-fadeIn">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-          <p class="text-text-dark mb-3 sm:mb-0">{{selectedUsers.length}} users selected</p>
+          <p class="text-gray-700 mb-3 sm:mb-0">{{selectedUsers.length}} users selected</p>
           <div class="flex gap-2 flex-wrap">
             <button 
               [disabled]="selectedUsers.length === 0" 
@@ -105,17 +106,17 @@
     </div>
 
     <!-- Dashboard Stats Cards -->
-    <div class="stats-cards px-5 lg:px-6 mt-2">
+    <div class="stats-cards px-4 lg:px-6 mt-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card bg-white rounded-lg p-5 shadow-md border-l-4 border-[#c026d3] transition-transform hover:scale-[1.02]">
+        <div class="stat-card bg-white rounded-lg p-5 shadow-md border-l-4 border-purple-600 transition-transform hover:scale-[1.02]">
           <div class="flex justify-between items-center">
             <div>
-              <p class="text-text-medium text-sm">Total Users</p>
-              <h3 class="text-2xl font-bold text-text-dark mt-1">{{totalUsers}}</h3>
+              <p class="text-gray-500 text-sm">Total Users</p>
+              <h3 class="text-2xl font-bold text-gray-800 mt-1">{{totalUsers}}</h3>
               <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up mr-1"></i>12% this month</p>
             </div>
             <div class="icon-circle bg-purple-100 p-3 rounded-full">
-              <i class="fas fa-users text-admin-color text-xl"></i>
+              <i class="fas fa-users text-purple-600 text-xl"></i>
             </div>
           </div>
         </div>
@@ -123,8 +124,8 @@
         <div class="stat-card bg-white rounded-lg p-5 shadow-md border-l-4 border-blue-500 transition-transform hover:scale-[1.02]">
           <div class="flex justify-between items-center">
             <div>
-              <p class="text-text-medium text-sm">Active Users</p>
-              <h3 class="text-2xl font-bold text-text-dark mt-1">{{activeUsers}}</h3>
+              <p class="text-gray-500 text-sm">Active Users</p>
+              <h3 class="text-2xl font-bold text-gray-800 mt-1">{{activeUsers}}</h3>
               <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up mr-1"></i>8% this month</p>
             </div>
             <div class="icon-circle bg-blue-100 p-3 rounded-full">
@@ -136,8 +137,8 @@
         <div class="stat-card bg-white rounded-lg p-5 shadow-md border-l-4 border-yellow-500 transition-transform hover:scale-[1.02]">
           <div class="flex justify-between items-center">
             <div>
-              <p class="text-text-medium text-sm">Pending Verification</p>
-              <h3 class="text-2xl font-bold text-text-dark mt-1">{{pendingUsers}}</h3>
+              <p class="text-gray-500 text-sm">Pending Verification</p>
+              <h3 class="text-2xl font-bold text-gray-800 mt-1">{{pendingUsers}}</h3>
               <p class="text-xs text-red-600 mt-1"><i class="fas fa-arrow-up mr-1"></i>15% this month</p>
             </div>
             <div class="icon-circle bg-yellow-100 p-3 rounded-full">
@@ -149,8 +150,8 @@
         <div class="stat-card bg-white rounded-lg p-5 shadow-md border-l-4 border-red-500 transition-transform hover:scale-[1.02]">
           <div class="flex justify-between items-center">
             <div>
-              <p class="text-text-medium text-sm">Suspended Accounts</p>
-              <h3 class="text-2xl font-bold text-text-dark mt-1">{{suspendedUsers}}</h3>
+              <p class="text-gray-500 text-sm">Suspended Accounts</p>
+              <h3 class="text-2xl font-bold text-gray-800 mt-1">{{suspendedUsers}}</h3>
               <p class="text-xs text-red-600 mt-1"><i class="fas fa-arrow-down mr-1"></i>3% this month</p>
             </div>
             <div class="icon-circle bg-red-100 p-3 rounded-full">
@@ -162,10 +163,16 @@
     </div>
 
     <!-- Users Table -->
-    <div class="users-table-container px-5 lg:px-6 overflow-x-auto">
+    <div class="users-table-container px-4 lg:px-6 overflow-x-auto">
       <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Debug section -->
+        <div *ngIf="filteredUsers.length === 0 && users.length > 0" class="p-4 bg-yellow-100 text-yellow-800 border-b border-yellow-200">
+          <p><i class="fas fa-exclamation-triangle mr-2"></i> Users found but filtered out. Try resetting filters.</p>
+          <button (click)="resetFilters()" class="mt-2 px-3 py-1 bg-yellow-200 rounded-md hover:bg-yellow-300">Reset Filters</button>
+        </div>
+      
         <table class="min-w-full table-auto">
-          <thead class="bg-gray-50 border-b border-border-color">
+          <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
               <th class="px-4 py-4 text-left">
                 <div class="flex items-center">
@@ -173,11 +180,11 @@
                     type="checkbox" 
                     [checked]="areAllUsersSelected()" 
                     (change)="toggleAllUsers()"
-                    class="w-4 h-4 text-admin-color focus:ring-admin-color rounded">
+                    class="w-4 h-4 text-purple-600 focus:ring-purple-600 rounded">
                 </div>
               </th>
-              <th class="px-4 py-4 text-left text-text-dark">User</th>
-              <th class="px-4 py-4 text-left text-text-dark">
+              <th class="px-4 py-4 text-left text-gray-700">User</th>
+              <th class="px-4 py-4 text-left text-gray-700">
                 <div class="flex items-center cursor-pointer" (click)="sortBy('email')">
                   Email
                   <i *ngIf="sortField === 'email'" 
@@ -185,7 +192,7 @@
                   <i *ngIf="sortField !== 'email'" class="fas fa-sort ml-1 text-gray-300"></i>
                 </div>
               </th>
-              <th class="px-4 py-4 text-left text-text-dark">
+              <th class="px-4 py-4 text-left text-gray-700 hidden md:table-cell">
                 <div class="flex items-center cursor-pointer" (click)="sortBy('role')">
                   Role
                   <i *ngIf="sortField === 'role'" 
@@ -193,7 +200,7 @@
                   <i *ngIf="sortField !== 'role'" class="fas fa-sort ml-1 text-gray-300"></i>
                 </div>
               </th>
-              <th class="px-4 py-4 text-left text-text-dark">
+              <th class="px-4 py-4 text-left text-gray-700 hidden sm:table-cell">
                 <div class="flex items-center cursor-pointer" (click)="sortBy('status')">
                   Status
                   <i *ngIf="sortField === 'status'" 
@@ -201,7 +208,7 @@
                   <i *ngIf="sortField !== 'status'" class="fas fa-sort ml-1 text-gray-300"></i>
                 </div>
               </th>
-              <th class="px-4 py-4 text-left text-text-dark">
+              <th class="px-4 py-4 text-left text-gray-700 hidden lg:table-cell">
                 <div class="flex items-center cursor-pointer" (click)="sortBy('createdAt')">
                   Created
                   <i *ngIf="sortField === 'createdAt'" 
@@ -209,44 +216,44 @@
                   <i *ngIf="sortField !== 'createdAt'" class="fas fa-sort ml-1 text-gray-300"></i>
                 </div>
               </th>
-              <th class="px-4 py-4 text-left text-text-dark">Verification</th>
-              <th class="px-4 py-4 text-left text-text-dark">Actions</th>
+              <th class="px-4 py-4 text-left text-gray-700 hidden md:table-cell">Verification</th>
+              <th class="px-4 py-4 text-left text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody>
             <ng-container *ngIf="filteredUsers.length > 0; else noUsers">
-              <tr *ngFor="let user of filteredUsers" class="border-b border-border-color hover:bg-slate-50 transition-colors">
+              <tr *ngFor="let user of filteredUsers" class="border-b border-gray-200 hover:bg-slate-50 transition-colors">
                 <td class="px-4 py-4">
                   <input 
                     type="checkbox" 
                     [checked]="isUserSelected(user.id)" 
                     (change)="toggleUserSelection(user)"
-                    class="w-4 h-4 text-admin-color focus:ring-admin-color rounded">
+                    class="w-4 h-4 text-purple-600 focus:ring-purple-600 rounded">
                 </td>
                 <td class="px-4 py-4">
                   <div class="flex items-center">
                     <div class="w-10 h-10 flex-shrink-0 mr-3">
                       <div class="w-full h-full rounded-full bg-gray-300 flex items-center justify-center text-gray-600 uppercase font-bold">
-                        {{user.firstName.charAt(0) + user.lastName.charAt(0)}}
+                        {{user.firstName?.charAt(0) || '?'}}{{user.lastName?.charAt(0) || '?'}}
                       </div>
                     </div>
                     <div>
-                      <div class="font-medium text-text-dark">{{user.firstName}} {{user.lastName}}</div>
-                      <div class="text-sm text-text-light">ID: {{user.id.substring(0, 8)}}</div>
+                      <div class="font-medium text-gray-800">{{user.firstName}} {{user.lastName}}</div>
+                      <div class="text-sm text-gray-500">ID: {{user.id.substring(0, 8)}}</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-4 py-4 text-text-medium">{{user.email}}</td>
-                <td class="px-4 py-4">
+                <td class="px-4 py-4 text-gray-600">{{user.email}}</td>
+                <td class="px-4 py-4 hidden md:table-cell">
                   <span [ngClass]="{
-                    'bg-purple-100 text-admin-color': user.role === 'admin',
+                    'bg-purple-100 text-purple-600': user.role === 'admin',
                     'bg-blue-100 text-blue-600': user.role === 'employer',
                     'bg-green-100 text-green-600': user.role === 'jobseeker'
                   }" class="px-2 py-1 rounded-full text-xs font-medium">
                     {{user.role | titlecase}}
                   </span>
                 </td>
-                <td class="px-4 py-4">
+                <td class="px-4 py-4 hidden sm:table-cell">
                   <span [ngClass]="{
                     'bg-green-100 text-green-600': user.status === 'active',
                     'bg-yellow-100 text-yellow-600': user.status === 'pending',
@@ -256,8 +263,8 @@
                     {{user.status | titlecase}}
                   </span>
                 </td>
-                <td class="px-4 py-4 text-text-medium">{{user.createdAt | date:'MMM d, y'}}</td>
-                <td class="px-4 py-4">
+                <td class="px-4 py-4 text-gray-600 hidden lg:table-cell">{{user.createdAt | date:'MMM d, y'}}</td>
+                <td class="px-4 py-4 hidden md:table-cell">
                   <span *ngIf="user.isVerified" class="flex items-center text-green-600">
                     <i class="fas fa-check-circle mr-1"></i> Verified
                   </span>
@@ -265,47 +272,52 @@
                     <i class="fas fa-exclamation-circle mr-1"></i> Unverified
                   </span>
                 </td>
-                <td class="px-4 py-4">
-                  <div class="dropdown relative inline-block">
-                    <button (click)="toggleActionMenu(user.id)" class="text-text-medium hover:text-admin-color focus:outline-none">
-                      <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <div *ngIf="activeActionMenu === user.id" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 animate-fadeIn">
-                      <div class="py-1">
-                        <a (click)="editUser(user)" class="block px-4 py-2 text-sm text-text-dark hover:bg-gray-100 cursor-pointer">
-                          <i class="fas fa-edit mr-2"></i>Edit User
-                        </a>
-                        <a (click)="viewUserDetails(user)" class="block px-4 py-2 text-sm text-text-dark hover:bg-gray-100 cursor-pointer">
-                          <i class="fas fa-eye mr-2"></i>View Details
-                        </a>
-                        <a *ngIf="user.status !== 'active'" (click)="activateUser(user)" class="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 cursor-pointer">
-                          <i class="fas fa-play-circle mr-2"></i>Activate
-                        </a>
-                        <a *ngIf="user.status === 'active'" (click)="suspendUser(user)" class="block px-4 py-2 text-sm text-yellow-600 hover:bg-gray-100 cursor-pointer">
-                          <i class="fas fa-pause-circle mr-2"></i>Suspend
-                        </a>
-                        <a (click)="changeRole(user)" class="block px-4 py-2 text-sm text-purple-600 hover:bg-gray-100 cursor-pointer">
-                          <i class="fas fa-user-tag mr-2"></i>Change Role
-                        </a>
-                        <a (click)="resetPassword(user)" class="block px-4 py-2 text-sm text-orange-600 hover:bg-gray-100 cursor-pointer">
-                          <i class="fas fa-key mr-2"></i>Reset Password
-                        </a>
-                        <a (click)="deleteUser(user)" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 cursor-pointer">
-                          <i class="fas fa-trash-alt mr-2"></i>Delete
-                        </a>
-                      </div>
-                    </div>
+                <td class="px-4 py-4 relative">
+                  <button 
+                    (click)="toggleActionMenu(user.id)" 
+                    class="text-gray-500 hover:text-purple-600 focus:outline-none">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                  <!-- Action dropdown menu -->
+                  <div *ngIf="activeActionMenu === user.id" 
+                       class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 py-1 border border-gray-200">
+                    <a (click)="viewUserDetails(user)" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
+                      <i class="fas fa-eye mr-2"></i> View Details
+                    </a>
+                    <a (click)="editUser(user)" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
+                      <i class="fas fa-edit mr-2"></i> Edit User
+                    </a>
+                    <a (click)="resetPassword(user)" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
+                      <i class="fas fa-key mr-2"></i> Reset Password
+                    </a>
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <a (click)="changeRole(user)" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
+                      <i class="fas fa-user-tag mr-2"></i> Change Role
+                    </a>
+                    <a *ngIf="user.status !== 'suspended'" (click)="suspendUser(user)" class="block px-4 py-2 text-yellow-600 hover:bg-yellow-50 cursor-pointer">
+                      <i class="fas fa-ban mr-2"></i> Suspend User
+                    </a>
+                    <a *ngIf="user.status === 'suspended'" (click)="activateUser(user)" class="block px-4 py-2 text-green-600 hover:bg-green-50 cursor-pointer">
+                      <i class="fas fa-check-circle mr-2"></i> Activate User
+                    </a>
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <a (click)="deleteUser(user)" class="block px-4 py-2 text-red-600 hover:bg-red-50 cursor-pointer">
+                      <i class="fas fa-trash-alt mr-2"></i> Delete User
+                    </a>
                   </div>
                 </td>
               </tr>
             </ng-container>
             <ng-template #noUsers>
               <tr>
-                <td colspan="8" class="px-4 py-10 text-center text-text-medium">
+                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
                   <div class="flex flex-col items-center">
-                    <i class="fas fa-search text-4xl text-gray-300 mb-3"></i>
-                    <p>No users found matching your criteria</p>
-                    <button (click)="resetFilters()" class="mt-3 text-admin-color hover:underline focus:outline-none">
+                    <i class="fas fa-users text-4xl mb-3 text-gray-300"></i>
+                    <p class="text-lg font-medium">No users found</p>
+                    <p class="text-sm max-w-md mx-auto mt-1">There are no users matching your current filters. Try adjusting your search criteria or reset filters.</p>
+                    <button 
+                      (click)="resetFilters()" 
+                      class="mt-3 px-4 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors">
                       Reset Filters
                     </button>
                   </div>
@@ -314,473 +326,553 @@
             </ng-template>
           </tbody>
         </table>
-      </div>
-      
-      <!-- Pagination -->
-      <div class="pagination-controls mt-5 flex flex-col sm:flex-row justify-between items-center">
-        <div class="text-text-medium mb-3 sm:mb-0">
-          Showing {{(currentPage - 1) * pageSize + 1}} to 
-          {{Math.min(currentPage * pageSize, filteredUsers.length)}} of 
-          {{filteredUsers.length}} users
-        </div>
-        <div class="flex items-center">
-          <button 
-            [disabled]="currentPage === 1"
-            (click)="goToPage(currentPage - 1)"
-            class="pagination-btn px-3 py-1 border border-[#c026d3] rounded-l-md disabled:opacity-50">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <div *ngFor="let page of getPaginationArray()" class="pagination-page">
-            <button 
-              *ngIf="page !== '...'"
-              [class.bg-admin-color]="page === currentPage"
-              [class.text-white]="page === currentPage"
-              [class.border-admin-color]="page === currentPage"
-              (click)="goToPage(page)"
-              class="pagination-btn border px-3 py-1 border-[#c026d3]">
-              {{page}}
-            </button>
-            <span *ngIf="page === '...'" class="pagination-ellipsis px-3 py-1 border border-[#c026d3]">{{page}}</span>
+        
+        <!-- Pagination -->
+        <div class="flex flex-col sm:flex-row justify-between items-center px-4 py-3 bg-white border-t border-gray-200">
+          <div class="mb-3 sm:mb-0 text-sm text-gray-600">
+            Showing <span class="font-medium">{{filteredUsers.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}}</span> to 
+            <span class="font-medium">{{Math.min(currentPage * pageSize, totalUsers)}}</span> of 
+            <span class="font-medium">{{totalUsers}}</span> users
           </div>
-          <button 
-            [disabled]="currentPage === getTotalPages()"
-            (click)="goToPage(currentPage + 1)"
-            class="pagination-btn px-3 py-1 border border-border-color rounded-r-md disabled:opacity-50">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+          <div class="pagination-controls flex space-x-1">
+            <button 
+              [disabled]="currentPage === 1"
+              (click)="goToPage(currentPage - 1)" 
+              class="pagination-btn px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <ng-container *ngFor="let page of getPaginationArray()">
+              <button 
+                *ngIf="page !== '...'"
+                [class.bg-purple-600]="page === currentPage"
+                [class.text-white]="page === currentPage"
+                [class.bg-white]="page !== currentPage"
+                [class.text-gray-700]="page !== currentPage"
+                (click)="goToPage(page)"
+                class="pagination-btn px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50">
+                {{page}}
+              </button>
+              <span *ngIf="page === '...'" class="px-3 py-1">{{page}}</span>
+            </ng-container>
+            <button 
+              [disabled]="currentPage === getTotalPages()"
+              (click)="goToPage(currentPage + 1)" 
+              class="pagination-btn px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Add/Edit User Modal -->
-<div *ngIf="showModal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ">
-  <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-4 animate-modalIn">
-    <div class="modal-header p-5 border-b border-border-color">
-      <h3 class="text-lg font-semibold text-text-dark">{{isEditMode ? 'Edit User' : 'Add New User'}}</h3>
-      <button (click)="closeModal()" class="absolute top-4 right-4 text-text-medium hover:text-text-dark">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body p-5">
+<!-- User Form Modal -->
+<div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto overflow-hidden animate-fadeIn">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-800">{{ isEditMode ? 'Edit User' : 'Add New User' }}</h2>
+        <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
       <form [formGroup]="userForm" (ngSubmit)="saveUser()">
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label for="firstName" class="block text-sm font-medium text-text-medium mb-1">First Name</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div class="form-group">
+            <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
             <input 
               type="text" 
               id="firstName" 
               formControlName="firstName" 
-              class="block w-full p-2.5 border border-border-color rounded-md focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color">
-            <div *ngIf="userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched" class="text-red-500 text-xs mt-1">
+              class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+              [ngClass]="{'border-red-500': userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched}">
+            <div *ngIf="userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched" class="text-red-500 text-sm mt-1">
               First name is required
             </div>
           </div>
-          <div>
-            <label for="lastName" class="block text-sm font-medium text-text-medium mb-1">Last Name</label>
+          
+          <div class="form-group">
+            <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
             <input 
               type="text" 
               id="lastName" 
               formControlName="lastName" 
-              class="block w-full p-2.5 border border-border-color rounded-md focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color">
-            <div *ngIf="userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched" class="text-red-500 text-xs mt-1">
+              class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+              [ngClass]="{'border-red-500': userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched}">
+            <div *ngIf="userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched" class="text-red-500 text-sm mt-1">
               Last name is required
             </div>
           </div>
         </div>
-        <div class="mb-4">
-          <label for="email" class="block text-sm font-medium text-text-medium mb-1">Email Address</label>
+        
+        <div class="form-group mb-4">
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
           <input 
             type="email" 
             id="email" 
             formControlName="email" 
-            class="block w-full p-2.5 border border-border-color rounded-md focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color">
-          <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="text-red-500 text-xs mt-1">
+            class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+            [ngClass]="{'border-red-500': userForm.get('email')?.invalid && userForm.get('email')?.touched}">
+          <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="text-red-500 text-sm mt-1">
             <span *ngIf="userForm.get('email')?.errors?.['required']">Email is required</span>
             <span *ngIf="userForm.get('email')?.errors?.['email']">Please enter a valid email address</span>
           </div>
         </div>
-        <div class="mb-4" *ngIf="!isEditMode">
-          <label for="password" class="block text-sm font-medium text-text-medium mb-1">Password</label>
+        
+        <div class="form-group mb-4" *ngIf="!isEditMode">
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
           <div class="relative">
             <input 
               [type]="showPassword ? 'text' : 'password'" 
               id="password" 
               formControlName="password" 
-              class="block w-full p-2.5 border border-border-color rounded-md focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color">
+              class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+              [ngClass]="{'border-red-500': userForm.get('password')?.invalid && userForm.get('password')?.touched}">
             <button 
-              type="button"
-              (click)="togglePasswordVisibility()"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-text-light"></i>
+              type="button" 
+              (click)="togglePasswordVisibility()" 
+              class="absolute right-3 top-3 text-gray-500 hover:text-gray-700 focus:outline-none">
+              <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
             </button>
           </div>
-          <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="text-red-500 text-xs mt-1">
+          <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="text-red-500 text-sm mt-1">
             <span *ngIf="userForm.get('password')?.errors?.['required']">Password is required</span>
             <span *ngIf="userForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</span>
           </div>
         </div>
-        <div class="mb-4">
-          <label for="role" class="block text-sm font-medium text-text-medium mb-1">Role</label>
-          <select 
-            id="role" 
-            formControlName="role"
-            class="block w-full p-2.5 border border-border-color rounded-md focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color bg-white">
-            <option value="jobseeker">Job Seeker</option>
-            <option value="employer">Employer</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label for="status" class="block text-sm font-medium text-text-medium mb-1">Status</label>
-          <select 
-            id="status" 
-            formControlName="status"
-            class="block w-full p-2.5 border border-border-color rounded-md focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color bg-white">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="pending">Pending</option>
-            <option value="suspended">Suspended</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <div class="flex items-center">
-            <input 
-              type="checkbox" 
-              id="verified" 
-              formControlName="isVerified"
-              class="w-4 h-4 text-admin-color focus:ring-admin-color rounded">
-            <label for="verified" class="ml-2 text-sm font-medium text-text-medium">Account Verified</label>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div class="form-group">
+            <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select 
+              id="role" 
+              formControlName="role" 
+              class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent bg-white">
+              <option value="jobseeker">Job Seeker</option>
+              <option value="employer">Employer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select 
+              id="status" 
+              formControlName="status" 
+              class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent bg-white">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="pending">Pending</option>
+              <option value="suspended">Suspended</option>
+            </select>
           </div>
         </div>
+        
+        <div class="form-group mb-6">
+          <label class="flex items-center">
+            <input 
+              type="checkbox" 
+              formControlName="isVerified" 
+              class="w-4 h-4 text-purple-600 focus:ring-purple-600 rounded">
+            <span class="ml-2 text-sm text-gray-700">User is verified</span>
+          </label>
+        </div>
+        
+        <div class="flex justify-end gap-3">
+          <button 
+            type="button" 
+            (click)="closeModal()" 
+            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            [disabled]="userForm.invalid" 
+            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ isEditMode ? 'Update User' : 'Create User' }}
+          </button>
+        </div>
       </form>
-    </div>
-    <div class="modal-footer p-5 border-t border-border-color flex justify-end gap-3">
-      <button 
-        type="button" 
-        (click)="closeModal()" 
-        class="px-4 py-2 border border-border-color rounded-md text-text-dark hover:bg-gray-50">
-        Cancel
-      </button>
-      <button 
-        type="button" 
-        (click)="saveUser()" 
-        [disabled]="!userForm.valid"
-        class="px-4 py-2 bg-admin-color text-white rounded-md hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
-        {{isEditMode ? 'Save Changes' : 'Add User'}}
-      </button>
     </div>
   </div>
 </div>
 
 <!-- User Details Modal -->
-<div *ngIf="showDetailsModal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 animate-modalIn">
-    <div class="modal-header p-5 border-b border-border-color">
-      <h3 class="text-lg font-semibold text-text-dark">User Details</h3>
-      <button (click)="closeDetailsModal()" class="absolute top-4 right-4 text-text-medium hover:text-text-dark">
+<div *ngIf="showDetailsModal && selectedUser" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto max-h-[90vh] overflow-hidden animate-fadeIn">
+    <div class="flex justify-between items-center p-6 border-b border-gray-200">
+      <h2 class="text-xl font-bold text-gray-800">User Details</h2>
+      <button (click)="closeDetailsModal()" class="text-gray-500 hover:text-gray-700 focus:outline-none">
         <i class="fas fa-times"></i>
       </button>
     </div>
-    <div class="modal-body p-5">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- User Profile Section -->
-        <div class="col-span-1 flex flex-col items-center p-5 bg-gray-50 rounded-lg">
-          <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 uppercase text-2xl font-bold mb-4">
-            {{((selectedUser?.firstName || '').charAt(0)) + ((selectedUser?.lastName || '').charAt(0))}}
+    
+    <div class="overflow-y-auto max-h-[calc(90vh-120px)]">
+      <!-- User Profile Header -->
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start">
+          <div class="w-20 h-20 flex-shrink-0 mb-4 sm:mr-6 sm:mb-0">
+            <div class="w-full h-full rounded-full bg-gray-300 flex items-center justify-center text-gray-600 uppercase font-bold text-2xl">
+              {{selectedUser.lastName.charAt(0) || '?'}}{{selectedUser.lastName.charAt(0) || '?'}}
+            </div>
           </div>
-          <h4 class="text-xl font-medium text-text-dark">{{selectedUser?.firstName}} {{selectedUser?.lastName}}</h4>
-          <p class="text-text-medium mb-4">{{selectedUser?.email}}</p>
-          
-          <div class="w-full mt-2">
-            <div class="flex justify-between py-2 border-b border-border-color">
-              <span class="text-text-medium">Status</span>
+          <div class="text-center sm:text-left">
+            <h3 class="text-xl font-bold text-gray-800">{{selectedUser.firstName}} {{selectedUser.lastName}}</h3>
+            <p class="text-gray-600 mb-1">{{selectedUser.email}}</p>
+            <div class="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
               <span [ngClass]="{
-                'text-green-600': selectedUser?.status === 'active',
-                'text-yellow-600': selectedUser?.status === 'pending',
-                'text-red-600': selectedUser?.status === 'suspended',
-                'text-gray-600': selectedUser?.status === 'inactive'
-              }" class="font-medium">{{selectedUser?.status | titlecase}}</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-border-color">
-              <span class="text-text-medium">Role</span>
-              <span class="font-medium text-admin-color">{{selectedUser?.role | titlecase}}</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-border-color">
-              <span class="text-text-medium">Verified</span>
-              <span [class]="selectedUser?.isVerified ? 'text-green-600' : 'text-red-600'" class="font-medium">
-                {{selectedUser?.isVerified ? 'Yes' : 'No'}}
+                'bg-purple-100 text-purple-600': selectedUser.role === 'admin',
+                'bg-blue-100 text-blue-600': selectedUser.role === 'employer',
+                'bg-green-100 text-green-600': selectedUser.role === 'jobseeker'
+              }" class="px-2 py-1 rounded-full text-xs font-medium">
+                {{selectedUser.role | titlecase}}
+              </span>
+              <span [ngClass]="{
+                'bg-green-100 text-green-600': selectedUser.status === 'active',
+                'bg-yellow-100 text-yellow-600': selectedUser.status === 'pending',
+                'bg-red-100 text-red-600': selectedUser.status === 'suspended',
+                'bg-gray-100 text-gray-600': selectedUser.status === 'inactive'
+              }" class="px-2 py-1 rounded-full text-xs font-medium">
+                {{selectedUser.status | titlecase}}
+              </span>
+              <span *ngIf="selectedUser.isVerified" class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-medium">
+                <i class="fas fa-check-circle mr-1"></i> Verified
+              </span>
+              <span *ngIf="!selectedUser.isVerified" class="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs font-medium">
+                <i class="fas fa-exclamation-circle mr-1"></i> Unverified
               </span>
             </div>
-            <div class="flex justify-between py-2 border-b border-border-color">
-              <span class="text-text-medium">Member Since</span>
-              <span class="font-medium text-text-dark">{{selectedUser?.createdAt | date:'mediumDate'}}</span>
-            </div>
-            <div class="flex justify-between py-2">
-              <span class="text-text-medium">Last Active</span>
-              <span class="font-medium text-text-dark">{{selectedUser?.lastActive | date:'medium'}}</span>
+          </div>
+          <div class="mt-4 sm:mt-0 sm:ml-auto flex gap-2">
+            <button 
+              (click)="editUser(selectedUser)" 
+              class="px-3 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
+              <i class="fas fa-edit mr-1"></i> Edit User
+            </button>
+            <button 
+              (click)="resetPassword(selectedUser)" 
+              class="px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+              <i class="fas fa-key mr-1"></i> Reset Password
+            </button>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 text-sm">
+          <div>
+            <p class="text-gray-500">User ID</p>
+            <p class="font-medium">{{selectedUser.id}}</p>
+          </div>
+          <div>
+            <p class="text-gray-500">Created At</p>
+            <p class="font-medium">{{selectedUser.createdAt | date:'MMM d, y, h:mm a'}}</p>
+          </div>
+          <div>
+            <p class="text-gray-500">Last Updated</p>
+            <p class="font-medium">{{selectedUser.updatedAt | date:'MMM d, y, h:mm a'}}</p>
+          </div>
+          <div>
+            <p class="text-gray-500">Last Active</p>
+            <p class="font-medium">{{selectedUser.lastActive ? (selectedUser.lastActive | date:'MMM d, y, h:mm a') : 'Never'}}</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tabs -->
+      <div class="border-b border-gray-200">
+        <div class="flex overflow-x-auto">
+          <button 
+            [class.border-purple-600]="currentTab === 'activity'" 
+            [class.text-purple-600]="currentTab === 'activity'"
+            [class.border-transparent]="currentTab !== 'activity'"
+            (click)="currentTab = 'activity'" 
+            class="py-3 px-6 border-b-2 font-medium text-sm hover:text-purple-600 focus:outline-none">
+            Activity Log
+          </button>
+          <button 
+            [class.border-purple-600]="currentTab === 'security'" 
+            [class.text-purple-600]="currentTab === 'security'"
+            [class.border-transparent]="currentTab !== 'security'"
+            (click)="currentTab = 'security'" 
+            class="py-3 px-6 border-b-2 font-medium text-sm hover:text-purple-600 focus:outline-none">
+            Security & Sessions
+          </button>
+          <button 
+            [class.border-purple-600]="currentTab === 'notes'" 
+            [class.text-purple-600]="currentTab === 'notes'"
+            [class.border-transparent]="currentTab !== 'notes'"
+            (click)="currentTab = 'notes'" 
+            class="py-3 px-6 border-b-2 font-medium text-sm hover:text-purple-600 focus:outline-none">
+            Admin Notes
+          </button>
+        </div>
+      </div>
+      
+      <!-- Tab Content -->
+      <div class="p-6">
+        <!-- Activity Log Tab -->
+        <div *ngIf="currentTab === 'activity'">
+          <h3 class="text-lg font-medium text-gray-800 mb-4">User Activity Log</h3>
+          
+          <div *ngIf="userActivityLog.length === 0" class="text-center py-8">
+            <i class="fas fa-history text-4xl text-gray-300 mb-3"></i>
+            <p class="text-gray-500">No activity records available for this user</p>
+          </div>
+          
+          <div *ngIf="userActivityLog.length > 0" class="space-y-3">
+            <div *ngFor="let activity of userActivityLog" class="p-3 bg-gray-50 rounded-lg">
+              <div class="flex justify-between items-start">
+                <span class="font-medium">{{activity.type}}</span>
+                <span class="text-sm text-gray-500">{{activity.createdAt | date:'MMM d, y, h:mm a'}}</span>
+              </div>
+              <p class="text-gray-600 mt-1">{{activity.description}}</p>
+              <div *ngIf="activity.metadata" class="mt-2 text-sm text-gray-500">
+                <div *ngFor="let item of activity.metadata | keyvalue">
+                  <span class="font-medium">{{item.key}}</span>: {{item.value}}
+                </div>
+              </div>
             </div>
           </div>
         </div>
         
-        <!-- User Activity Section -->
-        <div class="col-span-2">
-          <!-- Tabs Navigation -->
-          <div class="flex border-b border-border-color mb-5">
-            <button 
-              (click)="currentTab = 'activity'"
-              [class.border-admin-color]="currentTab === 'activity'"
-              [class.text-admin-color]="currentTab === 'activity'"
-              [class.border-b-2]="currentTab === 'activity'"
-              class="px-4 py-2 mr-2 font-medium focus:outline-none">
-              Activity Log
-            </button>
-            <button 
-              (click)="currentTab = 'security'"
-              [class.border-admin-color]="currentTab === 'security'"
-              [class.text-admin-color]="currentTab === 'security'"
-              [class.border-b-2]="currentTab === 'security'"
-              class="px-4 py-2 mr-2 font-medium focus:outline-none">
-              Security
-            </button>
-            <button 
-              (click)="currentTab = 'notes'"
-              [class.border-admin-color]="currentTab === 'notes'"
-              [class.text-admin-color]="currentTab === 'notes'"
-              [class.border-b-2]="currentTab === 'notes'"
-              class="px-4 py-2 font-medium focus:outline-none">
-              Admin Notes
-            </button>
-          </div>
-          
-          <!-- Tab Content -->
-          <div [ngSwitch]="currentTab">
-            <!-- Activity Log Tab -->
-            <div *ngSwitchCase="'activity'" class="tab-content">
-              <h5 class="text-text-dark font-medium mb-4">Recent Activity</h5>
-              <div class="activity-timeline">
-                <div *ngFor="let activity of userActivityLog" class="activity-item relative pl-6 pb-5 border-l-2 border-admin-color border-opacity-30 last:border-l-0">
-                  <div class="activity-dot absolute top-0 left-[-8px] w-4 h-4 rounded-full bg-admin-color"></div>
-                  <div class="activity-content">
-                    <p class="text-text-dark">{{activity.description}}</p>
-                    <div class="flex justify-between items-center mt-1">
-                      <span class="text-sm text-text-light">{{activity.timestamp | date:'medium'}}</span>
-                      <span *ngIf="activity.ip" class="text-xs px-2 py-1 bg-gray-100 rounded text-text-medium">IP: {{activity.ip}}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div *ngIf="userActivityLog.length === 0" class="text-center py-10 text-text-medium">
-                  <i class="fas fa-history text-4xl text-gray-300 mb-3"></i>
-                  <p>No activity recorded for this user yet</p>
-                </div>
-              </div>
-            </div>
+        <!-- Security & Sessions Tab -->
+        <div *ngIf="currentTab === 'security'">
+          <div class="mb-6">
+            <h3 class="text-lg font-medium text-gray-800 mb-4">Account Security</h3>
             
-            <!-- Security Tab -->
-            <div *ngSwitchCase="'security'" class="tab-content">
-              <h5 class="text-text-dark font-medium mb-4">Security Information</h5>
-              
-              <div class="mb-5 bg-white p-4 rounded-lg border border-border-color">
-                <h6 class="font-medium text-text-dark mb-3">Login Sessions</h6>
-                <div *ngFor="let session of userSessions" class="flex justify-between items-center py-2 border-b border-border-color last:border-b-0">
-                  <div>
-                    <p class="text-text-dark">{{session.device}}</p>
-                    <p class="text-xs text-text-light">{{session.location}} • IP: {{session.ip}}</p>
-                  </div>
-                  <div class="flex items-center">
-                    <span [class]="session.active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'" class="text-xs px-2 py-1 rounded-full mr-3">
-                      {{session.active ? 'Active' : 'Expired'}}
-                    </span>
-                    <button *ngIf="session.active" (click)="terminateSession(session)" class="text-red-500 hover:text-red-600">
-                      <i class="fas fa-times-circle"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div *ngIf="userSessions.length === 0" class="text-center py-5 text-text-medium">
-                  <p>No active sessions</p>
-                </div>
-              </div>
-              
-              <div class="mb-5 bg-white p-4 rounded-lg border border-border-color">
-                <h6 class="font-medium text-text-dark mb-3">Password & Authentication</h6>
-                <div class="flex justify-between items-center py-2 border-b border-border-color">
-                  <div>
-                    <p class="text-text-dark">Password Last Changed</p>
-                    <p class="text-xs text-text-light">{{selectedUser?.passwordLastChanged || 'Never' | date:'mediumDate'}}</p>
-                  </div>
-                  <button (click)="resetPassword(selectedUser)" class="px-3 py-1.5 text-sm bg-admin-color bg-opacity-10 text-admin-color rounded-md hover:bg-opacity-20">
-                    Reset Password
-                  </button>
-                </div>
-                <div class="flex justify-between items-center py-2">
-                  <div>
-                    <p class="text-text-dark">Two-Factor Authentication</p>
-                    <p class="text-xs text-text-light">{{selectedUser?.twoFactorEnabled ? 'Enabled' : 'Disabled'}}</p>
-                  </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="p-4 border border-gray-200 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-gray-700 font-medium">Two-Factor Authentication</span>
                   <div class="relative inline-block w-10 mr-2 align-middle select-none">
                     <input 
                       type="checkbox" 
-                      [checked]="selectedUser?.twoFactorEnabled"
+                      [checked]="selectedUser.twoFactorEnabled"
                       (change)="toggleTwoFactor()"
-                      id="toggleTwoFactor" 
+                      id="toggle-2fa" 
                       class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                    <label for="toggleTwoFactor" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                    <label for="toggle-2fa" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
                   </div>
                 </div>
+                <p class="text-sm text-gray-500">
+                  {{selectedUser.twoFactorEnabled ? 'User has enabled two-factor authentication for increased account security.' : 'Two-factor authentication is not enabled for this user.'}}
+                </p>
               </div>
               
-              <div class="bg-white p-4 rounded-lg border border-border-color">
-                <h6 class="font-medium text-text-dark mb-3">Account Actions</h6>
-                <div class="flex flex-wrap gap-3">
-                  <button (click)="lockAccount()" class="px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
-                    <i class="fas fa-lock mr-2"></i>Lock Account
+              <div class="p-4 border border-gray-200 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-gray-700 font-medium">Password Status</span>
+                  <button 
+                    (click)="resetPassword(selectedUser)" 
+                    class="px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm">
+                    Reset
                   </button>
-                  <button (click)="forceLogout()" class="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Force Logout
-                  </button>
-                  <button (click)="deleteUserData()" class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                    <i class="fas fa-trash-alt mr-2"></i>Delete Data
+                </div>
+                <p class="text-sm text-gray-500">
+                  Last changed: {{selectedUser.passwordLastChanged ? (selectedUser.passwordLastChanged | date:'MMM d, y') : 'Never'}}
+                </p>
+              </div>
+            </div>
+            
+            <div class="mt-4 flex gap-2">
+              <button 
+                (click)="lockAccount()" 
+                class="px-3 py-1.5 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors">
+                <i class="fas fa-lock mr-1"></i> Lock Account
+              </button>
+              <button 
+                (click)="forceLogout()" 
+                class="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
+                <i class="fas fa-sign-out-alt mr-1"></i> Force Logout
+              </button>
+              <button 
+                (click)="deleteUserData()" 
+                class="px-3 py-1.5 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors">
+                <i class="fas fa-trash-alt mr-1"></i> Delete Data
+              </button>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-medium text-gray-800 mb-4">Active Sessions</h3>
+            
+            <div *ngIf="userSessions.length === 0" class="text-center py-6">
+              <i class="fas fa-laptop text-4xl text-gray-300 mb-3"></i>
+              <p class="text-gray-500">No active sessions for this user</p>
+            </div>
+            
+            <div *ngIf="userSessions.length > 0" class="space-y-3">
+              <div *ngFor="let session of userSessions" class="p-4 border border-gray-200 rounded-lg">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <div class="flex items-center">
+                      <i class="fas fa-desktop mr-2 text-gray-500"></i>
+                      <span class="font-medium">{{session.device}}</span>
+                      <span *ngIf="session.active" class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">Active</span>
+                    </div>
+                    <div class="mt-1 text-sm text-gray-500">
+                      <p>{{session.location}} • IP: {{session.ip}}</p>
+                      <p>Last active: {{session.lastActive | date:'MMM d, y, h:mm a'}}</p>
+                    </div>
+                  </div>
+                  <button 
+                    *ngIf="session.active"
+                    (click)="terminateSession(session)" 
+                    class="px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm">
+                    Terminate
                   </button>
                 </div>
               </div>
             </div>
-            
-            <!-- Admin Notes Tab -->
-            <div *ngSwitchCase="'notes'" class="tab-content">
-              <h5 class="text-text-dark font-medium mb-4">Admin Notes</h5>
-              
-              <div class="mb-5">
-                <div *ngFor="let note of adminNotes" class="bg-white p-4 rounded-lg border border-border-color mb-3">
-                  <div class="flex justify-between items-start mb-2">
-                    <h6 class="font-medium text-text-dark">{{note.title}}</h6>
-                    <div class="flex items-center">
-                      <span class="text-xs text-text-light">{{note.createdAt | date:'mediumDate'}}</span>
-                      <button (click)="deleteNote(note)" class="ml-3 text-red-500 hover:text-red-600">
-                        <i class="fas fa-trash-alt"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <p class="text-text-medium">{{note.content}}</p>
-                  <div class="mt-2 text-xs text-text-light">
-                    Added by: {{note.adminName}}
-                  </div>
+          </div>
+        </div>
+        
+        <!-- Admin Notes Tab -->
+        <div *ngIf="currentTab === 'notes'">
+          <h3 class="text-lg font-medium text-gray-800 mb-4">Admin Notes</h3>
+          
+          <form [formGroup]="noteForm" (ngSubmit)="addNote()" class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="mb-3">
+              <label for="noteTitle" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <input 
+                type="text" 
+                id="noteTitle" 
+                formControlName="title" 
+                class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                placeholder="Note title">
+            </div>
+            <div class="mb-3">
+              <label for="noteContent" class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+              <textarea 
+                id="noteContent" 
+                formControlName="content" 
+                rows="3" 
+                class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                placeholder="Add notes about this user"></textarea>
+            </div>
+            <button 
+              type="submit" 
+              [disabled]="noteForm.invalid" 
+              class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-plus mr-1"></i> Add Note
+            </button>
+          </form>
+          
+          <div *ngIf="adminNotes.length === 0" class="text-center py-6">
+            <i class="fas fa-sticky-note text-4xl text-gray-300 mb-3"></i>
+            <p class="text-gray-500">No admin notes for this user</p>
+          </div>
+          
+          <div *ngIf="adminNotes.length > 0" class="space-y-4">
+            <div *ngFor="let note of adminNotes" class="p-4 border border-gray-200 rounded-lg">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-medium text-gray-800">{{note.title}}</h4>
+                  <p class="text-sm text-gray-500 mt-1">
+                    By {{note.adminName}} • {{note.createdAt | date:'MMM d, y, h:mm a'}}
+                  </p>
                 </div>
-                
-                <div *ngIf="adminNotes.length === 0" class="text-center py-5 text-text-medium bg-white rounded-lg border border-border-color">
-                  <i class="fas fa-sticky-note text-4xl text-gray-300 mb-3"></i>
-                  <p>No notes have been added for this user</p>
-                </div>
+                <button 
+                  (click)="deleteNote(note)" 
+                  class="text-red-500 hover:text-red-600">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
               </div>
-              
-              <!-- Add Note Form -->
-              <div class="bg-white p-4 rounded-lg border border-border-color">
-                <h6 class="font-medium text-text-dark mb-4">Add Note</h6>
-                <form [formGroup]="noteForm" (ngSubmit)="addNote()">
-                  <div class="mb-3">
-                    <input 
-                      type="text" 
-                      formControlName="title"
-                      placeholder="Note title"
-                      class="block w-full p-2.5 border border-border-color rounded-md focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color">
-                  </div>
-                  <div class="mb-3">
-                    <textarea 
-                      formControlName="content"
-                      rows="4"
-                      placeholder="Enter note content..."
-                      class="block w-full p-2.5 border border-border-color rounded-md focus:outline-none focus:border-admin-color focus:ring-1 focus:ring-admin-color"></textarea>
-                  </div>
-                  <div class="flex justify-end">
-                    <button 
-                      type="submit"
-                      [disabled]="!noteForm.valid"
-                      class="px-4 py-2 bg-admin-color text-white rounded-md hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
-                      Add Note
-                    </button>
-                  </div>
-                </form>
-              </div>
+              <p class="mt-2 text-gray-600">{{note.content}}</p>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal-footer p-5 border-t border-border-color flex justify-between">
-      <div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div *ngIf="showConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto overflow-hidden animate-fadeIn">
+    <div class="p-6">
+      <div class="mb-4">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full" 
+             [ngClass]="{
+               'bg-red-100': confirmModalType === 'delete',
+               'bg-yellow-100': confirmModalType === 'suspend',
+               'bg-green-100': confirmModalType === 'activate',
+               'bg-blue-100': confirmModalType === 'other'
+             }">
+          <i class="fas" 
+             [ngClass]="{
+               'fa-trash-alt text-red-600': confirmModalType === 'delete',
+               'fa-ban text-yellow-600': confirmModalType === 'suspend',
+               'fa-check-circle text-green-600': confirmModalType === 'activate',
+               'fa-exclamation-circle text-blue-600': confirmModalType === 'other'
+             }"></i>
+        </div>
+        <h3 class="mt-3 text-lg font-medium text-gray-900 text-center">{{confirmModalTitle}}</h3>
+        <p class="mt-2 text-gray-600 text-center">{{confirmModalMessage}}</p>
+      </div>
+      
+      <div class="flex justify-end gap-3 mt-6">
         <button 
-          *ngIf="selectedUser"
-          (click)="editUser(selectedUser)"
-          class="px-4 py-2 bg-admin-color bg-opacity-10 text-admin-color rounded-md hover:bg-opacity-20 mr-2">
-          <i class="fas fa-edit mr-2"></i>Edit User
+          type="button" 
+          (click)="closeConfirmModal()" 
+          class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          (click)="confirmAction()" 
+          class="px-4 py-2 rounded-lg text-white transition-colors"
+          [ngClass]="{
+            'bg-red-600 hover:bg-red-700': confirmModalType === 'delete',
+            'bg-yellow-500 hover:bg-yellow-600': confirmModalType === 'suspend',
+            'bg-green-600 hover:bg-green-700': confirmModalType === 'activate',
+            'bg-purple-600 hover:bg-purple-700': confirmModalType === 'other'
+          }">
+          {{confirmButtonText}}
         </button>
       </div>
-      <button 
-        (click)="closeDetailsModal()" 
-        class="px-4 py-2 border border-border-color rounded-md text-text-dark hover:bg-gray-50">
-        Close
-      </button>
     </div>
   </div>
 </div>
 
-<!-- Confirm Action Modal -->
-<div *ngIf="showConfirmModal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-4 animate-modalIn">
-    <div class="modal-header p-5 border-b border-border-color">
-      <h3 class="text-lg font-semibold text-text-dark">{{confirmModalTitle}}</h3>
-      <button (click)="closeConfirmModal()" class="absolute top-4 right-4 text-text-medium hover:text-text-dark">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body p-5">
-      <p class="text-text-dark">{{confirmModalMessage}}</p>
-    </div>
-    <div class="modal-footer p-5 border-t border-border-color flex justify-end gap-3">
-      <button 
-        type="button" 
-        (click)="closeConfirmModal()" 
-        class="px-4 py-2 border border-border-color rounded-md text-text-dark hover:bg-gray-50">
-        Cancel
-      </button>
-      <button 
-        type="button" 
-        (click)="confirmAction()"
-        [ngClass]="{
-          'bg-red-600 hover:bg-red-700': confirmModalType === 'delete',
-          'bg-yellow-500 hover:bg-yellow-600': confirmModalType === 'suspend',
-          'bg-blue-600 hover:bg-blue-700': confirmModalType === 'activate',
-          'bg-admin-color hover:bg-opacity-90': confirmModalType === 'other'
-        }"
-        class="px-4 py-2 text-white rounded-md">
-        {{confirmButtonText}}
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast Notification -->
-<div *ngIf="showToast" class="toast-notification fixed bottom-5 right-5 bg-white p-4 rounded-lg shadow-lg border-l-4 border-[#c026d3] max-w-sm z-50 animate-toastIn">
-  <div class="flex items-start">
-    <div class="toast-icon mr-3">
-      <i [ngClass]="{
-        'fas fa-check-circle text-green-500': toastType === 'success',
-        'fas fa-exclamation-circle text-yellow-500': toastType === 'warning',
-        'fas fa-times-circle text-red-500': toastType === 'error',
-        'fas fa-info-circle text-blue-500': toastType === 'info'
-      }" class="text-xl"></i>
-    </div>
-    <div class="toast-content flex-grow">
-      <h4 class="font-medium text-text-dark">{{toastTitle}}</h4>
-      <p class="text-sm text-text-medium mt-1">{{toastMessage}}</p>
-    </div>
-    <button (click)="closeToast()" class="text-text-light hover:text-text-dark ml-3">
+<!-- Toast Notifications -->
+<div *ngIf="showToast" 
+     class="fixed bottom-5 right-5 max-w-sm w-full bg-white rounded-lg shadow-lg border-l-4 overflow-hidden animate-slideUp z-50"
+     [ngClass]="{
+       'border-green-500': toastType === 'success',
+       'border-yellow-500': toastType === 'warning',
+       'border-red-500': toastType === 'error',
+       'border-blue-500': toastType === 'info'
+     }">
+  <div class="p-4 pr-12">
+    <button (click)="closeToast()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
       <i class="fas fa-times"></i>
     </button>
+    <div class="flex items-start">
+      <div class="flex-shrink-0">
+        <i class="fas text-lg"
+           [ngClass]="{
+             'fa-check-circle text-green-500': toastType === 'success',
+             'fa-exclamation-circle text-yellow-500': toastType === 'warning',
+             'fa-times-circle text-red-500': toastType === 'error',
+             'fa-info-circle text-blue-500': toastType === 'info'
+           }"></i>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm font-medium text-gray-900">{{toastTitle}}</p>
+        <p class="mt-1 text-sm text-gray-500">{{toastMessage}}</p>
+      </div>
+    </div>
   </div>
-  <div class="toast-progress mt-2 bg-gray-200 rounded-full h-1">
-    <div class="bg-[#c026d3] h-1 rounded-full" [style.width.%]="toastProgress"></div>
+  <div class="h-1 bg-gray-200">
+    <div class="h-full transition-all duration-200 ease-linear"
+         [ngClass]="{
+           'bg-green-500': toastType === 'success',
+           'bg-yellow-500': toastType === 'warning',
+           'bg-red-500': toastType === 'error',
+           'bg-blue-500': toastType === 'info'
+         }"
+         [style.width.%]="toastProgress"></div>
   </div>
 </div>

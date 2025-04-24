@@ -61,13 +61,25 @@ export class UsersService {
       params = params.set('search', search);
     }
     
-    return this.http.get<UserListResponse>(`${this.API_URL}/users`, {
+    const url = `${this.API_URL}/users`;
+    console.log('Calling API URL:', url);
+    console.log('With params:', params.toString());
+    console.log('Auth token:', this.authService.getToken() ? 'Present' : 'Missing');
+    
+    return this.http.get<UserListResponse>(url, {
       headers: {
         Authorization: `Bearer ${this.authService.getToken()}`
       },
       params
     }).pipe(
-      tap(response => console.log('Users fetched:', response)),
+      tap(response => {
+        console.log('Raw users response:', response);
+        if (response.users) {
+          console.log('Number of users received:', response.users.length);
+        } else {
+          console.error('No users array in response!');
+        }
+      }),
       catchError(this.handleError)
     );
   }
