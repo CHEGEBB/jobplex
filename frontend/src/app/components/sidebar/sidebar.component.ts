@@ -1,6 +1,7 @@
 import { Component, EventEmitter, HostListener, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService, User } from '../../services/auth.service';
 
 interface NavItem {
   icon: string;
@@ -20,7 +21,9 @@ export class SidebarComponent implements OnInit {
   @Input() collapsed = false;
   @Output() toggleSidebar = new EventEmitter<boolean>();
   isMobile = false;
-  
+  currentUser: User | null = null;
+  userInitials: string = '';
+
   // Separated navigation items into primary and secondary groups
   primaryNavItems: NavItem[] = [
     { icon: 'fa-th-large', label: 'Dashboard', route: '/jobseeker/dashboard' },
@@ -30,17 +33,19 @@ export class SidebarComponent implements OnInit {
     { icon: 'fa-file-alt', label: 'CV Manager', route: '/jobseeker/cv' },
     { icon: 'fa-id-card', label: 'My Profile', route: '/jobseeker/profile' },
   ];
-  
+
   secondaryNavItems: NavItem[] = [
     { icon: 'fa-cog', label: 'Settings', route: '/jobseeker/settings' },
     { icon: 'fa-question-circle', label: 'Help & Support', route: '/jobseeker/help' },
   ];
 
+  constructor(private authService: AuthService) {}
+
   @HostListener('window:resize', ['$event'])
   onResize() {
     this.checkScreenSize();
   }
-  
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     // Close sidebar on outside click in mobile view (optional)
@@ -48,7 +53,7 @@ export class SidebarComponent implements OnInit {
       const clickedElement = event.target as HTMLElement;
       const sidebarElement = document.querySelector('.sidebar-panel');
       const hamburgerElement = document.querySelector('.hamburger-btn');
-      
+
       if (sidebarElement && 
           hamburgerElement && 
           !sidebarElement.contains(clickedElement) && 
@@ -61,11 +66,12 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit() {
     this.checkScreenSize();
-    
+    this.loadUserData();
+
     // Apply parallax effect to sidebar background on mouse movement
     if (typeof document !== 'undefined') {
       const sidebar = document.querySelector('.sidebar-panel');
-      
+
       if (sidebar) {
         document.addEventListener('mousemove', (e) => {
           if (window.innerWidth >= 768) {
@@ -74,7 +80,7 @@ export class SidebarComponent implements OnInit {
             const depth = 15;
             const moveX = (mouseX - 0.5) * depth;
             const moveY = (mouseY - 0.5) * depth;
-            
+
             const beforeElement = sidebar.querySelector(':before') as HTMLElement;
             if (beforeElement) {
               beforeElement.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.05)`;
@@ -83,6 +89,33 @@ export class SidebarComponent implements OnInit {
         });
       }
     }
+  }
+
+  loadUserData() {
+    // Subscribe to the currentUser observable
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      if (user) {
+        // Generate initials from first and last name
+        this.userInitials = this.generateInitials(user.firstName, user.lastName);
+      }
+    });
+    
+    // If no user is loaded yet, try fetching from the profile
+    if (!this.currentUser) {
+      this.authService.getCurrentUserProfile().subscribe(
+        user => {
+          this.currentUser = user;
+          this.userInitials = this.generateInitials(user.firstName, user.lastName);
+        },
+        error => console.error('Error loading user profile:', error)
+      );
+    }
+  }
+
+  generateInitials(firstName: string, lastName: string): string {
+    if (!firstName && !lastName) return 'U';
+    return `${firstName ? firstName.charAt(0).toUpperCase() : ''}${lastName ? lastName.charAt(0).toUpperCase() : ''}`;
   }
 
   checkScreenSize() {
@@ -96,7 +129,7 @@ export class SidebarComponent implements OnInit {
   toggle() {
     this.collapsed = !this.collapsed;
     this.toggleSidebar.emit(this.collapsed);
-    
+
     // Animation for sidebar toggle
     const sidebar = document.querySelector('.sidebar-panel');
     if (sidebar) {
@@ -106,7 +139,7 @@ export class SidebarComponent implements OnInit {
       }, 400);
     }
   }
-  
+
   // Optional: Theme toggle function
   toggleTheme() {
     document.body.classList.toggle('dark-mode');

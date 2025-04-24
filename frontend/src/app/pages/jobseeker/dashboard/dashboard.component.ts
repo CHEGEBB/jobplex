@@ -51,6 +51,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showProfileMenu = false;
   currentUser: User | null = null;
   profileInitials = '';
+  hasProfilePhoto = false;
 
   profileData = {
     name: '',
@@ -58,7 +59,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     applications: 45,
     interviews: 12,
     savedJobs: 28,
-    image: 'assets/ana.jpg' // Default fallback image
+    profilePhoto: '' 
   };
 
   // Sample data arrays (keep your existing data)
@@ -95,7 +96,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       id: 2, 
       company: 'Custom', 
       position: 'UX Researcher',
-      logo: '',
+      logo: 'assets/ux.svg',
       status: 'Applied',
       date: '2 days ago', 
       isFullTime: true,
@@ -105,7 +106,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       id: 3, 
       company: 'Graphica', 
       position: 'Senior Product Designer',
-      logo: 'graphica.svg',
+      logo: 'graphic.svg',
       status: 'In Review',
       date: '2 days ago',
       isFullTime: true,
@@ -115,7 +116,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       id: 4, 
       company: 'Custom', 
       position: 'UI Designer',
-      logo: '',
+      logo: 'assets/ui.svg', 
       status: 'Interview',
       date: '3 days ago',
       isFullTime: true,
@@ -173,8 +174,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   ];
 
-  
-
   constructor(
     private authService: AuthService,
     private router: Router
@@ -212,7 +211,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private updateUserProfile(user: User): void {
     this.profileData.name = `${user.firstName} ${user.lastName}`;
     this.profileInitials = this.getInitials(user.firstName, user.lastName);
-    this.profileData.image = user.profilePhoto || this.profileData.image;
+    
+    // Check if user has a profile photo
+    if (user.profilePhoto && user.profilePhoto.trim() !== '') {
+      this.profileData.profilePhoto = user.profilePhoto;
+      this.hasProfilePhoto = true;
+    } else {
+      this.profileData.profilePhoto = '';
+      this.hasProfilePhoto = false;
+    }
   }
 
   private getInitials(firstName: string, lastName: string): string {

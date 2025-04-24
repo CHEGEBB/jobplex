@@ -36,8 +36,31 @@
           </button>
           <div class="profile-menu">
             <!-- Use user's profile picture or a generated avatar with initials -->
-            <div *ngIf="profileData.image; else profileInitialsTemplate">
-              <img [src]="profileData.image" class="profile-image" alt="Profile" (click)="toggleProfileMenu()"/>
+            <div class="profile-avatar" (click)="toggleProfileMenu($event)">
+              <!-- Show profile photo if available -->
+              <img *ngIf="hasProfilePhoto" [src]="profileData.profilePhoto" alt="Profile photo" class="avatar-img">
+              
+              <!-- Show initials if no profile photo -->
+              <div *ngIf="!hasProfilePhoto" class="avatar-initials">
+                {{ profileInitials }}
+              </div>
+            </div>
+            
+            <!-- Similar for profile menu or other places where profile image appears -->
+            <div class="profile-menu" *ngIf="showProfileMenu">
+              <div class="profile-header">
+                <!-- Show profile photo if available -->
+                <img *ngIf="hasProfilePhoto" [src]="profileData.profilePhoto" alt="Profile photo" class="menu-avatar-img">
+                
+                <!-- Show initials if no profile photo -->
+                
+                
+                <div class="profile-info">
+                  <h4>{{ profileData.name }}</h4>
+                  <!-- Other profile info -->
+                </div>
+              </div>
+              <!-- Rest of profile menu -->
             </div>
             <ng-template #profileInitialsTemplate>
               <div class="profile-initials" (click)="toggleProfileMenu()">
@@ -153,7 +176,7 @@
               <div *ngFor="let application of recentApplications" class="application-card">
                 <div class="application-header">
                   <div class="company-logo">
-                    <img *ngIf="application.company !== 'Custom'" [src]="'assets/images/companies' + application.logo" [alt]="application.company" />
+                    <img *ngIf="application.company !== 'Custom'" [src]="'assets/' + application.logo" [alt]="application.company" />
                     <img *ngIf="application.company === 'Custom'" [src]="'https://source.unsplash.com/random/100x100?company'" [alt]="application.company" />
                   </div>
                   <button class="star-btn">

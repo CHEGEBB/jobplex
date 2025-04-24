@@ -688,3 +688,98 @@
     }
   }
 }
+// Add this to your sidebar.component.scss file
+
+.user-profile {
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+
+    // Avatar with initials styling
+    .avatar-initials {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #5468FF; // Blue color (different from green)
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      text-transform: uppercase;
+      // Add subtle gradient effect
+      background-image: linear-gradient(135deg, #5468FF, #34348e);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    // If you still want to support image-based avatars
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .user-info {
+    flex: 1;
+    
+    .user-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+    
+    .user-role {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0;
+    }
+  }
+}
+
+// Make sure the user profile section is properly laid out
+.user-profile {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  
+  .theme-toggle {
+    cursor: pointer;
+    margin-left: auto;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+// Adjust for collapsed sidebar
+.sidebar-panel.collapsed {
+  .user-profile {
+    justify-content: center;
+    padding: 12px 0;
+    
+    .user-avatar {
+      margin-right: 0;
+    }
+  }
+}

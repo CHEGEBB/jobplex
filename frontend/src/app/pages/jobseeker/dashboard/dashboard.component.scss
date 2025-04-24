@@ -1879,3 +1879,40 @@
     }
   }
 }
+// Add these styles to your dashboard.component.scss file
+
+.avatar-initials {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #5e72e4; // Primary color, adjust to match your theme
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.menu-avatar-initials {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #5e72e4; // Primary color, adjust to match your theme
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+// Make sure your existing styles for images are appropriate
+.avatar-img,
+.menu-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}

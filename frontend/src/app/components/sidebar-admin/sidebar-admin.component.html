@@ -1,5 +1,3 @@
-<!-- sidebar-admin.component.html -->
-
 <!-- Mobile Hamburger Button -->
 <button 
   *ngIf="isMobile"
@@ -19,7 +17,7 @@
   
   <!-- Sidebar -->
   <aside
-    class="sidebar-panel"
+    class="sidebar-panel admin-theme"
     [class.collapsed]="collapsed">
     
     <!-- Logo & Toggle -->
@@ -27,7 +25,7 @@
       <div class="logo-wrapper">
         <div class="logo">
           <span class="logo-icon">JP</span>
-          <span class="logo-text" *ngIf="!collapsed">JobPlex</span>
+          <span class="logo-text" *ngIf="!collapsed">JobPlex Admin</span>
         </div>
       </div>
       <button
@@ -42,7 +40,7 @@
     <!-- Navigation Items -->
     <nav class="nav-container">
       <!-- Primary Navigation Group -->
-      <div class="nav-group-title" *ngIf="!collapsed">Dashboard</div>
+      <div class="nav-group-title" *ngIf="!collapsed">Main</div>
       <ul class="nav-items">
         <li *ngFor="let item of primaryNavItems">
           <a
@@ -60,7 +58,7 @@
       </ul>
       
       <!-- Secondary Navigation Group -->
-      <div class="nav-group-title" *ngIf="!collapsed">Management</div>
+      <div class="nav-group-title" *ngIf="!collapsed">Platform</div>
       <ul class="nav-items">
         <li *ngFor="let item of secondaryNavItems">
           <a
@@ -96,16 +94,17 @@
       </ul>
     </nav>
     
-    <!-- Admin Info at Bottom -->
+    <!-- User Profile at Bottom -->
     <div class="user-profile">
       <div class="user-avatar">
-        <img src="assets/joe.jpg" alt="Admin" class="avatar-img">
+        <!-- Display user initials instead of hardcoded profile image -->
+        <div class="avatar-initials">{{ userInitials || 'A' }}</div>
       </div>
       <div class="user-info" *ngIf="!collapsed">
-        <h4 class="user-name">System Admin</h4>
-        <p class="user-role">Administrator</p>
+        <h4 class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h4>
+        <p class="user-role">{{ currentUser?.role === 'admin' ? 'Administrator' : 'Admin' }}</p>
       </div>
-      <div class="theme-toggle" *ngIf="!collapsed" (click)="toggleTheme()" title="Toggle Theme">
+      <div class="theme-toggle" *ngIf="!collapsed" title="Toggle Theme" (click)="toggleTheme()">
         <i class="fas" [class.fa-moon]="!darkMode" [class.fa-sun]="darkMode"></i>
       </div>
     </div>

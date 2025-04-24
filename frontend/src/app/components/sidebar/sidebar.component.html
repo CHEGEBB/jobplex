@@ -79,13 +79,16 @@
     <!-- User Profile at Bottom -->
     <div class="user-profile">
       <div class="user-avatar">
-        <img src="assets/ana.jpg" alt="User" class="avatar-img">
+        <!-- Display user initials instead of hardcoded profile image -->
+        <div *ngIf="currentUser" class="avatar-initials">{{ userInitials }}</div>
+        <!-- Fallback if no user is loaded -->
+        <div *ngIf="!currentUser" class="avatar-initials">U</div>
       </div>
       <div class="user-info" *ngIf="!collapsed">
-        <h4 class="user-name">Elena Rodriguez</h4>
-        <p class="user-role">Job Seeker</p>
+        <h4 class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h4>
+        <p class="user-role">{{ currentUser?.role | titlecase }}</p>
       </div>
-      <div class="theme-toggle" *ngIf="!collapsed" title="Toggle Theme">
+      <div class="theme-toggle" *ngIf="!collapsed" title="Toggle Theme" (click)="toggleTheme()">
         <i class="fas fa-moon text-white"></i>
       </div>
     </div>

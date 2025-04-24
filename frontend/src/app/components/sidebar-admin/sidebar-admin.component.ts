@@ -1,8 +1,7 @@
-// sidebar-admin.component.ts
 import { Component, EventEmitter, HostListener, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink, RouterLinkActive } from '@angular/router';
-
+import { AuthService, User } from '../../services/auth.service';
 interface NavItem {
   icon: string;
   label: string;
@@ -22,6 +21,8 @@ export class SidebarAdminComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<boolean>();
   isMobile = false;
   darkMode = false;
+  currentUser: User | null = null;
+  userInitials: string = '';
   
   // Admin-specific navigation items
   primaryNavItems: NavItem[] = [
@@ -38,6 +39,8 @@ export class SidebarAdminComponent implements OnInit {
     { icon: 'fa-tachometer-alt', label: 'System Metrics', route: '/admin/system-metrics' },
     { icon: 'fa-cog', label: 'Settings', route: '/admin/settings' },
   ];
+
+  constructor(private authService: AuthService) {}
 
   @HostListener('window:resize', ['$event'])
   onResize() {
@@ -64,6 +67,7 @@ export class SidebarAdminComponent implements OnInit {
 
   ngOnInit() {
     this.checkScreenSize();
+    this.loadUserData();
     
     // Apply parallax effect to sidebar background on mouse movement
     if (typeof document !== 'undefined') {
@@ -83,6 +87,33 @@ export class SidebarAdminComponent implements OnInit {
         });
       }
     }
+  }
+
+  loadUserData() {
+    // Subscribe to the currentUser observable
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      if (user) {
+        // Generate initials from first and last name
+        this.userInitials = this.generateInitials(user.firstName, user.lastName);
+      }
+    });
+    
+    // If no user is loaded yet, try fetching from the profile
+    if (!this.currentUser) {
+      this.authService.getCurrentUserProfile().subscribe(
+        user => {
+          this.currentUser = user;
+          this.userInitials = this.generateInitials(user.firstName, user.lastName);
+        },
+        error => console.error('Error loading user profile:', error)
+      );
+    }
+  }
+
+  generateInitials(firstName: string, lastName: string): string {
+    if (!firstName && !lastName) return 'A';
+    return `${firstName ? firstName.charAt(0).toUpperCase() : ''}${lastName ? lastName.charAt(0).toUpperCase() : ''}`;
   }
 
   checkScreenSize() {
